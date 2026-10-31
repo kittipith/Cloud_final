@@ -1,0 +1,2548 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Lambda — Module 7</title>
+<meta name="description" content="สื่อทบทวนก่อนสอบ Module 7: Developing Event-Driven Serverless Solutions (AWS Lambda) แบบ interactive พร้อมข้อสอบจำลอง">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fafafa; --card:#ffffff; --line:#e5e7eb; --line-2:#d1d5db; --text:#111827; --muted:#6b7280; --hover:#f3f4f6; --code-bg:#f6f7f9;
+  --accent:#ff9900; --accent-ink:#b45309; --accent-soft:#fff7ed; --on-accent:#111827;
+  --ok:#16a34a; --ok-ink:#15803d; --ok-soft:#f0fdf4;
+  --bad:#dc2626; --bad-ink:#b91c1c; --bad-soft:#fef2f2;
+  --info:#2563eb; --info-ink:#1d4ed8; --info-soft:#eff6ff;
+  --r:12px; --r-sm:8px;
+  --font:'IBM Plex Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --header-h:56px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0f14; --card:#121821; --line:#1f2937; --line-2:#334155; --text:#e5e7eb; --muted:#9ca3af; --hover:#18212d; --code-bg:#0e141b;
+    --accent:#ff9900; --accent-ink:#ffb547; --accent-soft:#2a1e0b; --on-accent:#111827;
+    --ok:#22c55e; --ok-ink:#4ade80; --ok-soft:#0f2618;
+    --bad:#ef4444; --bad-ink:#f87171; --bad-soft:#2b1214;
+    --info:#3b82f6; --info-ink:#93c5fd; --info-soft:#0f1b30;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b0f14; --card:#121821; --line:#1f2937; --line-2:#334155; --text:#e5e7eb; --muted:#9ca3af; --hover:#18212d; --code-bg:#0e141b;
+  --accent:#ff9900; --accent-ink:#ffb547; --accent-soft:#2a1e0b; --on-accent:#111827;
+  --ok:#22c55e; --ok-ink:#4ade80; --ok-soft:#0f2618;
+  --bad:#ef4444; --bad-ink:#f87171; --bad-soft:#2b1214;
+  --info:#3b82f6; --info-ink:#93c5fd; --info-soft:#0f1b30;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:17px;line-height:1.75;overflow-x:hidden}
+a{color:var(--info-ink);text-underline-offset:3px}
+code{font-family:var(--mono);font-size:.86em;background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:.05em .35em;overflow-wrap:anywhere}
+pre{font-family:var(--mono);font-size:13.5px;line-height:1.65;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 16px;overflow-x:auto;margin:16px 0}
+pre code{background:none;border:0;padding:0;font-size:inherit;white-space:pre}
+h1,h2,h3,h4{line-height:1.35;margin:0}
+h2{font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:600;margin:32px 0 8px}
+p{margin:12px 0}
+ul,ol{padding-left:1.3em;margin:12px 0}
+li{margin:4px 0}
+strong{font-weight:600}
+:focus-visible{outline:2px solid var(--info);outline-offset:2px;border-radius:4px}
+button{font:inherit;color:inherit}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono)}
+
+/* ---------- header ---------- */
+.topbar{position:sticky;top:0;z-index:40;height:var(--header-h);display:flex;align-items:center;gap:12px;padding:0 20px;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;color:var(--text);min-width:0}
+.brand-mark{width:28px;height:28px;border-radius:7px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:700;font-size:16px;flex:none}
+.brand span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .spacer{flex:1}
+.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);background:var(--card);border-radius:var(--r-sm);cursor:pointer;flex:none}
+.icon-btn:hover{background:var(--hover)}
+.icon-btn svg{width:18px;height:18px}
+#menuBtn{display:none}
+.progress{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--accent);transition:width .1s linear}
+
+/* ---------- layout ---------- */
+.layout{display:grid;grid-template-columns:248px minmax(0,1fr);max-width:1180px;margin:0 auto}
+.sidenav{position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:24px 12px 40px 20px;border-right:1px solid var(--line)}
+.sidenav .group{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:20px 10px 6px}
+.sidenav .group:first-child{margin-top:0}
+.sidenav a{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:14.5px;line-height:1.5}
+.sidenav a:hover{background:var(--hover);color:var(--text)}
+.sidenav a.active{color:var(--text);background:var(--hover);box-shadow:inset 2px 0 0 var(--accent)}
+.sidenav .num{font-family:var(--mono);font-size:12px;width:20px;flex:none}
+.sidenav .check{margin-left:auto;color:var(--ok-ink);font-size:13px;visibility:hidden}
+.sidenav a.done .check{visibility:visible}
+.nav-meta{margin:24px 10px 0;font-size:13px;color:var(--muted)}
+.nav-meta .meter{height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:6px}
+.nav-meta .meter i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
+.scrim{display:none}
+main{min-width:0;padding:8px 48px 80px}
+.content{max-width:780px;margin:0 auto}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 48px;border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px}
+.eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.hero h1{font-size:clamp(2rem,5vw,2.9rem);font-weight:700;letter-spacing:-.02em;margin:18px 0 12px;line-height:1.2}
+.hero .lead{font-size:1.2rem;color:var(--muted);margin:0 0 28px;max-width:60ch}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+.stats{display:flex;gap:32px;flex-wrap:wrap;margin-top:40px}
+.stat b{display:block;font-size:1.6rem;font-weight:700;line-height:1.2}
+.stat span{font-size:14px;color:var(--muted)}
+.source-note{font-size:14px;color:var(--muted);margin-top:28px;max-width:68ch}
+
+/* ---------- sections ---------- */
+.sec{padding:64px 0 24px;border-bottom:1px solid var(--line);scroll-margin-top:calc(var(--header-h) + 8px)}
+.sec-label{font-family:var(--mono);font-size:13px;color:var(--accent-ink);margin-bottom:8px}
+.tldr{margin:20px 0 24px;padding:14px 18px;border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--card);border-radius:var(--r-sm)}
+.tldr .k{display:block;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.tldr p{margin:0;font-size:1.05rem;font-weight:500}
+.callout{margin:20px 0;padding:14px 18px;border-radius:var(--r-sm);border-left:3px solid}
+.callout .k{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.callout ul{margin:6px 0 0}
+.callout p:first-of-type{margin-top:0}
+.callout p:last-child{margin-bottom:0}
+.trap{background:var(--accent-soft);border-color:var(--accent)}
+.trap .k{color:var(--accent-ink)}
+.note{background:var(--info-soft);border-color:var(--info)}
+.note .k{color:var(--info-ink)}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;line-height:1.5;padding:0 7px;border-radius:999px;border:1px solid var(--line-2);color:var(--muted);vertical-align:2px;white-space:nowrap}
+.badge.extra{border-style:dashed}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin:16px 0;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:15px;line-height:1.6}
+.table-wrap table{min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+th{font-weight:600;background:var(--hover);font-size:14px}
+tr:last-child td{border-bottom:0}
+.sec-foot{display:flex;align-items:center;gap:12px;margin:28px 0 8px;flex-wrap:wrap}
+
+/* ---------- buttons, chips ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:7px 16px;border:1px solid var(--line-2);background:var(--card);border-radius:var(--r-sm);cursor:pointer;font-size:15px;font-weight:500;text-decoration:none;color:var(--text);transition:background .15s,border-color .15s}
+.btn:hover{background:var(--hover)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn-primary:hover{background:#f08c00}
+.btn-sm{min-height:32px;padding:4px 12px;font-size:14px}
+.btn[aria-pressed="true"].done-btn{border-color:var(--ok);color:var(--ok-ink);background:var(--ok-soft)}
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.seg button{border:0;background:transparent;padding:5px 12px;border-radius:7px;cursor:pointer;font-size:14.5px;color:var(--muted)}
+.seg button[aria-pressed="true"],.seg button[aria-selected="true"]{background:var(--card);color:var(--text);box-shadow:0 0 0 1px var(--line-2);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid var(--line-2);border-radius:999px;font-size:14px;cursor:pointer;background:var(--card);user-select:none}
+.chip input{margin:0;accent-color:var(--accent)}
+.chip:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.chip:has(input:focus-visible){outline:2px solid var(--info);outline-offset:2px}
+.field{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+.field > label,.field > .lbl{font-size:14px;font-weight:500}
+select{font:inherit;font-size:15px;color:var(--text);background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:6px 10px;min-height:38px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+/* ---------- widget ---------- */
+.widget{margin:28px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--card);overflow:hidden}
+.widget-head{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.widget-head .tag{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-ink)}
+.widget-head h3{margin:0;font-size:1.05rem}
+.widget-body{padding:20px}
+.widget-body > :first-child{margin-top:0}
+.explain{margin-top:16px;padding:12px 16px;border-radius:var(--r-sm);background:var(--hover);font-size:15.5px;line-height:1.7}
+.explain > :first-child{margin-top:0}.explain > :last-child{margin-bottom:0}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 20px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* responsibility */
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:4px 0 14px}
+.levels button{border:1px solid var(--line);background:var(--bg);border-radius:var(--r-sm);padding:8px 6px;cursor:pointer;font-size:14px;line-height:1.35}
+.levels button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.stack{display:flex;flex-direction:column;gap:4px}
+.layer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 12px;border-radius:7px;border:1px solid var(--line);font-size:14.5px;transition:background .2s,border-color .2s}
+.layer .who{font-size:12.5px;font-weight:600;white-space:nowrap}
+.layer.you{background:var(--accent-soft);border-color:var(--accent)}
+.layer.you .who{color:var(--accent-ink)}
+.layer.aws{background:var(--hover)}
+.layer.aws .who{color:var(--muted)}
+.proscons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.proscons > div{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 14px;font-size:15px}
+.proscons h4{font-size:13px;margin-bottom:4px;color:var(--muted);font-weight:600}
+.proscons ul{margin:0;padding-left:1.1em}
+
+/* flow */
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:4px 2px 10px}
+.node{flex:none;border:1px solid var(--line-2);background:var(--bg);border-radius:10px;padding:10px 12px;min-width:92px;text-align:center;cursor:pointer;font-size:14px;line-height:1.35;transition:border-color .2s,box-shadow .2s,background .2s}
+.node small{display:block;color:var(--muted);font-size:12px}
+.node.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.node.slow{border-color:var(--bad);background:var(--bad-soft)}
+.edge{flex:1 0 22px;min-width:22px;height:2px;background:var(--line-2);position:relative}
+.edge::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid var(--line-2);border-right:0}
+.edge.active{background:var(--accent)}
+.edge.active::after{border-left-color:var(--accent)}
+.edge.active::before{content:"";position:absolute;top:-3px;left:0;width:8px;height:8px;border-radius:50%;background:var(--accent);animation:travel .9s ease-in-out infinite}
+@keyframes travel{from{left:0}to{left:calc(100% - 8px)}}
+.caption{min-height:3.6em}
+.step-list{counter-reset:s;list-style:none;padding:0;margin:12px 0 0;font-size:15px}
+.step-list li{padding:4px 0 4px 30px;position:relative;color:var(--muted)}
+.step-list li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:6px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line-2);font-size:12px;display:grid;place-items:center;font-family:var(--mono)}
+.step-list li.on{color:var(--text)}
+.step-list li.on::before{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+/* timeline */
+.timeline{list-style:none;padding:0;margin:16px 0 0;border-left:2px solid var(--line);margin-left:9px}
+.timeline li{position:relative;padding:4px 0 10px 22px;font-size:15px;line-height:1.6;animation:fadein .25s ease both}
+.timeline li::before{content:attr(data-i);position:absolute;left:-11px;top:6px;width:20px;height:20px;border-radius:50%;background:var(--card);border:2px solid var(--line-2);font-size:11px;display:grid;place-items:center;font-weight:700}
+.timeline li.ok::before{border-color:var(--ok);color:var(--ok-ink)}
+.timeline li.bad::before{border-color:var(--bad);color:var(--bad-ink)}
+.timeline li.warn::before{border-color:var(--accent);color:var(--accent-ink)}
+.timeline li.info::before{border-color:var(--info);color:var(--info-ink)}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.kv{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.kv span{font-size:13.5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;background:var(--bg)}
+.kv b{font-weight:600}
+
+/* permission */
+.pdiag{display:flex;align-items:center;gap:8px;overflow-x:auto;padding-bottom:6px}
+.pnode{flex:none;border:1px solid var(--line-2);border-radius:10px;padding:10px 14px;text-align:center;font-size:14px;background:var(--bg);min-width:100px}
+.pedge{flex:1 0 110px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--muted);text-align:center}
+.pedge span{border-bottom:2px solid var(--line-2);padding-bottom:2px;white-space:nowrap}
+.pedge span.back{border-bottom:0;border-top:2px dashed var(--line-2);padding:2px 0 0}
+.prow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.prow:last-of-type{border-bottom:0}
+.prow .res{grid-column:1/-1;font-size:14.5px;display:none;padding:8px 12px;border-radius:7px}
+.prow .res.show{display:block}
+.res.ok,.fb.ok{background:var(--ok-soft);color:var(--text);border-left:3px solid var(--ok)}
+.res.bad,.fb.bad{background:var(--bad-soft);color:var(--text);border-left:3px solid var(--bad)}
+.diag-card{border:1px dashed var(--line-2);border-radius:var(--r-sm);padding:14px 16px;margin:12px 0;font-weight:500}
+
+/* handler */
+.hx{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.hx pre{margin:0;font-size:13px}
+.hx h4{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 6px}
+.tok{font:inherit;border:0;background:color-mix(in srgb,var(--info) 14%,transparent);color:inherit;border-radius:4px;padding:0 3px;cursor:pointer}
+.tok.ctx{background:color-mix(in srgb,var(--accent) 20%,transparent)}
+.tok:hover,.tok.on{outline:1.5px solid var(--info)}
+.tok.ctx:hover,.tok.ctx.on{outline-color:var(--accent)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:10px 0 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+
+/* concurrency */
+.cbar{display:flex;height:30px;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--line);background:var(--bg);margin:16px 0 8px}
+.cbar div{height:100%;transition:width .25s}
+.seg-warm{background:var(--ok)}
+.seg-cold{background:var(--accent)}
+.seg-thr{background:repeating-linear-gradient(45deg,var(--bad) 0 6px,color-mix(in srgb,var(--bad) 55%,transparent) 6px 12px)}
+.clegend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px}
+.clegend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.val{font-family:var(--mono);font-size:13.5px;color:var(--accent-ink);font-weight:500}
+.msgs{list-style:none;padding:0;margin:14px 0 0;font-size:15px}
+.msgs li{padding:6px 0 6px 22px;position:relative;border-top:1px solid var(--line)}
+.msgs li::before{content:"→";position:absolute;left:0;color:var(--muted)}
+.msgs li.bad::before{content:"✗";color:var(--bad-ink)}
+.msgs li.ok::before{content:"✓";color:var(--ok-ink)}
+.msgs li.warn::before{content:"!";color:var(--accent-ink);font-weight:700;left:4px}
+
+/* good/bad */
+.gb{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.gb > div{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+.gb .h{font-size:13.5px;font-weight:600;padding:6px 12px;border-bottom:1px solid var(--line)}
+.gb .bad-h{background:var(--bad-soft);color:var(--bad-ink)}
+.gb .good-h{background:var(--ok-soft);color:var(--ok-ink)}
+.gb pre{margin:0;border:0;border-radius:0;font-size:12.5px}
+.chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:14px 0}
+.lam{border:1px solid var(--line-2);border-radius:9px;padding:6px 12px;font-family:var(--mono);font-size:14px;background:var(--bg)}
+.lam.err{border-color:var(--bad);background:var(--bad-soft);color:var(--bad-ink)}
+.lam.q{border-style:dashed}
+
+/* versions */
+.vrow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin:14px 0}
+.vbox{position:relative;border:1px solid var(--line-2);border-radius:9px;padding:8px 12px;min-width:84px;font-size:14px;background:var(--bg);text-align:center}
+.vbox b{display:block;font-family:var(--mono);font-size:14px}
+.vbox small{color:var(--muted);font-size:12px;display:block}
+.vbox.latest{border-style:dashed}
+.vbox.target{border-color:var(--accent);background:var(--accent-soft)}
+.alias-pin{display:block;margin-top:6px;font-size:11.5px;font-weight:700;color:var(--on-accent);background:var(--accent);border-radius:999px;padding:0 8px}
+.arn{font-family:var(--mono);font-size:12.5px;word-break:break-all;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg)}
+.log{list-style:none;padding:0;margin:12px 0 0;font-size:14.5px;max-height:180px;overflow:auto}
+.log li{padding:4px 0;border-top:1px solid var(--line)}
+.log li.bad{color:var(--bad-ink)}
+
+/* report */
+.report{font-family:var(--mono);font-size:13px;line-height:2;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;overflow-x:auto}
+.report .tok{white-space:nowrap}
+.loghier{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:14px;margin:8px 0 0}
+.loghier span{border:1px solid var(--line);border-radius:7px;padding:2px 10px;background:var(--bg)}
+
+/* lab stepper */
+.lsteps{list-style:none;padding:0;margin:0}
+.lsteps li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.lsteps li:last-child{border-bottom:0}
+.lsteps input{width:18px;height:18px;margin-top:5px;accent-color:var(--ok);flex:none}
+.lsteps label{cursor:pointer}
+.lsteps li.done label b{text-decoration:line-through;text-decoration-color:var(--muted)}
+.lsteps small{display:block;color:var(--muted);font-size:14px}
+
+/* mini check & quiz choices */
+.mini{margin:28px 0 8px;border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;background:var(--card)}
+.mini-head{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.mq + .mq{border-top:1px solid var(--line);margin-top:18px;padding-top:18px}
+.qtext{font-weight:500;margin:4px 0 12px}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;font-size:15.5px;line-height:1.6;transition:border-color .15s,background .15s}
+.choice:hover:not(:disabled){border-color:var(--line-2);background:var(--hover)}
+.choice:disabled{cursor:default}
+.choice .key{flex:none;width:26px;height:26px;border-radius:7px;border:1px solid var(--line-2);display:grid;place-items:center;font-family:var(--mono);font-size:13px;margin-top:1px}
+.choice .ct{flex:1;min-width:0}
+.choice .st{flex:none;font-size:12.5px;font-weight:600;margin-top:3px}
+.choice.selected{border-color:var(--accent);background:var(--accent-soft)}
+.choice.selected .key{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.choice.correct{border-color:var(--ok);background:var(--ok-soft)}
+.choice.correct .key{background:var(--ok);border-color:var(--ok);color:#fff}
+.choice.correct .st{color:var(--ok-ink)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.choice.wrong .key{background:var(--bad);border-color:var(--bad);color:#fff}
+.choice.wrong .st{color:var(--bad-ink)}
+.fb{margin-top:12px;padding:12px 16px;border-radius:var(--r-sm);font-size:15px;line-height:1.7}
+.fb strong.verdict{display:block;margin-bottom:2px}
+.fb.ok strong.verdict{color:var(--ok-ink)}
+.fb.bad strong.verdict{color:var(--bad-ink)}
+.fb p{margin:6px 0}
+.fb details{margin-top:6px}
+.fb summary{cursor:pointer;color:var(--muted);font-size:14px}
+.fb details ul{margin:6px 0 0;padding-left:1.1em}
+
+/* flashcards */
+.fc-wrap{max-width:560px;margin:20px auto 0}
+.fc{display:block;width:100%;perspective:1200px;border:0;background:none;padding:0;cursor:pointer;text-align:center}
+.fc-inner{position:relative;min-height:230px;transition:transform .45s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d}
+.fc.flipped .fc-inner{transform:rotateY(180deg)}
+.fc-face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px 28px;border:1px solid var(--line);border-radius:16px;background:var(--card);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.fc-face .k{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.fc-front .t{font-size:1.35rem;font-weight:600;line-height:1.45}
+.fc-back{transform:rotateY(180deg);border-color:var(--accent)}
+.fc-back .t{font-size:1.1rem;line-height:1.65}
+.fc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.fc-count{font-family:var(--mono);font-size:14px;color:var(--muted)}
+
+/* cheatsheet */
+.cheat{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:20px 0}
+.cheat > div{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--card);font-size:14.5px;line-height:1.6}
+.cheat h4{font-size:13px;color:var(--accent-ink);margin-bottom:4px;font-weight:600}
+.cheat ul{margin:0;padding-left:1.05em}
+blockquote{margin:16px 0;padding:14px 18px;border-left:3px solid var(--line-2);background:var(--card);border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:1.02rem}
+
+/* quiz */
+.qpanel{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:22px;margin-top:20px}
+.qtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.qtop .spacer{flex:1}
+.pill{font-size:12.5px;border:1px solid var(--line-2);border-radius:999px;padding:1px 10px;color:var(--muted);white-space:nowrap}
+.pill.d-hard{border-color:var(--accent);color:var(--accent-ink)}
+.pill.d-xhard{border-color:var(--bad);color:var(--bad-ink)}
+.qbar{height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin:12px 0 18px}
+.qbar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.qq{font-size:1.1rem;font-weight:500;margin:0 0 16px;line-height:1.7}
+.qnav{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:18px}
+.timer{font-family:var(--mono);font-size:15px;color:var(--text);border:1px solid var(--line-2);border-radius:7px;padding:1px 10px}
+.timer.low{color:var(--bad-ink);border-color:var(--bad)}
+.bm{border:1px solid var(--line-2);background:var(--card);border-radius:7px;padding:2px 10px;cursor:pointer;font-size:13.5px;color:var(--muted)}
+.bm[aria-pressed="true"]{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.dots{display:flex;flex-wrap:wrap;gap:4px;margin-top:16px}
+.dots button{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:var(--bg);font-family:var(--mono);font-size:12px;cursor:pointer}
+.dots button.ans{background:var(--accent-soft);border-color:var(--accent)}
+.dots button.cur{outline:2px solid var(--text);outline-offset:1px}
+.score-big{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.score-big b{font-size:3rem;line-height:1;font-weight:700}
+.score-big span{color:var(--muted)}
+.tbars{margin:20px 0}
+.tbar{display:grid;grid-template-columns:130px minmax(0,1fr) 64px;gap:12px;align-items:center;font-size:14px;padding:5px 0}
+.tbar .track{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.tbar .track i{display:block;height:100%;border-radius:5px;background:var(--ok)}
+.tbar .track i.mid{background:var(--accent)}
+.tbar .track i.low{background:var(--bad)}
+.tbar .n{font-family:var(--mono);font-size:13px;text-align:right;color:var(--muted)}
+.wrong-item{border-top:1px solid var(--line);padding:16px 0}
+.wrong-item .qtext{margin-bottom:6px}
+.wrong-item p{margin:4px 0;font-size:15px}
+.hint{font-size:13.5px;color:var(--muted)}
+kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--card)}
+
+footer{padding:48px 0 24px;font-size:14px;color:var(--muted)}
+footer p{margin:6px 0}
+
+
+/* ---------- hub navigation ---------- */
+a.icon-btn{color:var(--text);text-decoration:none}
+.sidenav a.navhome{display:flex;align-items:center;gap:8px;margin:0 0 18px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;color:var(--text);font-weight:500;background:var(--card)}
+.sidenav a.navhome:hover{border-color:var(--accent);background:var(--card)}
+.weeknav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:40px 0 0}
+.weeknav a{display:block;border:1px solid var(--line);border-radius:12px;padding:12px 16px;text-decoration:none;color:var(--text);background:var(--card);transition:border-color .15s}
+.weeknav a:hover{border-color:var(--accent)}
+.weeknav small{display:block;color:var(--muted);font-size:12.5px}
+.weeknav b{font-weight:600}
+.weeknav .next{grid-column:2;text-align:right}
+.weeknav .home{grid-column:1/-1;text-align:center}
+@media (max-width: 640px){ .weeknav{grid-template-columns:1fr} .weeknav .next{grid-column:auto} }
+
+@media (max-width: 960px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  #menuBtn{display:grid}
+  .sidenav{position:fixed;top:var(--header-h);left:0;bottom:0;width:280px;height:auto;z-index:35;background:var(--card);transform:translateX(-102%);transition:transform .22s ease;border-right:1px solid var(--line)}
+  .sidenav.open{transform:none}
+  .scrim{display:block;position:fixed;inset:var(--header-h) 0 0 0;background:rgba(0,0,0,.35);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
+  .scrim.show{opacity:1;pointer-events:auto}
+  main{padding:0 16px 64px}
+}
+@media (max-width: 640px){
+  body{font-size:16px}
+  .topbar{padding:0 12px}
+  .hero{padding:40px 0 32px}
+  .sec{padding:44px 0 16px}
+  h2{font-size:1.4rem}
+  .widget-body{padding:16px}
+  .widget-head{padding:12px 16px}
+  .proscons,.hx,.gb{grid-template-columns:1fr}
+  .levels{grid-template-columns:1fr 1fr}
+  .prow{grid-template-columns:1fr 1fr}
+  .prow > .lbl{grid-column:1/-1}
+  .tbar{grid-template-columns:96px minmax(0,1fr) 54px}
+  .qpanel{padding:16px}
+  .stats{gap:22px}
+  .pdiag{flex-direction:column;align-items:stretch}
+  .pedge{flex:none}
+  .pnode{min-width:0}
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+@media print{
+  .topbar,.sidenav,.scrim,.widget,.mini,.sec-foot,#flashcards,#quiz,.hero-actions{display:none !important}
+  .layout{display:block}
+  main{padding:0}
+  body{background:#fff;color:#000;font-size:12pt}
+  .sec{border:0;padding:16px 0;break-inside:avoid-page}
+  body.print-cheat .hero,body.print-cheat .sec:not(#cheatsheet),body.print-cheat footer{display:none !important}
+  .cheat > div{break-inside:avoid}
+}
+</style>
+<script>try{var t=JSON.parse(localStorage.getItem('w9:theme'));if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>try{localStorage.setItem("hub:last",JSON.stringify({w:9,t:Date.now()}))}catch(e){}</script>
+<style id="gl-css">
+/* glossary tooltips */
+.gl{text-decoration:underline dotted;text-decoration-color:var(--muted);text-decoration-thickness:1px;text-underline-offset:3px;cursor:help;border-radius:3px}
+.gl:hover,.gl.on{text-decoration-color:var(--accent);background:var(--accent-soft)}
+.gl-tip{position:fixed;z-index:1000;max-width:min(340px,calc(100vw - 16px));padding:10px 13px;border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--card);color:var(--text);font-family:var(--font);font-size:14px;font-weight:400;line-height:1.6;text-align:left;box-shadow:0 8px 28px rgba(0,0,0,.18);pointer-events:none}
+.gl-tip b{display:block;margin-bottom:2px;font-family:var(--mono);font-size:12.5px;font-weight:500;color:var(--accent-ink)}
+@media print{.gl{text-decoration:none;background:none}.gl-tip{display:none!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn" id="menuBtn" aria-label="เปิดสารบัญ" aria-expanded="false" aria-controls="sidenav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">λ</span><span>Module 7 · AWS Lambda</span></a>
+  <span class="spacer"></span>
+  <!-- hub-nav --><a class="icon-btn" href="index.html" aria-label="ทุกบท (หน้ารวม)" title="ทุกบท"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+  <button class="icon-btn" id="themeBtn" aria-label="สลับธีมสว่าง/มืด"></button>
+  <div class="progress" id="readProgress" aria-hidden="true"></div>
+</header>
+<div class="scrim" id="scrim"></div>
+
+<div class="layout">
+<nav class="sidenav" id="sidenav" aria-label="สารบัญ">
+  <a class="navhome" href="index.html">← ทุกบท</a>
+  <div class="group">เนื้อหา</div>
+  <a href="#s1"><span class="num">01</span>Serverless คืออะไร<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s2"><span class="num">02</span>AWS Lambda<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s3"><span class="num">03</span>Invocation models<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s4"><span class="num">04</span>Permissions<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s5"><span class="num">05</span>Handler<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s6"><span class="num">06</span>ประสิทธิภาพ & Concurrency<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s7"><span class="num">07</span>Best practices<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s8"><span class="num">08</span>Deployment<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s9"><span class="num">09</span>Monitoring & X-Ray<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s10"><span class="num">10</span>Lab<span class="check" aria-hidden="true">✓</span></a>
+  <div class="group">ทบทวน</div>
+  <a href="#flashcards"><span class="num">F</span>Flashcards</a>
+  <a href="#cheatsheet"><span class="num">S</span>สรุปหน้าเดียว</a>
+  <a href="#quiz"><span class="num">Q</span>ข้อสอบจำลอง</a>
+  <div class="nav-meta"><span id="doneCount">เข้าใจแล้ว 0/10 หัวข้อ</span><div class="meter"><i id="doneMeter"></i></div></div>
+</nav>
+
+<main id="top">
+<div class="content">
+
+<!-- ================= HERO ================= -->
+<section class="hero" aria-labelledby="heroTitle">
+  <span class="eyebrow"><i></i>Week 9 · Module 7</span>
+  <h1 id="heroTitle">Developing Event-Driven Serverless Solutions</h1>
+  <p class="lead">AWS Lambda — รันโค้ดตาม event โดยไม่ต้องดูแลเซิร์ฟเวอร์</p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="#s1">เริ่มเรียน</a>
+    <a class="btn" href="#quiz">ไปทำข้อสอบ</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>10</b><span>หัวข้อ</span></div>
+    <div class="stat"><b id="statQ">36</b><span>ข้อสอบปรนัย</span></div>
+    <div class="stat"><b id="statF">22</b><span>flashcards</span></div>
+    <div class="stat"><b>10</b><span>แบบจำลอง interactive</span></div>
+  </div>
+  <p class="source-note">สรุปจากสไลด์และสิ่งที่อาจารย์เขียนเพิ่มบนสไลด์ในคลิป transcript อัตโนมัติถอดเสียงภาษาไทยเพี้ยน ส่วนที่อาจารย์พูดเสริมจึงอาจตกหล่น จุดที่ติดป้าย <span class="badge extra">เสริม</span> เป็นความรู้จากเอกสาร AWS ที่ไม่ได้อยู่ในสไลด์</p>
+</section>
+
+<!-- ================= 1 ================= -->
+<section class="sec" id="s1" aria-labelledby="h-s1">
+  <div class="sec-label">01</div>
+  <h2 id="h-s1">Serverless คืออะไร</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>ยิ่งขยับจาก On-premises ไปทาง Serverless เรายิ่งดูแลเครื่องน้อยลง จนเหลือแค่ดูแลโค้ด แลกกับข้อเสียคือ cold start</p></div>
+
+  <h3>ระดับการจัดการ 4 ขั้น</h3>
+  <p>ยิ่งขั้นสูง เรายิ่งดูแลเครื่องน้อยลงและได้โฟกัสกับ business logic มากขึ้น</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ระดับ</th><th>สิ่งที่ได้</th><th>สิ่งที่เรายังต้องดูแล</th></tr></thead>
+    <tbody>
+      <tr><td><strong>On-premises</strong></td><td>ควบคุมได้ทุกอย่าง</td><td>ลงทุนก้อนใหญ่, ต้องเดาความจุเอง, ติดตั้งนานเป็นเดือน, ดูแลทุกชั้นตั้งแต่ฮาร์ดแวร์</td></tr>
+      <tr><td><strong>VM (EC2)</strong></td><td>ไม่ต้องซื้อฮาร์ดแวร์, ปรับขนาดได้</td><td>ยังต้องดูแล <strong>OS</strong> เอง เช่น patch และ monitor</td></tr>
+      <tr><td><strong>Containers</strong></td><td>รันได้ทุกที่, ใช้ทรัพยากรคุ้มขึ้น, deploy เร็ว</td><td>ยังต้องดูแลตัว container และ cluster (ยกเว้นใช้ Fargate)</td></tr>
+      <tr><td><strong>Serverless</strong></td><td>ไม่มี OS ให้ดูแล, scale อัตโนมัติ, จ่ายตามที่ใช้, มี fault tolerance ในตัว, แทบไม่ต้องบำรุงรักษา</td><td>ดูแลแค่ <strong>โค้ดและการตั้งค่า</strong></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout note"><span class="k">อาจารย์เน้น</span>
+    <ul><li><strong>Lambda = serverless compute</strong> (รันโค้ด)</li><li><strong>Fargate = serverless infrastructure สำหรับ container</strong> (รัน container โดยไม่ต้องดูแลเครื่อง)</li></ul>
+  </div>
+  <p class="muted">เปรียบเทียบให้เห็นภาพ: On-premises = สร้างบ้านเอง, EC2 = เช่าบ้านทั้งหลังแต่ซ่อมเอง, Container = เช่าห้องในหอที่จัดของเองได้, Serverless = เรียก Grab มารับ จ่ายเฉพาะตอนนั่ง ไม่ต้องดูแลรถ</p>
+
+  <div class="widget" id="w-resp">
+    <div class="widget-head"><span class="tag">ลองเล่น</span><h3>ใครดูแลอะไรในแต่ละระดับ</h3></div>
+    <div class="widget-body">
+      <div class="levels" role="group" aria-label="เลือกระดับการจัดการ"></div>
+      <div class="stack" aria-live="polite"></div>
+      <div class="proscons"><div><h4>ข้อดี</h4><ul class="pros"></ul></div><div><h4>สิ่งที่ยังต้องทำ / ข้อเสีย</h4><ul class="cons"></ul></div></div>
+      <div class="explain"></div>
+    </div>
+  </div>
+
+  <h3>แนวคิดของแอป serverless สมัยใหม่</h3>
+  <ul>
+    <li>แบ่งเป็นชิ้นเล็ก ๆ ที่ผูกกันหลวม ๆ (<strong>loosely coupled</strong>) ชิ้นหนึ่งพังไม่ลากชิ้นอื่นพังตาม</li>
+    <li>ทำงานแบบ <strong>event-driven</strong> คือทำงานเฉพาะตอนมี event มากระตุ้น เช่น มีไฟล์อัปโหลด, มีคน call API, มีข้อความเข้าคิว</li>
+    <li>ถ้าไม่มี event ก็ <strong>scale to zero</strong> ไม่มีค่าใช้จ่ายตอนว่าง</li>
+    <li>ข้อเสียที่ตามมาคือ <strong>cold start</strong>: ตอนเรียกครั้งแรก (หรือหลังว่างไปนาน) AWS ต้องเตรียม environment ใหม่ ทำให้ request แรกช้ากว่าปกติ</li>
+  </ul>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>อย่าสลับ: Lambda = <em>compute</em>, Fargate = <em>container</em></li>
+      <li>"ต้อง patch / monitor OS เอง" เป็นภาระของระดับ VM (EC2) ไม่ใช่ข้อดีของ serverless</li>
+      <li>scale to zero → ไม่จ่ายตอนว่าง แต่ข้อเสียที่ตามมาคือ cold start</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="1,3"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s1" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 2 ================= -->
+<section class="sec" id="s2" aria-labelledby="h-s2">
+  <div class="sec-label">02</div>
+  <h2 id="h-s2">AWS Lambda</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>Lambda คือบริการ serverless compute ที่รันโค้ดของเราเมื่อมี event โดยเราดูแลโค้ด ส่วน AWS ดูแลเครื่อง</p></div>
+
+  <p>Lambda เป็นบริการ <strong>serverless compute</strong> ที่ให้เรารันโค้ดได้โดยไม่ต้องสร้างหรือดูแลเซิร์ฟเวอร์</p>
+  <p><strong>แบ่งหน้าที่:</strong> ลูกค้าดูแล <strong>โค้ด</strong> ส่วน AWS ดูแล <strong>เครื่อง</strong> (OS, patch, scaling, availability)</p>
+  <h3>จุดเด่น 3 ข้อ</h3>
+  <ol><li>รันโค้ดเพื่อตอบสนองต่อ event</li><li>scale ให้อัตโนมัติ</li><li>ส่ง log และ metric ไป <strong>CloudWatch</strong> ให้เอง</li></ol>
+  <h3>ฟีเจอร์ 6 ข้อ</h3>
+  <ol>
+    <li>ใช้โค้ดของเราเองได้ (bring your own code)</li>
+    <li>ทำงานร่วมกับบริการ AWS อื่นได้ (integrated)</li>
+    <li>ปรับ resource และ concurrency ได้</li>
+    <li>ตั้ง permission ได้ยืดหยุ่น</li>
+    <li>มี availability และ fault tolerance ในตัว</li>
+    <li>ไม่ต้องจ่ายตอนไม่ได้ใช้งาน (pay for value)</li>
+  </ol>
+  <p><span class="badge extra">เสริม</span> คิดเงินจาก (1) จำนวน request และ (2) duration × memory ที่ตั้ง คิดละเอียดถึงระดับมิลลิวินาที</p>
+
+  <h3>ตัวอย่าง use case</h3>
+  <div class="widget" id="w-flow">
+    <div class="widget-head"><span class="tag">ดูการทำงาน</span><h3>Use case flow</h3></div>
+    <div class="widget-body">
+      <div class="row" style="justify-content:space-between">
+        <div class="seg" role="tablist" aria-label="เลือก use case">
+          <button role="tab" aria-selected="true" data-flow="web">Web app</button>
+          <button role="tab" aria-selected="false" data-flow="stream">Real-time stream</button>
+        </div>
+        <div class="row"><button class="btn btn-sm" id="flowStep">ขั้นถัดไป</button><button class="btn btn-sm btn-primary" id="flowPlay">เล่น</button></div>
+      </div>
+      <div class="flow" style="margin-top:16px"></div>
+      <ol class="step-list"></ol>
+      <div class="explain caption" aria-live="polite"><p class="muted">กด "เล่น" หรือคลิกที่กล่องแต่ละกล่องเพื่อดูคำอธิบาย</p></div>
+    </div>
+  </div>
+
+  <h3>องค์ประกอบของ Lambda function</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>องค์ประกอบ</th><th>คืออะไร</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Access permissions</strong></td><td>ใช้ IAM กำหนดว่าใครเรียก function ได้ และ function เข้าถึงอะไรได้</td></tr>
+      <tr><td><strong>Initiating events</strong></td><td>ตัว trigger ที่เรียก function เช่น API Gateway, S3, SQS</td></tr>
+      <tr><td><strong>Runtime + deployment package</strong></td><td>runtime (เช่น Node.js, Python) + application code + dependencies/libraries</td></tr>
+      <tr><td><strong>Configuration</strong></td><td>ค่าที่ตั้งตามงาน เช่น memory, timeout, concurrency, environment variables</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>"application code + dependencies" คือ <strong>Runtime และ deployment package</strong> ไม่ใช่ Configuration</li>
+      <li>log และ metric ไป CloudWatch <strong>อัตโนมัติ</strong> ไม่ต้องติดตั้ง agent</li>
+      <li>Web app: API Gateway เรียก Lambda แบบ <strong>sync</strong> / Stream: Lambda <strong>poll</strong> Kinesis</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="35,2"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s2" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 3 ================= -->
+<section class="sec" id="s3" aria-labelledby="h-s3">
+  <div class="sec-label">03 · ออกสอบบ่อย</div>
+  <h2 id="h-s3">Invocation models</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>Push แบบ sync ผู้เรียกรอผลและไม่มี retry, push แบบ async เข้าคิวและ retry ได้ 0–2 ครั้ง, ส่วน pull คือ Lambda ไป poll ข้อมูลมาเป็น batch</p></div>
+
+  <h3>Push model — บริการอื่นเป็นคนเรียก Lambda</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>Synchronous</th><th>Asynchronous</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ตัวอย่าง</strong></td><td><strong>API Gateway</strong></td><td><strong>S3</strong> (รวมถึง SNS, EventBridge <span class="badge extra">เสริม</span>)</td></tr>
+      <tr><td><strong>การทำงาน</strong></td><td>ผู้เรียก <strong>รอ</strong> ผลตอบกลับ</td><td>Lambda เอา event <strong>เข้าคิว</strong> ก่อน แล้วตอบผู้เรียกทันทีว่ารับแล้ว จากนั้นค่อยส่งให้ function</td></tr>
+      <tr><td><strong>Retry</strong></td><td><strong>ไม่มี retry ในตัว</strong> error ส่งกลับไปที่ผู้เรียก ผู้เรียกต้อง retry เอง</td><td>retry ได้ <strong>0–2 ครั้ง</strong> (ค่าเริ่มต้น 2) รวมแล้วลองได้สูงสุด <strong>3 ครั้ง</strong></td></tr>
+      <tr><td><strong>InvocationType</strong></td><td><code>RequestResponse</code></td><td><code>Event</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Pull (polling) model — Lambda เป็นฝ่ายไปดึงข้อมูลเอง</h3>
+  <ul>
+    <li>Lambda ไป <strong>poll</strong> แหล่งข้อมูล แล้วเรียก function พร้อมข้อมูลเป็น <strong>batch</strong></li>
+    <li>ใช้กับ <strong>Kinesis, SQS, DynamoDB Streams</strong></li>
+    <li>ตั้งค่าผ่านสิ่งที่เรียกว่า <strong>event source mapping</strong></li>
+    <li><span class="badge extra">เสริม</span> เพราะ Lambda เป็นฝ่ายไปอ่าน สิทธิ์อ่านคิว/stream จึงอยู่ใน <strong>execution role</strong> ของ Lambda ไม่ใช่ resource-based policy</li>
+  </ul>
+
+  <h3>Destinations (อาจารย์โชว์ในแลบ)</h3>
+  <ul>
+    <li>ใช้ส่งผลลัพธ์ของการเรียกแบบ <strong>async</strong> หรือ <strong>event source mapping</strong> ไปต่อที่อื่น เช่น <strong>SNS</strong>, SQS, Lambda อื่น, EventBridge</li>
+    <li>ตั้งได้ 2 เงื่อนไข: <strong>On failure</strong> หรือ <strong>On success</strong></li>
+    <li>ใช้กับการเรียกแบบ sync (เช่น API Gateway) <strong>ไม่ได้</strong> เพราะผลถูกส่งกลับให้ผู้เรียกโดยตรงอยู่แล้ว</li>
+  </ul>
+
+  <div class="widget" id="w-inv">
+    <div class="widget-head"><span class="tag">แบบจำลอง</span><h3>Invocation simulator — ลองเรียก function แล้วดูว่าเกิดอะไรขึ้น</h3></div>
+    <div class="widget-body">
+      <div class="field"><span class="lbl">Event source</span>
+        <div class="seg" role="group" aria-label="เลือก event source" id="invSrc">
+          <button aria-pressed="true" data-v="apigw">API Gateway</button>
+          <button aria-pressed="false" data-v="s3">S3</button>
+          <button aria-pressed="false" data-v="sqs">SQS</button>
+          <button aria-pressed="false" data-v="kinesis">Kinesis</button>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="field"><label for="invRetry">Retry attempts (async เท่านั้น)</label>
+          <select id="invRetry"><option value="0">0</option><option value="1">1</option><option value="2" selected>2 (ค่าเริ่มต้น)</option></select></div>
+        <div class="field"><label for="invDest">Destination</label>
+          <select id="invDest"><option value="none">ไม่มี</option><option value="fail">SNS · On failure</option><option value="ok">SNS · On success</option></select></div>
+        <div class="field"><span class="lbl">ผลการรัน function</span>
+          <label class="chip" style="align-self:flex-start"><input type="checkbox" id="invErr"> ให้ function error</label></div>
+      </div>
+      <div class="row" style="margin-top:8px"><button class="btn btn-primary" id="invGo">Invoke</button><span class="hint" id="invHint"></span></div>
+      <div class="kv" id="invKv"></div>
+      <ol class="timeline" id="invTl" aria-live="polite"></ol>
+      <div class="explain" id="invSum" hidden></div>
+    </div>
+  </div>
+
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>"retry 2 ครั้ง" ≠ "ลอง 2 ครั้ง" — ครั้งแรก 1 + retry 2 = <strong>3 ครั้ง</strong></li>
+      <li>ไม่มี InvocationType ชื่อ <code>Async</code> หรือ <code>Sync</code></li>
+      <li>Sync ไม่ใช่ "retry ไม่ได้เลย" แต่ <strong>Lambda ไม่ retry ให้</strong> ฝั่งผู้เรียก (client) ต้องจัดการเอง</li>
+      <li>Destinations ใช้กับ async และ event source mapping ไม่ใช่ sync</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="5,10"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s3" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 4 ================= -->
+<section class="sec" id="s4" aria-labelledby="h-s4">
+  <div class="sec-label">04</div>
+  <h2 id="h-s4">Lambda permissions — สิทธิ์มี 2 ฝั่ง</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>ใครจะเรียก Lambda ได้ ตั้งที่ resource-based policy ส่วน Lambda จะไปใช้บริการอื่นได้ ตั้งที่ IAM execution role</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ทิศทาง</th><th>คำถาม</th><th>ตั้งผ่าน</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ขาเข้า</strong></td><td>ใครมีสิทธิ์ <strong>เรียก</strong> Lambda?</td><td><strong>Resource-based policy</strong> (function policy) เช่นอนุญาต <code>s3.amazonaws.com</code> ให้ <code>lambda:InvokeFunction</code></td></tr>
+      <tr><td><strong>ขาออก</strong></td><td>Lambda มีสิทธิ์ <strong>เข้าถึง</strong> บริการอื่นไหม?</td><td><strong>IAM execution role</strong> เช่น <code>s3:GetObject</code>, <code>s3:PutObject</code>, <code>dynamodb:Query</code></td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>ตัวอย่างที่อาจารย์วาดบนสไลด์:</strong> อัปโหลดรูปลง S3-source → trigger Lambda → Lambda อ่านรูป แปลงเป็น .PNG แล้วเขียนลง S3-dest ในเคสนี้ Lambda ต้องมี IAM Role ที่มีสิทธิ์อ่านและเขียน S3</p>
+
+  <div class="widget" id="w-perm">
+    <div class="widget-head"><span class="tag">ลองต่อสิทธิ์</span><h3>Permission builder</h3></div>
+    <div class="widget-body">
+      <div class="seg" role="tablist" aria-label="โหมด">
+        <button role="tab" aria-selected="true" data-pm="build">ต่อสิทธิ์</button>
+        <button role="tab" aria-selected="false" data-pm="diag">วินิจฉัยอาการ</button>
+      </div>
+      <div id="permBuild" style="margin-top:16px">
+        <div class="pdiag" aria-hidden="true">
+          <div class="pnode">อัปโหลดรูป<br><b>S3-source</b></div>
+          <div class="pedge"><span>① trigger →</span><span class="back">← ② อ่านรูป</span></div>
+          <div class="pnode"><b>λ Lambda</b><br><small class="muted">แปลงเป็น .PNG</small></div>
+          <div class="pedge"><span>③ เขียน .PNG →</span></div>
+          <div class="pnode"><b>S3-dest</b></div>
+        </div>
+        <p class="hint" style="margin:12px 0 4px">เลือกให้แต่ละลูกศรว่าต้องตั้งสิทธิ์ที่ไหน และใช้ action อะไร</p>
+        <div id="permRows"></div>
+        <div class="row" style="margin-top:12px"><button class="btn btn-primary" id="permCheck">ตรวจคำตอบ</button><button class="btn" id="permReset">ล้าง</button><span id="permScore" class="hint" aria-live="polite"></span></div>
+      </div>
+      <div id="permDiag" hidden style="margin-top:16px">
+        <p class="hint" style="margin:0">อ่านอาการ แล้วเลือกว่าต้องแก้ที่ไหน</p>
+        <div class="diag-card" id="diagText"></div>
+        <div class="row"><button class="btn" data-ans="resource">Resource-based policy</button><button class="btn" data-ans="role">Execution role</button><button class="btn btn-sm" id="diagNext" style="margin-left:auto">สุ่มอาการใหม่</button></div>
+        <div id="diagFb" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>วิธีวิเคราะห์อาการ</h3>
+  <ul>
+    <li>function <strong>ไม่ถูกเรียกเลย</strong> → มักเป็นปัญหาฝั่ง <strong>resource-based policy / trigger</strong></li>
+    <li>function ถูกเรียกแล้ว แต่ error <strong>AccessDenied</strong> ตอนอ่าน/เขียนบริการอื่น → ปัญหาฝั่ง <strong>execution role</strong></li>
+  </ul>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>ช้อยที่ให้ "เพิ่ม <code>lambda:InvokeFunction</code>" เพื่อแก้ AccessDenied ตอน Lambda เขียน S3 เป็นช้อยหลอก — นั่นคือสิทธิ์ขาเข้า</li>
+      <li>ไม่มี log เลย = function ยังไม่เคยถูกเรียก ปัญหาอยู่ก่อนถึงโค้ด</li>
+      <li><span class="badge extra">เสริม</span> pull model (SQS/Kinesis): Lambda เป็นฝ่ายไปอ่าน สิทธิ์จึงอยู่ใน execution role</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="11,12"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s4" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 5 ================= -->
+<section class="sec" id="s5" aria-labelledby="h-s5">
+  <div class="sec-label">05</div>
+  <h2 id="h-s5">Handler</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p><code>handler(event, context)</code> — event คือข้อมูลของสิ่งที่ trigger มา ส่วน context คือข้อมูลของ runtime ในการเรียกครั้งนั้น</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Object</th><th>ส่งอะไรเข้ามา</th><th>ตัวอย่าง</th></tr></thead>
+    <tbody>
+      <tr><td><strong>event</strong></td><td>ข้อมูลของ event ที่ trigger มา รูปแบบที่ AWS กำหนดไว้แล้วตามแหล่งที่มา ทดสอบด้วย custom (test) event ได้</td><td>ชื่อ bucket และ key ของไฟล์จาก S3, body ของ HTTP request จาก API Gateway</td></tr>
+      <tr><td><strong>context</strong></td><td>ข้อมูลของ <strong>runtime / การเรียกครั้งนั้น</strong></td><td><code>awsRequestId</code>, <code>getRemainingTimeInMillis()</code>, <code>logStreamName</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="widget" id="w-handler">
+    <div class="widget-head"><span class="tag">สำรวจ</span><h3>Handler explorer — คลิกที่ฟิลด์เพื่อดูว่ามาจากไหน</h3></div>
+    <div class="widget-body">
+      <div class="seg" role="tablist" aria-label="เลือกตัวอย่าง event">
+        <button role="tab" aria-selected="true" data-ev="s3">S3 event</button>
+        <button role="tab" aria-selected="false" data-ev="api">API Gateway event</button>
+      </div>
+      <div class="hx" style="margin-top:14px">
+        <div><h4>handler (Node.js)</h4><pre id="hxCode"></pre></div>
+        <div><h4>event</h4><pre id="hxEvent"></pre><h4 style="margin-top:12px">context</h4><pre id="hxCtx"></pre></div>
+      </div>
+      <div class="legend"><span><i style="background:color-mix(in srgb,var(--info) 30%,transparent)"></i>มาจาก event</span><span><i style="background:color-mix(in srgb,var(--accent) 40%,transparent)"></i>มาจาก context</span></div>
+      <div class="explain" id="hxInfo" aria-live="polite"><p class="muted">คลิกฟิลด์ที่ไฮไลต์อยู่ในโค้ดหรือใน JSON</p></div>
+    </div>
+  </div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>ชื่อ bucket / key ของไฟล์ มาจาก <strong>event</strong> ไม่ใช่ context และไม่ใช่ environment variable</li>
+      <li><code>getRemainingTimeInMillis()</code> เป็น method ของ <strong>context</strong> ใช้ตัดสินใจระหว่างรันว่าควรหยุดก่อน timeout ไหม</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="14,15"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s5" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 6 ================= -->
+<section class="sec" id="s6" aria-labelledby="h-s6">
+  <div class="sec-label">06 · จำตัวเลขไว้</div>
+  <h2 id="h-s6">การตั้งค่าด้านประสิทธิภาพ</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>Memory 128–10,240 MB (CPU ตาม), timeout 1 วินาที–15 นาที, concurrency 1,000 ต่อ Region; reserved = กันโควตา + เพดาน (ฟรี), provisioned = อุ่นเครื่องแก้ cold start (เสียเงิน)</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>การตั้งค่า</th><th>ค่า / ความหมาย</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Memory</strong></td><td><strong>128 MB – 10,240 MB</strong> และ <strong>CPU เพิ่มตาม memory</strong> (ไม่มีช่องให้ตั้ง CPU แยก)</td></tr>
+      <tr><td><strong>Timeout</strong></td><td><strong>1 วินาที – 15 นาที</strong> (900 วินาที)</td></tr>
+      <tr><td><strong>Concurrency</strong></td><td>จำนวน invocation ที่รัน <strong>พร้อมกัน</strong> ค่าเริ่มต้น <strong>1,000 ต่อ Region ต่อ account</strong> เป็น <strong>soft limit</strong> ขอเพิ่มได้</td></tr>
+      <tr><td><strong>Reserved concurrency</strong></td><td><strong>กันโควตา</strong> ไว้ให้ function นั้นโดยเฉพาะ และเป็น <strong>เพดาน</strong> ไม่ให้ใช้เกิน ช่วยไม่ให้ระบบปลายทางรับภาระเกิน <strong>ไม่มีค่าใช้จ่ายเพิ่ม</strong></td></tr>
+      <tr><td><strong>Provisioned concurrency</strong></td><td>เตรียม environment ไว้ล่วงหน้าให้ <strong>อุ่นอยู่ตลอด (keep warm)</strong> แก้ <strong>cold start</strong> <strong>มีค่าใช้จ่ายเพิ่ม</strong></td></tr>
+      <tr><td><strong>Monitoring</strong></td><td>เปิด <strong>X-Ray (active tracing)</strong> และ <strong>CloudWatch Lambda Insights</strong> ได้</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>จำให้ขาด: Reserved vs Provisioned</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>Reserved</th><th>Provisioned</th></tr></thead>
+    <tbody>
+      <tr><td>แก้ปัญหาอะไร</td><td>function อื่นแย่งโควตา / ปลายทางรับโหลดไม่ไหว</td><td>cold start</td></tr>
+      <tr><td>ทำให้ function อุ่นไหม</td><td>ไม่</td><td>ใช่</td></tr>
+      <tr><td>เป็นเพดานไหม</td><td>ใช่</td><td>ไม่ใช่หน้าที่หลัก</td></tr>
+      <tr><td>ค่าใช้จ่าย</td><td>ฟรี</td><td>เสียเงินเพิ่ม</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="widget" id="w-conc">
+    <div class="widget-head"><span class="tag">ทดลอง</span><h3>Concurrency playground</h3></div>
+    <div class="widget-body">
+      <div class="controls">
+        <div class="field"><label for="cReq">request พร้อมกัน <span class="val" id="cReqV"></span></label><input type="range" id="cReq" min="0" max="1500" step="10" value="300"></div>
+        <div class="field"><label for="cProv">provisioned concurrency <span class="val" id="cProvV"></span></label><input type="range" id="cProv" min="0" max="500" step="10" value="0"></div>
+        <div class="field"><span class="lbl"><label class="chip" style="display:inline-flex"><input type="checkbox" id="cResOn"> ตั้ง reserved concurrency</label> <span class="val" id="cResV"></span></span><input type="range" id="cRes" min="0" max="1000" step="10" value="100" disabled aria-label="reserved concurrency"></div>
+        <div class="field"><label for="cMem">memory <span class="val" id="cMemV"></span></label><input type="range" id="cMem" min="128" max="10240" step="64" value="128"></div>
+      </div>
+      <div class="cbar" id="cBar" role="img" aria-label="สัดส่วน request"><div class="seg-warm"></div><div class="seg-cold"></div><div class="seg-thr"></div></div>
+      <div class="clegend" id="cLegend"></div>
+      <ul class="msgs" id="cMsgs" aria-live="polite"></ul>
+      <hr style="border:0;border-top:1px solid var(--line);margin:20px 0 8px">
+      <div class="field"><label for="cTo">timeout <span class="val" id="cToV"></span></label><input type="range" id="cTo" min="1" max="1800" step="1" value="3"></div>
+      <div id="cToMsg" class="hint" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <p><span class="badge extra">เสริม</span></p>
+  <ul>
+    <li>ตั้ง reserved concurrency ให้ function A = 400 จาก 1,000 → function อื่นทั้งหมดใช้ร่วมกันได้ 600</li>
+    <li>ตั้ง reserved concurrency = 0 → function นั้นถูก throttle ทุกครั้ง (ใช้เป็นสวิตช์ปิด function ได้)</li>
+    <li>request ที่เกินโควตาจะถูก <strong>throttle</strong> (sync ได้ error 429, async Lambda จะลองส่งใหม่ให้เอง)</li>
+    <li>ราว 1,769 MB จะได้ CPU เท่ากับ 1 vCPU, ตั้ง memory ได้ทีละ 1 MB</li>
+  </ul>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>อยากปกป้องฐานข้อมูลปลายทาง → <strong>reserved</strong> (ไม่ใช่ provisioned)</li>
+      <li>เจอ cold start / Init Duration สูง → <strong>provisioned</strong> (ไม่ใช่ reserved)</li>
+      <li>ไม่มีช่องตั้ง CPU — อยากได้ CPU เพิ่มให้เพิ่ม <strong>memory</strong></li>
+      <li>15 นาทีเป็นเพดานของ timeout ขอเพิ่มไม่ได้ ต่างจาก concurrency ที่เป็น soft limit</li>
+      <li>1,000 คือต่อ <strong>Region ต่อ account</strong> ไม่ใช่ต่อ function</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="20,21"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s6" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 7 ================= -->
+<section class="sec" id="s7" aria-labelledby="h-s7">
+  <div class="sec-label">07</div>
+  <h2 id="h-s7">Best practices</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>แยก logic ออกจาก handler, ใช้ env var, ห้าม recursive, ห้าม λ เรียก λ ตรง ๆ, ทำให้ stateless และ reuse environment ที่อุ่นอยู่</p></div>
+  <h3>การเขียนโค้ด</h3>
+  <ul>
+    <li><strong>แยก business logic ออกจาก handler</strong> → test ง่าย ย้ายไปใช้ที่อื่นได้</li>
+    <li>เขียนเป็น <strong>module</strong></li>
+    <li>ใส่ <strong>logging</strong></li>
+    <li>ใช้ <strong>environment variables</strong> แทนการ hard-code ค่า เช่น ชื่อตาราง, ชื่อ bucket</li>
+    <li><strong>หลีกเลี่ยง recursive code</strong> (เช่น function เขียนไฟล์ลง bucket เดียวกับที่ trigger ตัวเอง → วนไม่จบ ค่าใช้จ่ายพุ่ง)</li>
+    <li><strong>ไม่ควรให้ function หนึ่งเรียกอีก function หนึ่งโดยตรง</strong> อาจารย์วาดให้ดูว่า λ1 → λ2 ทำให้จำนวน invocation <strong>ทวีคูณ</strong> และถ้ามี error ก็จะ <strong>ลามต่อกัน</strong> (cascading failure)<br><span class="badge extra">เสริม</span> ถ้าเรียกแบบรอผล λ1 ต้องเสียเงินช่วงที่นั่งรอ λ2 ด้วย ควรใช้คิว (SQS/SNS) หรือ Step Functions คั่นกลางแทน</li>
+  </ul>
+  <h3>สภาพแวดล้อม</h3>
+  <ul>
+    <li>ทำ function ให้ <strong>stateless</strong> อย่าเก็บ state ไว้ในเครื่อง เพราะการเรียกครั้งถัดไปอาจไปรันคนละ environment</li>
+    <li>ใส่ <strong>เฉพาะสิ่งที่จำเป็น</strong> (package เล็ก → cold start เร็ว)</li>
+    <li><strong>reuse runtime environment ชั่วคราว</strong> ที่มีอยู่ เช่น สร้าง DB client / SDK client <strong>นอก handler</strong> เพื่อให้การเรียกครั้งถัดไปที่ได้ environment เดิม (warm) ใช้ connection เดิมได้</li>
+  </ul>
+
+  <div class="widget" id="w-gb">
+    <div class="widget-head"><span class="tag">เทียบ</span><h3>Good vs Bad</h3></div>
+    <div class="widget-body">
+      <div class="seg" role="tablist" aria-label="เลือกหัวข้อ" id="gbTabs"></div>
+      <div class="gb" id="gbBody"></div>
+      <div class="explain" id="gbExp"></div>
+      <h4 style="margin:24px 0 4px;font-size:15px">λ1 เรียก λ2 ตรง ๆ เกิดอะไรขึ้น</h4>
+      <div class="controls">
+        <div class="field"><label for="chReq">จำนวน request <span class="val" id="chReqV"></span></label><input type="range" id="chReq" min="1" max="100" value="10"></div>
+        <div class="field"><label for="chDepth">ความยาวสาย (จำนวน function ที่เรียกต่อกัน) <span class="val" id="chDepthV"></span></label><input type="range" id="chDepth" min="1" max="4" value="2"></div>
+      </div>
+      <div class="row"><label class="chip"><input type="checkbox" id="chErr"> ให้ function ตัวสุดท้าย error</label>
+        <div class="seg" role="group" aria-label="รูปแบบการเชื่อม"><button aria-pressed="true" data-ch="direct">เรียกตรง</button><button aria-pressed="false" data-ch="queue">คั่นด้วยคิว</button></div></div>
+      <div class="chain" id="chain"></div>
+      <ul class="msgs" id="chMsgs" aria-live="polite"></ul>
+    </div>
+  </div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>"reuse environment" คือใช้ซ้ำเพื่อ <strong>ประสิทธิภาพ</strong> (cache, connection) ไม่ได้แปลว่าให้ฝาก <strong>state ที่ต้องถูกต้อง</strong> ไว้ในนั้น</li>
+      <li>λ เรียก λ ได้ทางเทคนิค — แต่ไม่ควรทำ (ช้อย "IAM ไม่อนุญาต" เป็นช้อยหลอก)</li>
+      <li>เขียนผลลัพธ์ลง bucket เดียวกับที่ trigger = recursive</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="24,25"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s7" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 8 ================= -->
+<section class="sec" id="s8" aria-labelledby="h-s8">
+  <div class="sec-label">08</div>
+  <h2 id="h-s8">Deployment</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>deploy ได้ทั้ง .zip และ container image (ผ่าน ECR), publish แล้วได้ version ที่แก้ไม่ได้, alias เป็นตัวชี้ไป version และ layer คือ library ที่ใช้ร่วมกัน</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>หัวข้อ</th><th>รายละเอียด</th></tr></thead>
+    <tbody>
+      <tr><td><strong>.zip archive</strong></td><td>เลือก runtime <strong>ตอนสร้าง function</strong> แล้ว zip โค้ดกับ dependencies อัปโหลดขึ้นไป</td></tr>
+      <tr><td><strong>Container image</strong></td><td>เลือก runtime และ Linux distribution <strong>ตอนสร้าง image</strong> แล้วอัปโหลดขึ้น <strong>Amazon ECR</strong></td></tr>
+      <tr><td><strong>Versioning</strong></td><td>ตอน publish จะได้ version ที่ <strong>แก้ไขไม่ได้ (immutable)</strong> เช่น <code>:1</code> ส่วน <strong><code>$LATEST</code></strong> คือตัวที่กำลังแก้อยู่ (แก้ได้)</td></tr>
+      <tr><td><strong>Alias</strong></td><td>เช่น <code>PROD</code> เป็น <strong>ตัวชี้</strong> ไปยัง version ที่ต้องการ ข้อดีคือ event source <strong>ไม่ต้องเปลี่ยน ARN</strong> ทุกครั้งที่ออก version ใหม่ แค่ย้าย alias</td></tr>
+      <tr><td><strong>Layers</strong></td><td>library ที่ <strong>หลาย function ใช้ร่วมกัน</strong> ได้</td></tr>
+      <tr><td><strong>Runtime</strong></td><td>มี runtime สำเร็จรูปให้ และสร้าง <strong>custom runtime</strong> เองก็ได้</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="widget" id="w-ver">
+    <div class="widget-head"><span class="tag">ลองเล่น</span><h3>Version & alias visualizer</h3></div>
+    <div class="widget-body">
+      <div class="row">
+        <button class="btn" id="vEdit">แก้โค้ดใน $LATEST</button>
+        <button class="btn btn-primary" id="vPub">Publish version</button>
+        <label class="row" style="gap:6px;font-size:14px">ย้าย alias PROD ไป <select id="vAlias" aria-label="version ที่ alias PROD ชี้"></select></label>
+        <button class="btn btn-sm" id="vTamper">ลองแก้ version ที่ publish แล้ว</button>
+      </div>
+      <div class="vrow" id="vRow"></div>
+      <div class="field" style="margin-top:4px"><span class="lbl">S3 trigger ชี้ไปที่</span><div class="arn" id="vArn"></div></div>
+      <ul class="log" id="vLog" aria-live="polite"></ul>
+    </div>
+  </div>
+  <p><span class="badge extra">เสริม</span> alias ยังแบ่ง traffic ระหว่าง 2 version ได้ (เช่น 90/10) สำหรับทำ canary release</p>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>version ที่ publish แล้ว <strong>immutable</strong> — <code>$LATEST</code> ต่างหากที่แก้ได้ (ช้อยมักสลับกัน)</li>
+      <li>alias <strong>ย้ายได้</strong> นั่นคือหน้าที่ของมัน</li>
+      <li>ให้ trigger ชี้ <code>$LATEST</code> ใน production ไม่ดี เพราะโค้ดเปลี่ยนตลอดขณะพัฒนา</li>
+      <li>container image → <strong>ECR</strong> ไม่ใช่ S3 หรือ Layers</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="28,29"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s8" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 9 ================= -->
+<section class="sec" id="s9" aria-labelledby="h-s9">
+  <div class="sec-label">09</div>
+  <h2 id="h-s9">Monitoring และ AWS X-Ray</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>CloudWatch เก็บ log/metric ของแต่ละ function (ดู Init Duration = cold start) ส่วน X-Ray trace request ข้ามหลายบริการเป็น service map</p></div>
+  <h3>ทำไมแอปสมัยใหม่ monitor ยาก</h3>
+  <ul><li>resource มี <strong>อายุสั้น</strong> (environment เกิดแล้วหายไป)</li><li>มี <strong>อุปกรณ์และบริการเยอะ</strong></li><li>ออก <strong>release ถี่</strong></li></ul>
+  <h3>CloudWatch Logs</h3>
+  <div class="loghier"><span>Log group <code>/aws/lambda/&lt;ชื่อ function&gt;</code></span>→<span>Log stream</span>→<span>Log events</span></div>
+
+  <div class="widget" id="w-report">
+    <div class="widget-head"><span class="tag">ถอดรหัส</span><h3>บรรทัด REPORT ใน CloudWatch</h3></div>
+    <div class="widget-body">
+      <div class="seg" role="tablist" aria-label="เลือกตัวอย่าง">
+        <button role="tab" aria-selected="true" data-rp="cold">Cold start</button>
+        <button role="tab" aria-selected="false" data-rp="warm">Warm start</button>
+      </div>
+      <div class="report" id="rpLine" style="margin-top:14px"></div>
+      <div class="explain" id="rpInfo" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <h3>AWS X-Ray</h3>
+  <ul>
+    <li><strong>trace</strong> request ที่วิ่งผ่านหลายบริการ แล้ววาดเป็น <strong>service map</strong></li>
+    <li>ใช้หา <strong>latency</strong>, หาจุดผิดปกติ (<strong>outlier</strong>), debug ระบบแบบ <strong>distributed</strong></li>
+    <li>เปิดใช้กับ Lambda ได้ใน <strong>คลิกเดียว</strong> (active tracing)</li>
+    <li>ถ้าใช้ <strong>X-Ray SDK</strong> จะเก็บข้อมูลการเรียก API ผ่าน <strong>AWS SDK</strong> ได้ด้วย (เช่นเห็นว่าการเรียก DynamoDB ใช้เวลาเท่าไร)</li>
+  </ul>
+  <div class="widget" id="w-xray">
+    <div class="widget-head"><span class="tag">ดูภาพ</span><h3>X-Ray service map</h3></div>
+    <div class="widget-body">
+      <label class="chip"><input type="checkbox" id="xSdk"> ใช้ X-Ray SDK ห่อการเรียก AWS SDK</label>
+      <div class="flow" id="xMap" style="margin-top:16px"></div>
+      <div class="explain" id="xInfo" aria-live="polite"></div>
+    </div>
+  </div>
+  <div class="callout note"><span class="k">แยกให้ออก</span><p>CloudWatch = log + metric ของแต่ละ function / X-Ray = เส้นทาง request ข้ามหลายบริการ</p></div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li><strong>Init Duration</strong> = cold start (ไม่ใช่ Duration หรือ Billed Duration) และมีเฉพาะการเรียกที่เป็น cold start</li>
+      <li>รูปแบบ log group คือ <code>/aws/lambda/&lt;name&gt;</code> ช้อยหลอกมักสลับลำดับคำ</li>
+      <li>อยากเห็นเวลาเรียก DynamoDB ภายใน function → ต้องใช้ <strong>X-Ray SDK</strong> เพิ่ม</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="31,33"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s9" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 10 ================= -->
+<section class="sec" id="s10" aria-labelledby="h-s10">
+  <div class="sec-label">10</div>
+  <h2 id="h-s10">Lab</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>เปลี่ยน mock endpoint ใน API Gateway จากแลบก่อน ให้เป็น endpoint จริงที่ใช้ Lambda ดึงข้อมูลจาก DynamoDB</p></div>
+  <div class="widget" id="w-lab">
+    <div class="widget-head"><span class="tag">เช็กลิสต์</span><h3>ขั้นตอนแลบ (ตามที่โชว์ในแลบ)</h3><span class="hint" id="labCount" style="margin-left:auto"></span></div>
+    <div class="widget-body">
+      <ol class="lsteps" id="labSteps"></ol>
+    </div>
+  </div>
+  <p class="hint">ขั้นตอนนี้เรียงจากคำอธิบายแลบแบบย่อ อาจไม่ตรงกับที่อาจารย์ทำทุกคลิก</p>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul><li>แลบนี้ต้องมีสิทธิ์ทั้ง <strong>2 ฝั่ง</strong>: API Gateway เรียก Lambda (resource-based policy) + Lambda อ่าน DynamoDB (execution role)</li><li>provisioned concurrency ไม่ใช่เงื่อนไขจำเป็นของการเชื่อม API Gateway กับ Lambda</li></ul>
+  </div>
+  <div class="mini" data-qids="36"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s10" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= FLASHCARDS ================= -->
+<section class="sec" id="flashcards" aria-labelledby="h-fc">
+  <div class="sec-label">ทบทวน</div>
+  <h2 id="h-fc">Flashcards</h2>
+  <p class="muted">คลิกการ์ดหรือกด <kbd>Space</kbd> เพื่อพลิก แล้วบอกตัวเองว่าจำได้หรือยัง การ์ดที่ยังจำไม่ได้จะวนกลับมาอีก</p>
+  <div class="fc-wrap">
+    <button class="fc" id="fcCard" aria-live="polite">
+      <div class="fc-inner">
+        <div class="fc-face fc-front"><span class="k">คำถาม</span><div class="t" id="fcFront"></div></div>
+        <div class="fc-face fc-back"><span class="k">คำตอบ</span><div class="t" id="fcBack"></div></div>
+      </div>
+    </button>
+    <div class="fc-bar">
+      <span class="fc-count" id="fcCount"></span>
+      <div class="row">
+        <button class="btn btn-sm" id="fcPrev">ก่อนหน้า</button>
+        <button class="btn btn-sm" id="fcShuffle">สุ่ม</button>
+        <button class="btn btn-sm" id="fcNext">ถัดไป</button>
+      </div>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:12px">
+      <button class="btn" id="fcNo">ยังไม่ได้</button>
+      <button class="btn btn-primary" id="fcYes">จำได้</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CHEATSHEET ================= -->
+<section class="sec" id="cheatsheet" aria-labelledby="h-cs">
+  <div class="sec-label">ทบทวน</div>
+  <h2 id="h-cs">สรุปหน้าเดียวก่อนเข้าห้องสอบ</h2>
+  <div class="row" style="margin-top:12px"><button class="btn btn-sm" id="printCheat">พิมพ์เฉพาะหน้านี้</button></div>
+  <div class="cheat">
+    <div><h4>บทบาท</h4><ul><li><strong>Lambda</strong> = serverless compute</li><li><strong>Fargate</strong> = serverless container</li></ul></div>
+    <div><h4>Sync</h4><ul><li>API Gateway</li><li>รอผล, Lambda ไม่ retry</li><li><code>RequestResponse</code></li></ul></div>
+    <div><h4>Async</h4><ul><li>S3</li><li>เข้าคิว, retry 0–2 (รวม 3 ครั้ง)</li><li><code>Event</code></li></ul></div>
+    <div><h4>Poll</h4><ul><li>Kinesis / SQS / DynamoDB Streams</li><li>event source mapping, batch</li></ul></div>
+    <div><h4>Destinations</h4><ul><li>async + event source mapping</li><li>On success / On failure</li></ul></div>
+    <div><h4>Permissions</h4><ul><li><strong>ใครเรียก Lambda</strong> → resource-based policy</li><li><strong>Lambda ไปเรียกใคร</strong> → execution role</li></ul></div>
+    <div><h4>Handler</h4><ul><li><code>handler(event, context)</code></li><li>event = ข้อมูล trigger</li><li>context = ข้อมูล runtime</li></ul></div>
+    <div><h4>ตัวเลข</h4><ul><li>Memory 128–10,240 MB (CPU ตาม)</li><li>Timeout 1 วิ – 15 นาที</li><li>Concurrency 1,000/Region (soft)</li></ul></div>
+    <div><h4>Concurrency</h4><ul><li><strong>Reserved</strong> = กันโควตา + เพดาน + ฟรี</li><li><strong>Provisioned</strong> = อุ่นเครื่อง แก้ cold start + เสียเงิน</li></ul></div>
+    <div><h4>Deployment</h4><ul><li>Version immutable, <code>$LATEST</code> แก้ได้</li><li>Alias = pointer, Layer = library ร่วม</li><li>image → ECR</li></ul></div>
+    <div><h4>Monitoring</h4><ul><li>Init Duration = cold start</li><li>Log group <code>/aws/lambda/&lt;name&gt;</code></li><li>X-Ray = service map ข้ามบริการ</li></ul></div>
+    <div><h4>Best practice</h4><ul><li>ห้าม recursive, ห้าม λ เรียก λ ตรง ๆ</li><li>stateless, init client นอก handler</li></ul></div>
+  </div>
+  <h3>ตัวอย่างการตอบแบบสั้นตรงจุด</h3>
+  <blockquote>"Lambda คือที่รันโค้ดตาม event โดยไม่ต้องดูแลเซิร์ฟเวอร์ จ่ายเฉพาะตอนรัน ถ้าเรียกแบบ sync ผู้เรียกจะรอผลและไม่มี retry ส่วนแบบ async จะเข้าคิวและ retry ได้ 2 ครั้ง สิทธิ์มี 2 ฝั่ง คือ event source ต้องมีสิทธิ์เรียก Lambda และ Lambda ต้องมี execution role เพื่อเข้าถึงบริการอื่น ถ้าเจอ cold start ให้แก้ด้วย provisioned concurrency"</blockquote>
+</section>
+
+<!-- ================= QUIZ ================= -->
+<section class="sec" id="quiz" aria-labelledby="h-quiz">
+  <div class="sec-label">ข้อสอบจำลอง</div>
+  <h2 id="h-quiz">ข้อสอบปรนัย</h2>
+  <p class="muted">ข้อสอบส่วนใหญ่เป็นโจทย์สถานการณ์ ช้อยหลอกมาจากจุดที่สับสนจริง ลำดับข้อและลำดับช้อยสลับทุกครั้ง</p>
+
+  <div class="qpanel" id="qSetup">
+    <div class="field"><span class="lbl">โหมด</span>
+      <div class="seg" role="group" aria-label="โหมด" id="qMode">
+        <button aria-pressed="true" data-m="practice">ฝึกซ้อม — เห็นเฉลยทันที</button>
+        <button aria-pressed="false" data-m="timed">จับเวลา — 20 ข้อ 25 นาที</button>
+      </div>
+    </div>
+    <div class="field"><span class="lbl">หัวข้อ</span><div class="chips" id="qTopics"></div></div>
+    <div class="field"><span class="lbl">ระดับความยาก</span><div class="chips" id="qDiffs"></div></div>
+    <div class="controls">
+      <div class="field"><label for="qCount">จำนวนข้อ</label><select id="qCount"><option value="10">10 ข้อ</option><option value="20" selected>20 ข้อ</option><option value="all">ทั้งหมด</option></select></div>
+      <div class="field"><span class="lbl">ตัวเลือกเพิ่ม</span><label class="chip" style="align-self:flex-start"><input type="checkbox" id="qOnlyBm"> เฉพาะข้อที่ bookmark ไว้ <span id="qBmN" class="muted"></span></label></div>
+    </div>
+    <p class="hint" id="qPoolInfo"></p>
+    <div class="row"><button class="btn btn-primary" id="qStart">เริ่มทำข้อสอบ</button><span class="hint" id="qHistory"></span></div>
+    <p class="hint" style="margin-bottom:0">คีย์ลัด: <kbd>1</kbd>–<kbd>4</kbd> หรือ <kbd>A</kbd>–<kbd>D</kbd> เลือกช้อย · <kbd>Enter</kbd> ไปข้อถัดไป</p>
+  </div>
+
+  <div class="qpanel" id="qRun" hidden>
+    <div class="qtop">
+      <span id="qNum"></span><span class="pill" id="qTopic"></span><span class="pill" id="qDiff"></span>
+      <span class="spacer"></span>
+      <span class="timer" id="qTimer" hidden></span>
+      <button class="bm" id="qBm" aria-pressed="false">☆ Bookmark</button>
+    </div>
+    <div class="qbar"><i id="qBar"></i></div>
+    <p class="qq" id="qText"></p>
+    <div class="choices" id="qChoices"></div>
+    <div id="qFb" aria-live="polite"></div>
+    <div class="qnav">
+      <button class="btn" id="qPrev">ย้อนกลับ</button>
+      <div class="row"><button class="btn" id="qQuit">ออก</button><button class="btn btn-primary" id="qNext">ถัดไป</button></div>
+    </div>
+    <div class="dots" id="qDots" aria-label="ไปยังข้อ"></div>
+  </div>
+
+  <div class="qpanel" id="qResult" hidden tabindex="-1">
+    <div class="score-big"><b id="rScore"></b><span id="rPct"></span></div>
+    <p id="rMsg"></p>
+    <h3 style="margin-top:20px">คะแนนแยกตามหัวข้อ</h3>
+    <div class="tbars" id="rBars"></div>
+    <div class="callout trap" id="rWeak"></div>
+    <div class="row"><button class="btn btn-primary" id="rRetryWrong">ทำเฉพาะข้อที่ผิดอีกรอบ</button><button class="btn" id="rRestart">เริ่มใหม่</button></div>
+    <h3 id="rWrongH">ข้อที่ผิด / ไม่ได้ตอบ</h3>
+    <div id="rWrong"></div>
+  </div>
+</section>
+
+<nav class="weeknav" aria-label="บทอื่น"><a class="next" href="Week10.html"><small>บทถัดไป →</small><b>Week 10 · Containers บน AWS และ Caching</b></a><a class="home" href="index.html"><small>กลับไปเลือกบท</small><b>ทุกบท (หน้ารวม)</b></a></nav>
+<footer>
+  <p>สรุปจากสไลด์ Module 7: Developing Event-Driven Serverless Solutions และสิ่งที่อาจารย์เขียนเพิ่มบนสไลด์ในคลิป ส่วนที่ติดป้าย "เสริม" มาจากเอกสาร AWS</p>
+  <p><strong>เช็กประกาศของวิชา:</strong> ช่วงท้ายคลิปเหมือนอาจารย์พูดถึงการเปลี่ยนวันนัดหรือวันสอบ (มีคำว่า "วันที่ 22" กับ "25") แต่เสียงที่ถอดออกมาเพี้ยนจนจับใจความไม่ได้</p>
+  <p>ยังไม่ทราบรูปแบบข้อสอบ (ปรนัยแบบ Knowledge Check / เขียนอธิบาย / สอบปากเปล่า) และยังไม่ทราบว่าสอบส่วนแลบหรือไม่</p>
+</footer>
+
+</div>
+</main>
+</div>
+<script>
+/* ================= DATA ================= */
+const TOPICS = [
+  { key: 'Serverless', label: 'Serverless', sec: 's1' },
+  { key: 'Lambda basics', label: 'Lambda พื้นฐาน', sec: 's2' },
+  { key: 'Invocation', label: 'Invocation', sec: 's3' },
+  { key: 'Permissions', label: 'Permissions', sec: 's4' },
+  { key: 'Handler', label: 'Handler', sec: 's5' },
+  { key: 'Configuration', label: 'Configuration', sec: 's6' },
+  { key: 'Concurrency', label: 'Concurrency', sec: 's6' },
+  { key: 'Best practice', label: 'Best practice', sec: 's7' },
+  { key: 'Deployment', label: 'Deployment', sec: 's8' },
+  { key: 'Monitoring', label: 'Monitoring', sec: 's9' },
+  { key: 'Lab', label: 'Lab', sec: 's10' }
+];
+const DIFFS = ['กลาง', 'ยาก', 'ยากมาก'];
+
+const QUESTIONS = [
+  { id: 1, topic: 'Serverless', difficulty: 'กลาง',
+    question: 'ข้อใดอธิบายความต่างระหว่าง AWS Lambda กับ AWS Fargate ได้ถูกต้องที่สุด',
+    choices: ['Lambda เป็น serverless infrastructure สำหรับ container ส่วน Fargate เป็น serverless compute สำหรับรันฟังก์ชัน',
+              'Lambda เป็น serverless compute สำหรับรันโค้ดตาม event ส่วน Fargate เป็น serverless infrastructure สำหรับรัน container',
+              'ทั้งสองเป็น VM ที่ AWS patch OS ให้ แต่ Fargate คิดเงินรายชั่วโมง',
+              'Fargate ต้องเลือก EC2 instance type เอง ส่วน Lambda ไม่ต้อง'],
+    answer: 1,
+    explain: 'อาจารย์เน้นว่า Lambda = serverless compute และ Fargate = serverless infrastructure สำหรับ container',
+    whyWrong: { 0: 'สลับบทบาทกัน', 2: 'ทั้งคู่ไม่ใช่ VM ที่เราเห็น และเราไม่ต้องยุ่งกับ OS', 3: 'จุดเด่นของ Fargate คือไม่ต้องจัดการ EC2 instance เอง' } },
+
+  { id: 2, topic: 'Serverless', difficulty: 'กลาง',
+    question: 'ข้อใด <strong>ไม่ใช่</strong> คุณสมบัติของระดับ Serverless ตามสไลด์',
+    choices: ['scale อัตโนมัติ', 'จ่ายตามที่ใช้ และ scale to zero ได้', 'ผู้ใช้ต้อง patch และ monitor OS เอง', 'มี fault tolerance ในตัว'],
+    answer: 2,
+    explain: 'การดูแล OS เป็นภาระของระดับ VM (EC2) ใน serverless ไม่มี OS ให้ดูแล',
+    whyWrong: { 0: 'scale อัตโนมัติเป็นข้อดีของ serverless ตามสไลด์', 1: 'จ่ายตามที่ใช้และ scale to zero เป็นข้อดีของ serverless', 3: 'fault tolerance ในตัวเป็นข้อดีของ serverless' } },
+
+  { id: 3, topic: 'Serverless', difficulty: 'ยาก',
+    question: 'แอปแบบ event-driven ที่ scale to zero ได้ จะมีข้อเสียที่ตามมาโดยตรงข้อใด',
+    choices: ['ต้องจ่ายค่าเครื่องตลอดเวลาแม้ไม่มี request', 'ต้องเดาความจุล่วงหน้าเหมือน on-premises', 'request แรกหลังว่างนานอาจช้าเพราะเกิด cold start', 'ไม่สามารถเชื่อมกับบริการ AWS อื่นได้'],
+    answer: 2,
+    explain: 'เมื่อไม่มี environment อุ่นอยู่ AWS ต้องเตรียมใหม่ ทำให้ request แรกช้า',
+    whyWrong: { 0: 'scale to zero แปลว่าไม่จ่ายตอนว่าง', 1: 'serverless scale อัตโนมัติ ไม่ต้องเดาความจุ', 3: 'Lambda integrate กับบริการอื่นได้ เป็นหนึ่งในฟีเจอร์' } },
+
+  { id: 4, topic: 'Invocation', difficulty: 'ยาก',
+    question: 'API Gateway เรียก Lambda function แล้ว function โยน error ออกมา จะเกิดอะไรขึ้น',
+    choices: ['Lambda นำ event เข้าคิวและ retry ให้อีก 2 ครั้งโดยอัตโนมัติ',
+              'error ถูกส่งกลับไปยังผู้เรียก Lambda ไม่ retry ให้ ผู้เรียกต้องตัดสินใจ retry เอง',
+              'Lambda ส่ง event ไป Destination แบบ On failure ที่ตั้งไว้',
+              'API Gateway ได้ status 202 Accepted แล้ว Lambda ไปจัดการ error ภายหลัง'],
+    answer: 1,
+    explain: 'API Gateway เรียกแบบ synchronous ผู้เรียกรอผล และไม่มี retry ในตัว',
+    whyWrong: { 0: 'เป็นพฤติกรรมของ async', 2: 'Destinations ใช้กับ async และ event source mapping ไม่ใช่ sync', 3: 'การตอบรับทันทีแล้วค่อยประมวลผลเป็นลักษณะของ async' } },
+
+  { id: 5, topic: 'Invocation', difficulty: 'ยาก',
+    question: 'อัปโหลดไฟล์ลง S3 แล้ว trigger Lambda แต่ function error ทุกครั้งด้วยการตั้งค่าเริ่มต้น function จะถูกรัน <strong>ทั้งหมดกี่ครั้ง</strong> สำหรับ event นี้',
+    choices: ['1 ครั้ง', '2 ครั้ง', '4 ครั้ง', '3 ครั้ง'],
+    answer: 3,
+    explain: 'S3 เรียกแบบ async ค่าเริ่มต้น retry 2 ครั้ง รวมครั้งแรกเป็น 3 ครั้ง',
+    whyWrong: { 0: 'เป็นพฤติกรรมเมื่อตั้ง retry = 0 หรือแบบ sync', 1: 'สับสน "retry 2 ครั้ง" กับ "รันทั้งหมด 2 ครั้ง"', 2: 'retry สูงสุดคือ 2 ไม่ใช่ 3' } },
+
+  { id: 6, topic: 'Invocation', difficulty: 'กลาง',
+    question: 'ถ้าเรียก Lambda ผ่าน API ให้ทำงานแบบ asynchronous ต้องใส่ InvocationType เป็นค่าใด',
+    choices: ['<code>RequestResponse</code>', '<code>Async</code>', '<code>Event</code>', '<code>Queue</code>'],
+    answer: 2,
+    explain: 'async ใช้ InvocationType = <code>Event</code>',
+    whyWrong: { 0: '<code>RequestResponse</code> คือ sync', 1: 'ไม่มี InvocationType ชื่อนี้', 3: 'ไม่มี InvocationType ชื่อนี้' } },
+
+  { id: 7, topic: 'Invocation', difficulty: 'ยาก',
+    question: 'บริการใดที่ Lambda ใช้ <strong>event source mapping</strong> เพื่อ poll ข้อมูลมาเป็น batch',
+    choices: ['API Gateway, S3, SNS', 'Kinesis, SQS, DynamoDB Streams', 'S3, DynamoDB Streams, CloudWatch Logs', 'Kinesis, API Gateway, SQS'],
+    answer: 1,
+    explain: 'pull model ใช้กับ Kinesis, SQS, DynamoDB Streams',
+    whyWrong: { 0: 'ทั้งหมดเป็น push (API Gateway = sync, S3/SNS = async)', 2: 'S3 เป็น push แบบ async', 3: 'API Gateway เป็น push แบบ sync' } },
+
+  { id: 8, topic: 'Invocation', difficulty: 'ยาก',
+    question: 'ระบบวิเคราะห์ hashtag ส่งข้อมูล social media เข้า Kinesis แล้วให้ Lambda คำนวณ trend ข้อใดอธิบายการเรียก function ถูกต้อง',
+    choices: ['Kinesis push event แต่ละ record ไปเรียก Lambda แบบ sync ทีละรายการ',
+              'Kinesis เรียก Lambda แบบ async และ retry ให้ 2 ครั้ง',
+              'Lambda poll stream ผ่าน event source mapping แล้วเรียก function พร้อมข้อมูลเป็น batch',
+              'ต้องมี API Gateway คั่นกลางเพื่อแปลง stream เป็น HTTP request'],
+    answer: 2,
+    explain: 'Kinesis เป็นแหล่งข้อมูลแบบ poll — Lambda เป็นฝ่ายไปดึงข้อมูลมาเป็น batch',
+    whyWrong: { 0: 'Kinesis ไม่ได้เป็นฝ่าย push', 1: 'Kinesis ไม่ได้เป็นฝ่าย push และไม่ใช่ async invocation', 3: 'ไม่จำเป็น Lambda อ่าน stream ได้โดยตรง' } },
+
+  { id: 9, topic: 'Invocation', difficulty: 'ยากมาก',
+    question: 'ทีมต้องการให้ระบบส่งการแจ้งเตือนผ่าน SNS เมื่อ Lambda ที่ถูก S3 เรียกยังล้มเหลวหลัง retry ครบแล้ว ควรตั้งค่าอย่างไร',
+    choices: ['ตั้ง Destination แบบ On failure ชี้ไปที่ SNS topic',
+              'ตั้ง Destination แบบ On success ชี้ไปที่ SNS แล้วเช็กค่า error ในข้อความ',
+              'เปิด X-Ray active tracing แล้วให้ X-Ray ส่ง SNS',
+              'ตั้ง reserved concurrency = 0 เพื่อให้ error ถูกส่งไป SNS'],
+    answer: 0,
+    explain: 'Destinations ใช้กับการเรียกแบบ async ได้ และเลือกเงื่อนไข On failure',
+    whyWrong: { 1: 'On success ส่งเฉพาะตอนสำเร็จ', 2: 'X-Ray ใช้ trace ไม่ได้มีหน้าที่ส่งแจ้งเตือน', 3: 'reserved = 0 ทำให้ function ถูก throttle ทั้งหมด ไม่ได้ส่งอะไรไป SNS' } },
+
+  { id: 10, topic: 'Invocation', difficulty: 'ยากมาก',
+    question: 'ข้อใดกล่าวถูกต้องเกี่ยวกับ Lambda Destinations',
+    choices: ['ใช้ได้กับทุกรูปแบบการเรียก รวมถึง API Gateway แบบ sync',
+              'ใช้ได้เฉพาะเมื่อ function สำเร็จ',
+              'ใช้ส่งผลลัพธ์ของการเรียกแบบ async และ event source mapping ไปยังปลายทาง เช่น SNS โดยเลือก On success หรือ On failure ได้',
+              'ใช้แทน IAM execution role ในการให้สิทธิ์ function เข้าถึง SNS'],
+    answer: 2,
+    explain: 'ตรงกับสิ่งที่อาจารย์โชว์ในแลบ',
+    whyWrong: { 0: 'sync ส่งผลกลับผู้เรียกโดยตรง ไม่ใช้ Destinations', 1: 'มีทั้ง On success และ On failure', 3: 'Destinations ไม่ได้แทนเรื่องสิทธิ์ การส่งไป Destination ยังต้องใช้สิทธิ์ใน execution role' } },
+
+  { id: 11, topic: 'Permissions', difficulty: 'ยาก',
+    question: 'Lambda ที่ถูก trigger จาก S3-source อ่านรูปได้ปกติ แต่ล้มเหลวด้วย <code>AccessDenied</code> ตอนเขียนไฟล์ .PNG ลง S3-dest ต้องแก้ที่ใด',
+    choices: ['เพิ่ม <code>lambda:InvokeFunction</code> ให้ S3-dest ใน resource-based policy ของ function',
+              'เพิ่มสิทธิ์ <code>s3:PutObject</code> บน S3-dest ใน IAM execution role ของ function',
+              'เปิด versioning ของ S3-dest',
+              'เพิ่ม provisioned concurrency ให้ function'],
+    answer: 1,
+    explain: 'Lambda ไปเข้าถึงบริการอื่น = สิทธิ์ขาออก ตั้งที่ execution role',
+    whyWrong: { 0: 'resource-based policy คุมว่าใครเรียก Lambda ได้ ไม่ใช่ Lambda ไปเขียนอะไรได้', 2: 'versioning ไม่เกี่ยวกับสิทธิ์', 3: 'provisioned concurrency เป็นเรื่อง cold start' } },
+
+  { id: 12, topic: 'Permissions', difficulty: 'ยาก',
+    question: 'ตั้ง trigger ให้ S3 เรียก Lambda แล้ว แต่พบว่า function <strong>ไม่ถูกเรียกเลย</strong> และไม่มี log ใด ๆ สาเหตุที่น่าจะเป็นมากที่สุดคือข้อใด',
+    choices: ['execution role ไม่มีสิทธิ์ <code>s3:GetObject</code>', 'memory ของ function น้อยเกินไป',
+              'resource-based policy ของ function ไม่อนุญาตให้ S3 เรียก <code>lambda:InvokeFunction</code>', 'timeout ตั้งไว้ 1 วินาที'],
+    answer: 2,
+    explain: 'ถ้าผู้เรียกไม่มีสิทธิ์เรียก function จะไม่เริ่มทำงานเลย จึงไม่มี log',
+    whyWrong: { 0: 'ถ้าขาด GetObject function จะถูกเรียกแล้ว error ตอนอ่าน (จะมี log)', 1: 'function ต้องถูกเรียกก่อนถึงจะเจอปัญหา memory และจะมี log', 3: 'function ต้องถูกเรียกก่อนถึงจะเจอปัญหา timeout และจะมี log' } },
+
+  { id: 13, topic: 'Permissions', difficulty: 'ยากมาก',
+    question: 'Lambda ดึงข้อความจาก SQS ผ่าน event source mapping สิทธิ์ในการอ่านคิว (<code>sqs:ReceiveMessage</code>) ควรอยู่ที่ใด',
+    choices: ['resource-based policy ของ Lambda function', 'ไม่ต้องตั้ง เพราะ event source mapping ข้ามการตรวจสิทธิ์',
+              'bucket policy ของ S3', 'IAM execution role ของ Lambda เพราะ Lambda เป็นฝ่ายไป poll คิว'],
+    answer: 3,
+    explain: 'ใน pull model Lambda เป็นฝ่ายเข้าถึง SQS จึงเป็นสิทธิ์ขาออก (execution role) — ความรู้เสริม',
+    whyWrong: { 0: 'resource-based policy ใช้เมื่อบริการอื่น push มาเรียก Lambda', 1: 'ทุกการเข้าถึงต้องมีสิทธิ์', 2: 'ไม่เกี่ยวกับ S3' } },
+
+  { id: 14, topic: 'Handler', difficulty: 'กลาง',
+    question: 'ใน handler ของ function ที่ถูก S3 trigger ชื่อ bucket และ key ของไฟล์ที่อัปโหลดหาได้จากที่ใด',
+    choices: ['<code>context.awsRequestId</code>', '<code>context.logStreamName</code>', 'environment variables', '<code>event</code> object'],
+    answer: 3,
+    explain: 'ข้อมูลของ event ที่ trigger มาอยู่ใน event object',
+    whyWrong: { 0: 'เป็นข้อมูล runtime ของการเรียก ไม่ใช่ข้อมูลไฟล์', 1: 'เป็นข้อมูล runtime ของการเรียก ไม่ใช่ข้อมูลไฟล์', 2: 'env var เป็นค่าคงที่ที่ตั้งไว้ ไม่เปลี่ยนตามไฟล์ที่อัปโหลด' } },
+
+  { id: 15, topic: 'Handler', difficulty: 'ยาก',
+    question: 'function ประมวลผลรายการเป็นชุด และต้องการหยุดอย่างปลอดภัยก่อนหมดเวลา ควรใช้สิ่งใด',
+    choices: ['<code>event.timeout</code>', '<code>context.getRemainingTimeInMillis()</code>', '<code>context.awsRequestId</code>', 'ค่า Billed Duration ใน CloudWatch'],
+    answer: 1,
+    explain: 'context บอกเวลาที่เหลือก่อน timeout',
+    whyWrong: { 0: 'ไม่มีฟิลด์นี้ใน event', 2: 'เป็นแค่ ID ของ request', 3: 'ดูได้หลังรันเสร็จ ใช้ตัดสินใจระหว่างรันไม่ได้' } },
+
+  { id: 16, topic: 'Configuration', difficulty: 'กลาง',
+    question: 'ค่าใด <strong>ตั้งเป็น memory ของ Lambda ไม่ได้</strong>',
+    choices: ['128 MB', '64 MB', '3,008 MB', '10,240 MB'],
+    answer: 1,
+    explain: 'ช่วงที่ตั้งได้คือ 128–10,240 MB',
+    whyWrong: { 0: 'เป็นค่าต่ำสุดที่ตั้งได้', 2: 'อยู่ในช่วงที่ตั้งได้', 3: 'เป็นค่าสูงสุดที่ตั้งได้' } },
+
+  { id: 17, topic: 'Configuration', difficulty: 'ยาก',
+    question: 'function ทำงานหนักด้าน CPU และช้าเกินไป แต่ใช้ memory จริงแค่ 60 MB จาก 128 MB ที่ตั้งไว้ วิธีใดเพิ่ม CPU ได้',
+    choices: ['ตั้งค่า vCPU ในหน้า configuration ให้มากขึ้น', 'เพิ่ม timeout เป็น 15 นาที', 'เพิ่ม memory ที่ตั้งไว้ เพราะ CPU จะเพิ่มตาม memory', 'เปิด provisioned concurrency'],
+    answer: 2,
+    explain: 'Lambda ไม่มีช่องตั้ง CPU แยก CPU ผูกกับ memory',
+    whyWrong: { 0: 'ไม่มีการตั้งค่านี้', 1: 'แค่ให้รันได้นานขึ้น ไม่ได้เร็วขึ้น', 3: 'ช่วยแค่ cold start ไม่ได้เพิ่ม CPU ระหว่างรัน' } },
+
+  { id: 18, topic: 'Configuration', difficulty: 'ยาก',
+    question: 'งานประมวลผลไฟล์ใช้เวลาประมาณ 25 นาทีต่อไฟล์ ข้อใดถูกต้อง',
+    choices: ['ตั้ง timeout ของ Lambda เป็น 25 นาทีได้เลย', 'เพิ่ม memory เป็น 10,240 MB จะทำให้ timeout สูงสุดขยายเป็น 30 นาที',
+              'ขอเพิ่ม timeout limit ผ่าน Service Quotas เหมือน concurrency', 'timeout สูงสุดคือ 15 นาที ต้องแบ่งงานให้เล็กลงหรือย้ายไปรันแบบ container เช่น Fargate'],
+    answer: 3,
+    explain: 'timeout อยู่ในช่วง 1 วินาที – 15 นาที',
+    whyWrong: { 0: 'เกินเพดาน 15 นาที', 1: 'memory ไม่ได้ขยาย timeout', 2: '15 นาทีเป็น hard limit ต่างจาก concurrency ที่เป็น soft limit' } },
+
+  { id: 19, topic: 'Concurrency', difficulty: 'กลาง',
+    question: 'ข้อใดถูกต้องเกี่ยวกับ concurrency เริ่มต้นของ Lambda',
+    choices: ['1,000 ต่อ function และเพิ่มไม่ได้', '1,000 ต่อ Region ต่อ account เป็น soft limit ขอเพิ่มได้', '100 ต่อ Region ต่อ account', 'ไม่จำกัด เพราะ serverless scale อัตโนมัติ'],
+    answer: 1,
+    explain: 'ค่าเริ่มต้น 1,000 ต่อ Region ต่อ account และเป็น soft limit',
+    whyWrong: { 0: 'เป็นของทั้ง Region ต่อ account ไม่ใช่ต่อ function และขอเพิ่มได้', 2: 'ตัวเลขผิด', 3: 'scale อัตโนมัติแต่มีโควตา' } },
+
+  { id: 20, topic: 'Concurrency', difficulty: 'ยากมาก',
+    question: 'function เขียนข้อมูลลงฐานข้อมูลเก่าที่รับ connection พร้อมกันได้สูงสุด 50 ตัว ช่วง flash sale มี request เข้ามาพร้อมกันหลายร้อย ควรตั้งค่าใดเพื่อปกป้องฐานข้อมูล',
+    choices: ['provisioned concurrency = 50', 'เพิ่ม memory เพื่อให้แต่ละ invocation จบเร็วขึ้น', 'reserved concurrency = 50', 'เพิ่ม concurrency limit ของ account เป็น 5,000'],
+    answer: 2,
+    explain: 'reserved concurrency เป็นเพดาน ไม่ให้ function รันพร้อมกันเกิน 50 ปกป้องระบบปลายทาง และไม่มีค่าใช้จ่ายเพิ่ม',
+    whyWrong: { 0: 'provisioned ใช้อุ่นเครื่องแก้ cold start ไม่ได้ทำหน้าที่เป็นเพดาน และเสียเงินเพิ่ม', 1: 'ยังรันพร้อมกันเกิน 50 ได้', 3: 'ยิ่งทำให้ยิงเข้าฐานข้อมูลได้มากขึ้น' } },
+
+  { id: 21, topic: 'Concurrency', difficulty: 'ยาก',
+    question: 'API ที่ผู้ใช้รอผลแบบ real-time มี latency สูงผิดปกติในช่วงเช้าที่คนเริ่มใช้งาน ใน log พบ Init Duration หลายร้อย ms วิธีใดแก้ตรงจุดที่สุด',
+    choices: ['ตั้ง provisioned concurrency เพื่อเตรียม environment ให้อุ่นไว้ล่วงหน้า', 'ตั้ง reserved concurrency ให้ function', 'เพิ่ม timeout เป็น 15 นาที', 'เปลี่ยนการเรียกจาก sync เป็น async'],
+    answer: 0,
+    explain: 'Init Duration = cold start แก้ด้วย provisioned concurrency',
+    whyWrong: { 1: 'reserved กันโควตาและเป็นเพดาน แต่ไม่ได้ทำให้อุ่น', 2: 'timeout ไม่เกี่ยวกับ latency', 3: 'ผู้ใช้ต้องรอผล จึงเปลี่ยนเป็น async ไม่ได้ และไม่ได้แก้ cold start' } },
+
+  { id: 22, topic: 'Concurrency', difficulty: 'ยากมาก',
+    question: 'ข้อใดจับคู่ถูกต้องทั้งหมด',
+    choices: ['Reserved = keep warm, เสียเงินเพิ่ม / Provisioned = เพดาน, ฟรี',
+              'Reserved = กันโควตา + เพดาน, ฟรี / Provisioned = keep warm แก้ cold start, เสียเงินเพิ่ม',
+              'Reserved = เพิ่มโควตาของ account / Provisioned = ลด timeout',
+              'Reserved = กันโควตา, เสียเงินเพิ่ม / Provisioned = เพดาน, ฟรี'],
+    answer: 1,
+    explain: 'Reserved = กันโควตา + เพดาน ไม่มีค่าใช้จ่าย / Provisioned = อุ่นเครื่อง แก้ cold start มีค่าใช้จ่าย',
+    whyWrong: { 0: 'สลับกันทั้งคู่', 2: 'reserved ไม่ได้เพิ่มโควตารวม และ provisioned ไม่เกี่ยวกับ timeout', 3: 'reserved ไม่มีค่าใช้จ่ายเพิ่ม และ provisioned ไม่ได้ฟรี' } },
+
+  { id: 23, topic: 'Concurrency', difficulty: 'ยากมาก',
+    question: 'account มี concurrency 1,000 ใน Region หนึ่ง ตั้ง reserved concurrency ให้ function A = 400 function อื่นทั้งหมดใน Region นี้จะใช้ concurrency ร่วมกันได้สูงสุดเท่าใด',
+    choices: ['1,000', '1,400', '400', '600'],
+    answer: 3,
+    explain: 'reserved คือการกันโควตาออกจากก้อนรวม เหลือ 1,000 − 400 = 600 (ความรู้เสริม)',
+    whyWrong: { 0: 'ลืมว่าโควตาถูกกันออกไป', 1: 'reserved ไม่ได้เพิ่มโควตารวม', 2: 'นั่นคือโควตาของ function A' } },
+
+  { id: 24, topic: 'Best practice', difficulty: 'ยาก',
+    question: 'ข้อใดเป็นแนวทางที่ <strong>ถูกต้อง</strong> ในการเขียน Lambda',
+    choices: ['สร้าง database client ภายใน handler ทุกครั้ง เพื่อให้ได้ connection ใหม่เสมอ',
+              'เก็บข้อมูล session ของผู้ใช้ไว้ในตัวแปร global เพื่อให้การเรียกครั้งถัดไปใช้ต่อได้',
+              'สร้าง client นอก handler เพื่อ reuse environment และให้ function เป็น stateless',
+              'hard-code ชื่อตาราง DynamoDB ไว้ในโค้ดเพื่อลดเวลาอ่าน environment variable'],
+    answer: 2,
+    explain: 'reuse runtime environment ที่มีอยู่ + stateless',
+    whyWrong: { 0: 'เสียเวลาสร้าง connection ใหม่ทุกครั้ง ไม่ได้ประโยชน์จาก environment ที่อุ่นอยู่', 1: 'ขัดหลัก stateless การเรียกครั้งถัดไปอาจไปรันคนละ environment', 3: 'best practice คือใช้ environment variables' } },
+
+  { id: 25, topic: 'Best practice', difficulty: 'ยากมาก',
+    question: 'ทำไมจึงไม่ควรให้ Lambda λ1 เรียก λ2 โดยตรงแล้วรอผล',
+    choices: ['เพราะ IAM ไม่อนุญาตให้ Lambda เรียก Lambda อื่นได้',
+              'เพราะจำนวน invocation ทวีคูณ, error ลามต่อกัน และ λ1 ยังเสียเงินระหว่างรอ λ2',
+              'เพราะ λ2 จะถูกบังคับให้รันแบบ async เสมอ',
+              'เพราะ Lambda มี timeout สูงสุด 1 วินาทีเมื่อถูกเรียกจาก Lambda'],
+    answer: 1,
+    explain: 'ตามที่อาจารย์วาด λ1 → λ2 (ส่วนเสียเงินระหว่างรอเป็นความรู้เสริม)',
+    whyWrong: { 0: 'ทำได้ทางเทคนิค แต่ไม่ควรทำ', 2: 'ผู้เรียกเลือกได้ว่าจะ sync หรือ async', 3: 'timeout ไม่ได้เปลี่ยนตามผู้เรียก' } },
+
+  { id: 26, topic: 'Best practice', difficulty: 'ยาก',
+    question: 'function ถูก trigger เมื่อมีไฟล์ใหม่ใน bucket X แล้วเขียนไฟล์ผลลัพธ์กลับลง bucket X เดิม ความเสี่ยงหลักคืออะไร',
+    choices: ['ไฟล์จะถูกเข้ารหัสซ้ำสองชั้น', 'S3 จะปฏิเสธการเขียนเพราะเป็น bucket ต้นทาง', 'cold start จะเกิดทุกครั้ง', 'เกิด recursive invocation วนไม่จบ ทำให้ค่าใช้จ่ายและจำนวนการเรียกพุ่ง'],
+    answer: 3,
+    explain: 'ขัดกับ best practice "หลีกเลี่ยง recursive code" จึงควรเขียนลงอีก bucket (เหมือนตัวอย่าง S3-source → S3-dest)',
+    whyWrong: { 0: 'ไม่ใช่ผลที่เกิดขึ้น', 1: 'S3 ไม่ได้ปฏิเสธ การเขียนสำเร็จและ trigger ซ้ำ', 2: 'ไม่ใช่ผลที่เกิดขึ้น ปัญหาคือการเรียกวนซ้ำ' } },
+
+  { id: 27, topic: 'Deployment', difficulty: 'กลาง',
+    question: 'ถ้า deploy Lambda ด้วย container image ต้องอัปโหลด image ไปที่ใด',
+    choices: ['Amazon S3', 'Amazon ECR', 'AWS CodeCommit', 'Lambda Layers'],
+    answer: 1,
+    explain: 'container image ต้องอยู่ใน Amazon ECR',
+    whyWrong: { 0: 'S3 ใช้กับ .zip ขนาดใหญ่ได้ แต่ image ต้องอยู่ ECR', 2: 'เป็นที่เก็บ source code', 3: 'layer ใช้แชร์ library ไม่ใช่ที่เก็บ image' } },
+
+  { id: 28, topic: 'Deployment', difficulty: 'ยาก',
+    question: 'S3 trigger ชี้ไปที่ alias <code>PROD</code> ซึ่งชี้ version <code>:3</code> ทีม publish version <code>:4</code> แล้ว ต้องการให้ traffic จริงไปที่ <code>:4</code> โดยแก้น้อยที่สุด ควรทำอย่างไร',
+    choices: ['แก้ trigger ให้ชี้ไปที่ ARN ของ version <code>:4</code>', 'แก้โค้ดใน version <code>:3</code> ให้เหมือน <code>:4</code>',
+              'ย้าย alias <code>PROD</code> ให้ชี้ไปที่ <code>:4</code> โดยไม่ต้องแก้ trigger', 'ให้ trigger ชี้ไปที่ <code>$LATEST</code> ตลอดไป'],
+    answer: 2,
+    explain: 'ข้อดีของ alias คือ event source ไม่ต้องเปลี่ยน ARN',
+    whyWrong: { 0: 'ทำได้แต่ต้องแก้ทุก trigger ทุกครั้ง เสียข้อดีของ alias', 1: 'version ที่ publish แล้ว immutable', 3: '$LATEST เปลี่ยนตลอดขณะพัฒนา ไม่เหมาะกับ production' } },
+
+  { id: 29, topic: 'Deployment', difficulty: 'ยาก',
+    question: 'ข้อใดถูกต้องเกี่ยวกับ version ของ Lambda',
+    choices: ['<code>$LATEST</code> เป็น version ที่ immutable', 'version ที่ publish แล้ว เช่น <code>:1</code> แก้ไขโค้ดไม่ได้ ส่วน <code>$LATEST</code> คือตัวที่กำลังแก้อยู่',
+              'alias แก้ไขไม่ได้หลังสร้าง', 'ทุก version ใช้ ARN เดียวกัน'],
+    answer: 1,
+    explain: 'publish แล้วได้ version ที่ immutable ส่วน $LATEST แก้ได้',
+    whyWrong: { 0: 'สลับกัน', 2: 'alias ย้ายให้ชี้ version อื่นได้ นั่นคือหน้าที่ของมัน', 3: 'แต่ละ version มี ARN ของตัวเอง (ต่อท้ายด้วย :1, :2)' } },
+
+  { id: 30, topic: 'Deployment', difficulty: 'กลาง',
+    question: 'function 12 ตัวใช้ library สำหรับ logging และเชื่อมต่อฐานข้อมูลชุดเดียวกัน วิธีใดเหมาะที่สุด',
+    choices: ['Lambda Layers', 'Alias', 'Provisioned concurrency', 'Destinations'],
+    answer: 0,
+    explain: 'layer คือ library ที่หลาย function ใช้ร่วมกันได้',
+    whyWrong: { 1: 'alias เป็น pointer ไปยัง version', 2: 'ใช้แก้ cold start', 3: 'ใช้ส่งผลลัพธ์ async ต่อไปที่อื่น' } },
+
+  { id: 31, topic: 'Monitoring', difficulty: 'กลาง',
+    question: 'ใน CloudWatch Logs บรรทัด REPORT ฟิลด์ใดบอกเวลาที่เสียไปกับ cold start',
+    choices: ['Duration', 'Billed Duration', 'Max Memory Used', 'Init Duration'],
+    answer: 3,
+    explain: 'Init Duration คือเวลาที่เสียไปกับ cold start',
+    whyWrong: { 0: 'เวลารันของ handler', 1: 'เวลาที่ถูกคิดเงิน', 2: 'memory ที่ใช้สูงสุด' } },
+
+  { id: 32, topic: 'Monitoring', difficulty: 'กลาง',
+    question: 'log ของ function ชื่อ <code>orderProcessor</code> จะอยู่ใน log group ใด',
+    choices: ['<code>/aws/lambda/orderProcessor</code>', '<code>/lambda/aws/orderProcessor</code>', '<code>/aws/cloudwatch/orderProcessor</code>', '<code>orderProcessor/logs</code>'],
+    answer: 0,
+    explain: 'รูปแบบคือ /aws/lambda/&lt;ชื่อ function&gt; → log stream → log events',
+    whyWrong: { 1: 'สลับลำดับคำ รูปแบบไม่ถูกต้อง', 2: 'รูปแบบไม่ถูกต้อง', 3: 'รูปแบบไม่ถูกต้อง' } },
+
+  { id: 33, topic: 'Monitoring', difficulty: 'ยาก',
+    question: 'ระบบ API Gateway → Lambda → DynamoDB ช้าเป็นบางครั้ง ทีมต้องการเห็นว่าช่วงไหนของเส้นทาง request ที่ช้า และหา outlier ควรใช้สิ่งใด',
+    choices: ['AWS X-Ray พร้อม service map', 'CloudWatch Logs ของ Lambda อย่างเดียว', 'Lambda Destinations', 'Reserved concurrency'],
+    answer: 0,
+    explain: 'X-Ray trace request ข้ามหลายบริการ วาด service map หา latency และ outlier',
+    whyWrong: { 1: 'เห็นแค่ฝั่ง function ไม่เห็นภาพข้ามบริการ', 2: 'ใช้ส่งผลลัพธ์ async', 3: 'เป็นการตั้งค่า concurrency' } },
+
+  { id: 34, topic: 'Monitoring', difficulty: 'ยากมาก',
+    question: 'ต้องการให้ X-Ray แสดงว่าการเรียก DynamoDB จากภายใน function ใช้เวลาเท่าไร นอกจากเปิด active tracing แล้วควรทำอะไรเพิ่ม',
+    choices: ['ไม่ต้องทำอะไร X-Ray เห็นทุกบรรทัดของโค้ดอยู่แล้ว', 'เพิ่ม memory เพื่อให้ X-Ray เก็บข้อมูลได้', 'ใช้ X-Ray SDK ห่อการเรียก AWS SDK เพื่อเก็บข้อมูลการเรียก API', 'ตั้ง Destination ไปที่ X-Ray'],
+    answer: 2,
+    explain: 'ตามสไลด์ ถ้าใช้ X-Ray SDK จะเก็บข้อมูลการเรียก API ผ่าน AWS SDK ได้ด้วย',
+    whyWrong: { 0: 'active tracing อย่างเดียวเห็นภาพรวมของ function ไม่ได้เห็นการเรียกภายในละเอียด', 1: 'memory ไม่เกี่ยว', 3: 'X-Ray ไม่ใช่ Destination' } },
+
+  { id: 35, topic: 'Lambda basics', difficulty: 'ยาก',
+    question: 'ข้อใดคือ "องค์ประกอบของ Lambda function" ที่หมายถึง application code + dependencies/libraries',
+    choices: ['Initiating events', 'Access permissions', 'Configuration', 'Runtime และ deployment package'],
+    answer: 3,
+    explain: 'Runtime และ deployment package ประกอบด้วย application code และ dependencies/libraries',
+    whyWrong: { 0: 'คือ trigger ที่เรียก function', 1: 'คือ IAM', 2: 'คือค่าที่ตั้งตามงาน เช่น memory, timeout' } },
+
+  { id: 36, topic: 'Lab', difficulty: 'ยาก',
+    question: 'ในแลบ เมื่อเปลี่ยน mock endpoint ของ API Gateway ให้เรียก Lambda ที่ query DynamoDB สิ่งใดจำเป็นต่อการทำงาน <strong>ทั้งสองฝั่ง</strong>',
+    choices: ['API Gateway ต้องมีสิทธิ์เรียก Lambda (resource-based policy) และ Lambda ต้องมี execution role ที่อ่าน DynamoDB ได้',
+              'Lambda ต้องมี resource-based policy ที่อนุญาตให้อ่าน DynamoDB',
+              'DynamoDB ต้องมีสิทธิ์เรียก Lambda',
+              'ต้องตั้ง provisioned concurrency ก่อน API Gateway ถึงจะเรียกได้'],
+    answer: 0,
+    explain: 'สิทธิ์ 2 ฝั่ง: ใครเรียก Lambda / Lambda ไปเรียกใคร',
+    whyWrong: { 1: 'สิทธิ์ขาออกต้องอยู่ใน execution role', 2: 'DynamoDB ไม่ได้เป็นผู้เรียกในแลบนี้', 3: 'provisioned เป็นตัวเลือกด้านประสิทธิภาพ ไม่ใช่เงื่อนไขจำเป็น' } }
+];
+
+const FLASHCARDS = [
+  ['Lambda คือบริการประเภทไหน', 'serverless <strong>compute</strong> — รันโค้ดตาม event โดยไม่ต้องดูแลเซิร์ฟเวอร์'],
+  ['Fargate คือบริการประเภทไหน', 'serverless <strong>infrastructure สำหรับ container</strong>'],
+  ['Memory ตั้งได้ช่วงไหน', '<strong>128 MB – 10,240 MB</strong><br>CPU เพิ่มตาม memory'],
+  ['Timeout ตั้งได้ช่วงไหน', '<strong>1 วินาที – 15 นาที</strong> (900 วินาที)'],
+  ['Concurrency เริ่มต้น', '<strong>1,000 ต่อ Region ต่อ account</strong><br>soft limit ขอเพิ่มได้'],
+  ['Sync: ตัวอย่าง / InvocationType / retry', '<strong>API Gateway</strong> · <code>RequestResponse</code><br>ผู้เรียกรอผล ไม่มี retry ในตัว'],
+  ['Async: ตัวอย่าง / InvocationType', '<strong>S3</strong> · <code>Event</code><br>Lambda เอา event เข้าคิวก่อน'],
+  ['Async retry ได้กี่ครั้ง', 'retry <strong>0–2</strong> ครั้ง (ค่าเริ่มต้น 2)<br>รวมแล้วลองสูงสุด <strong>3 ครั้ง</strong>'],
+  ['Poll model ใช้กับอะไร', '<strong>Kinesis, SQS, DynamoDB Streams</strong><br>ผ่าน event source mapping เป็น batch'],
+  ['Destinations ใช้กับอะไร', 'async + event source mapping<br><strong>On success / On failure</strong> · ใช้กับ sync ไม่ได้'],
+  ['ใครมีสิทธิ์เรียก Lambda ตั้งที่ไหน', '<strong>Resource-based policy</strong> (function policy)'],
+  ['Lambda เข้าถึงบริการอื่น ตั้งที่ไหน', '<strong>IAM execution role</strong>'],
+  ['handler(event, context)', '<strong>event</strong> = ข้อมูลของ trigger<br><strong>context</strong> = ข้อมูล runtime'],
+  ['ตัวอย่างข้อมูลใน context', '<code>awsRequestId</code>, <code>getRemainingTimeInMillis()</code>, <code>logStreamName</code>'],
+  ['Reserved concurrency', 'กันโควตา + <strong>เพดาน</strong> ปกป้องปลายทาง<br><strong>ไม่มีค่าใช้จ่ายเพิ่ม</strong>'],
+  ['Provisioned concurrency', '<strong>keep warm</strong> แก้ cold start<br><strong>มีค่าใช้จ่ายเพิ่ม</strong>'],
+  ['Version vs $LATEST', 'version ที่ publish (<code>:1</code>) <strong>immutable</strong><br><code>$LATEST</code> คือตัวที่กำลังแก้'],
+  ['Alias มีไว้ทำอะไร', 'pointer ไป version เช่น <code>PROD</code><br>event source <strong>ไม่ต้องเปลี่ยน ARN</strong>'],
+  ['Layer คืออะไร', 'library ที่ <strong>หลาย function ใช้ร่วมกัน</strong>'],
+  ['Container image อัปโหลดที่ไหน', '<strong>Amazon ECR</strong>'],
+  ['Init Duration ใน REPORT คือ', 'เวลาที่เสียไปกับ <strong>cold start</strong>'],
+  ['X-Ray ใช้ทำอะไร', 'trace request ข้ามบริการ วาด <strong>service map</strong><br>หา latency / outlier / debug distributed']
+];
+</script>
+<script>
+(function () {
+'use strict';
+
+/* ================= helpers ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const REDUCE = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const LETTERS = ['A', 'B', 'C', 'D'];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('w9:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('w9:' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+};
+const shuffle = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = (n) => Number(n).toLocaleString('en-US');
+const EXTRA = '<span class="badge extra">เสริม</span>';
+const qById = Object.fromEntries(QUESTIONS.map((q) => [q.id, q]));
+const topicOf = (k) => TOPICS.find((t) => t.key === k) || { key: k, label: k, sec: 's1' };
+function setPressed(group, btn, attr) { $$('button', group).forEach((b) => b.setAttribute(attr || 'aria-pressed', String(b === btn))); }
+function inView(el) { if (!el || el.hidden) return false; const r = el.getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; }
+
+/* ================= theme ================= */
+const themeBtn = $('#themeBtn');
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+function effectiveTheme() {
+  const t = document.documentElement.getAttribute('data-theme');
+  if (t) return t;
+  return window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function paintTheme() {
+  const dark = effectiveTheme() === 'dark';
+  themeBtn.innerHTML = dark ? SUN : MOON;
+  themeBtn.setAttribute('aria-label', dark ? 'เปลี่ยนเป็นธีมสว่าง' : 'เปลี่ยนเป็นธีมมืด');
+}
+themeBtn.addEventListener('click', () => {
+  const next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  store.set('theme', next);
+  paintTheme();
+});
+paintTheme();
+
+/* ================= nav / progress ================= */
+const sidenav = $('#sidenav'), scrim = $('#scrim'), menuBtn = $('#menuBtn');
+function setMenu(open) {
+  sidenav.classList.toggle('open', open);
+  scrim.classList.toggle('show', open);
+  menuBtn.setAttribute('aria-expanded', String(open));
+}
+menuBtn.addEventListener('click', () => setMenu(!sidenav.classList.contains('open')));
+scrim.addEventListener('click', () => setMenu(false));
+$$('a', sidenav).forEach((a) => a.addEventListener('click', () => setMenu(false)));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+
+const prog = $('#readProgress');
+function onScroll() {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  prog.style.width = (h > 0 ? Math.min(100, (scrollY / h) * 100) : 0) + '%';
+}
+addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+const navLinks = $$('a[href^="#"]', sidenav);
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      navLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
+    });
+  }, { rootMargin: '-35% 0px -60% 0px' });
+  navLinks.forEach((a) => { const s = $(a.getAttribute('href')); if (s) io.observe(s); });
+}
+
+/* ================= done marks ================= */
+let done = new Set(store.get('done', []));
+function paintDone() {
+  $$('.done-btn').forEach((b) => {
+    const on = done.has(b.dataset.sec);
+    b.setAttribute('aria-pressed', String(on));
+    b.textContent = on ? '✓ เข้าใจแล้ว' : 'เข้าใจแล้ว';
+  });
+  navLinks.forEach((a) => a.classList.toggle('done', done.has(a.getAttribute('href').slice(1))));
+  const n = [...done].filter((s) => /^s\d+$/.test(s)).length;
+  $('#doneCount').textContent = 'เข้าใจแล้ว ' + n + '/10 หัวข้อ';
+  $('#doneMeter').style.width = n * 10 + '%';
+}
+$$('.done-btn').forEach((b) => b.addEventListener('click', () => {
+  const s = b.dataset.sec;
+  done.has(s) ? done.delete(s) : done.add(s);
+  store.set('done', [...done]);
+  paintDone();
+}));
+paintDone();
+
+$('#statQ').textContent = QUESTIONS.length;
+$('#statF').textContent = FLASHCARDS.length;
+
+/* ================= shared: choice + feedback ================= */
+function choiceHTML(q, order) {
+  return order.map((o, pos) =>
+    '<button class="choice" data-orig="' + o + '" data-pos="' + pos + '"><span class="key">' + LETTERS[pos] + '</span><span class="ct">' + q.choices[o] + '</span><span class="st"></span></button>'
+  ).join('');
+}
+function revealChoices(box, q, sel) {
+  $$('.choice', box).forEach((b) => {
+    const o = +b.dataset.orig;
+    b.disabled = true;
+    if (o === q.answer) { b.classList.add('correct'); $('.st', b).textContent = '✓ ถูก'; }
+    else if (o === sel) { b.classList.add('wrong'); $('.st', b).textContent = '✗ ที่เลือก'; }
+  });
+}
+function feedbackHTML(q, sel, order) {
+  const L = (o) => LETTERS[order.indexOf(o)];
+  const ok = sel === q.answer;
+  let h = '<div class="fb ' + (ok ? 'ok' : 'bad') + '"><strong class="verdict">' +
+    (ok ? '✓ ถูกต้อง' : (sel == null ? '— ไม่ได้ตอบ' : '✗ ยังไม่ถูก') + ' — คำตอบที่ถูกคือ ' + L(q.answer)) + '</strong>';
+  h += '<p>' + q.explain + '</p>';
+  if (!ok && sel != null && q.whyWrong[sel]) h += '<p><strong>ทำไม ' + L(sel) + ' ผิด:</strong> ' + q.whyWrong[sel] + '</p>';
+  const others = order.filter((o) => o !== q.answer).map((o) => '<li><strong>' + L(o) + '</strong> — ' + (q.whyWrong[o] || '') + '</li>').join('');
+  h += '<details><summary>ดูเหตุผลของช้อยที่ผิดทั้งหมด</summary><ul>' + others + '</ul></details></div>';
+  return h;
+}
+
+/* ================= mini checks ================= */
+$$('.mini').forEach((box) => {
+  const ids = box.dataset.qids.split(',').map((s) => +s.trim());
+  box.innerHTML = '<div class="mini-head">Mini check · ' + ids.length + ' ข้อ</div>' + ids.map((id) => {
+    const q = qById[id];
+    const order = shuffle([0, 1, 2, 3]);
+    return '<div class="mq" data-id="' + id + '" data-order="' + order.join(',') + '"><p class="qtext">' + q.question +
+      ' <span class="pill">' + q.difficulty + '</span></p><div class="choices">' + choiceHTML(q, order) + '</div><div class="mfb" aria-live="polite"></div></div>';
+  }).join('');
+  $$('.mq', box).forEach((mq) => {
+    const q = qById[+mq.dataset.id];
+    const order = mq.dataset.order.split(',').map(Number);
+    mq.addEventListener('click', (e) => {
+      const b = e.target.closest('.choice');
+      if (!b || b.disabled) return;
+      const sel = +b.dataset.orig;
+      revealChoices(mq, q, sel);
+      $('.mfb', mq).innerHTML = feedbackHTML(q, sel, order);
+    });
+  });
+});
+
+/* ================= W1: responsibility ================= */
+(function () {
+  const w = $('#w-resp');
+  const LAYERS = ['Application code (โค้ดของเรา)', 'Data & configuration', 'Runtime & dependencies', 'Container / cluster', 'Scaling & capacity', 'Operating system (OS)', 'Virtualization', 'Hardware & data center'];
+  // y = คุณดูแล, a = AWS ดูแล, n = ไม่เกี่ยว
+  const LEVELS = [
+    { name: 'On-premises', cells: ['y', 'y', 'y', 'n', 'y', 'y', 'y', 'y'],
+      pros: ['ควบคุมได้ทุกอย่าง'], cons: ['ลงทุนก้อนใหญ่', 'ต้องเดาความจุเอง', 'ติดตั้งนานเป็นเดือน', 'ดูแลทุกชั้นตั้งแต่ฮาร์ดแวร์'],
+      note: 'คุณดูแลทุกชั้นเอง ตั้งแต่ซื้อเครื่องจนถึงเขียนโค้ด เปรียบเหมือน <strong>สร้างบ้านเอง</strong>' },
+    { name: 'VM (EC2)', cells: ['y', 'y', 'y', 'n', 'y', 'y', 'a', 'a'],
+      pros: ['ไม่ต้องซื้อฮาร์ดแวร์', 'ปรับขนาดได้'], cons: ['ยังต้องดูแล OS เอง เช่น patch และ monitor', 'ต้องตั้งค่าการ scale เอง'],
+      note: 'AWS ดูแลฮาร์ดแวร์และ virtualization แต่ <strong>OS ยังเป็นของคุณ</strong> เปรียบเหมือน <strong>เช่าบ้านทั้งหลังแต่ซ่อมเอง</strong>' },
+    { name: 'Containers', cells: ['y', 'y', 'y', 'y', 'y', 'y', 'a', 'a'],
+      pros: ['รันได้ทุกที่', 'ใช้ทรัพยากรคุ้มขึ้น', 'deploy เร็ว'], cons: ['ยังต้องดูแลตัว container และ cluster', 'ถ้าใช้ <strong>Fargate</strong> ส่วน cluster / OS / scaling ของเครื่องจะกลายเป็นหน้าที่ของ AWS'],
+      note: 'แพ็กโค้ดกับ dependencies เป็น image เปรียบเหมือน <strong>เช่าห้องในหอที่จัดของเองได้</strong> — Fargate = serverless infrastructure สำหรับ container' },
+    { name: 'Serverless', cells: ['y', 'y', 'a', 'n', 'a', 'a', 'a', 'a'],
+      pros: ['ไม่มี OS ให้ดูแล', 'scale อัตโนมัติ', 'จ่ายตามที่ใช้ (scale to zero)', 'มี fault tolerance ในตัว', 'แทบไม่ต้องบำรุงรักษา'], cons: ['cold start ตอนเรียกครั้งแรกหรือหลังว่างนาน', 'ดูแลแค่โค้ดและการตั้งค่า'],
+      note: '<strong>Lambda = serverless compute</strong> คุณเหลือแค่โค้ดกับการตั้งค่า เปรียบเหมือน <strong>เรียก Grab</strong> จ่ายเฉพาะตอนนั่ง' }
+  ];
+  const lv = $('.levels', w), stack = $('.stack', w);
+  lv.innerHTML = LEVELS.map((l, i) => '<button aria-pressed="' + (i === 0) + '" data-i="' + i + '">' + l.name + '</button>').join('');
+  function render(i) {
+    const L = LEVELS[i];
+    stack.innerHTML = LAYERS.map((name, k) => {
+      const c = L.cells[k];
+      const cls = c === 'y' ? 'you' : c === 'a' ? 'aws' : '';
+      const who = c === 'y' ? 'คุณดูแล' : c === 'a' ? 'AWS ดูแล' : 'ไม่เกี่ยว';
+      return '<div class="layer ' + cls + '"' + (c === 'n' ? ' style="opacity:.5;border-style:dashed"' : '') + '><span>' + name + '</span><span class="who">' + who + '</span></div>';
+    }).join('');
+    $('.pros', w).innerHTML = L.pros.map((p) => '<li>' + p + '</li>').join('');
+    $('.cons', w).innerHTML = L.cons.map((p) => '<li>' + p + '</li>').join('');
+    const you = L.cells.filter((c) => c === 'y').length, total = L.cells.filter((c) => c !== 'n').length;
+    $('.explain', w).innerHTML = '<p><strong>' + L.name + ':</strong> คุณดูแล ' + you + ' จาก ' + total + ' ชั้น — ' + L.note + '</p>';
+  }
+  lv.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(lv, b); render(+b.dataset.i); });
+  render(0);
+})();
+
+/* ================= W2: use-case flow ================= */
+(function () {
+  const w = $('#w-flow');
+  const FLOWS = {
+    web: {
+      nodes: [['Browser', 'ผู้ใช้'], ['S3', 'หน้าเว็บ static'], ['API Gateway', 'REST API'], ['Lambda', 'business logic'], ['DynamoDB', 'ฐานข้อมูล']],
+      info: ['ผู้ใช้เปิดเว็บผ่าน browser', 'S3 เก็บหน้าเว็บ static (HTML / CSS / JS) ไม่ต้องมีเว็บเซิร์ฟเวอร์', 'API Gateway รับ REST API call แล้วเรียก Lambda แบบ <strong>synchronous</strong> (InvocationType <code>RequestResponse</code>) และรอผล', 'Lambda รันโค้ดเฉพาะตอนมี request — scale อัตโนมัติ ไม่มี request ก็ไม่จ่าย', 'DynamoDB เก็บข้อมูล Lambda ต้องมีสิทธิ์อ่านผ่าน <strong>execution role</strong>'],
+      steps: [
+        { n: [0, 1], e: [0], t: 'browser โหลดหน้าเว็บ static จาก <strong>S3</strong>' },
+        { n: [2], e: [1], t: 'หน้าเว็บเรียก <strong>REST API</strong> ที่ API Gateway' },
+        { n: [3], e: [2], t: 'API Gateway เรียก Lambda แบบ <strong>sync</strong> แล้วรอผล — ถ้า error ผู้เรียกได้ error ทันที ไม่มี retry ในตัว' },
+        { n: [4], e: [3], t: 'Lambda ดึงข้อมูลจาก <strong>DynamoDB</strong> (สิทธิ์อยู่ใน execution role)' },
+        { n: [3, 2, 0], e: [], t: 'ข้อมูลส่งกลับ Lambda → API Gateway → หน้าเว็บ ผู้ใช้เห็นผลลัพธ์' }
+      ]
+    },
+    stream: {
+      nodes: [['Social media', 'แหล่งข้อมูล'], ['Kinesis', 'data stream'], ['Lambda', 'คำนวณ trend'], ['DynamoDB', 'เก็บผล']],
+      info: ['โพสต์จาก social media ไหลเข้ามาตลอดเวลา', 'Kinesis เป็น stream เก็บข้อมูลไว้ให้ผู้บริโภคมาอ่าน', 'Lambda <strong>poll</strong> stream เองผ่าน <strong>event source mapping</strong> แล้วเรียก function พร้อมข้อมูลเป็น batch (pull model)', 'DynamoDB เก็บผล hashtag trend'],
+      steps: [
+        { n: [0, 1], e: [0], t: 'ข้อมูล social media ไหลเข้า <strong>Kinesis</strong> อย่างต่อเนื่อง' },
+        { n: [2], e: [1], t: 'Lambda <strong>poll</strong> stream ผ่าน event source mapping ได้ข้อมูลเป็น <strong>batch</strong> — Kinesis ไม่ได้เป็นฝ่าย push' },
+        { n: [2], e: [], t: 'Lambda คำนวณ hashtag trend จาก batch นั้น' },
+        { n: [3], e: [2], t: 'Lambda เขียนผลลง <strong>DynamoDB</strong>' }
+      ]
+    }
+  };
+  let cur = 'web', step = -1, timer = null;
+  const flow = $('.flow', w), list = $('.step-list', w), cap = $('.caption', w), playBtn = $('#flowPlay');
+  function draw() {
+    const F = FLOWS[cur];
+    flow.innerHTML = F.nodes.map((n, i) => (i ? '<div class="edge" data-e="' + (i - 1) + '"></div>' : '') +
+      '<button class="node" data-n="' + i + '">' + n[0] + '<small>' + n[1] + '</small></button>').join('');
+    list.innerHTML = F.steps.map((s) => '<li>' + s.t + '</li>').join('');
+  }
+  function show(i) {
+    const F = FLOWS[cur];
+    step = i;
+    const s = F.steps[i];
+    $$('.node', flow).forEach((n) => n.classList.toggle('active', s.n.includes(+n.dataset.n)));
+    $$('.edge', flow).forEach((e) => e.classList.toggle('active', s.e.includes(+e.dataset.e)));
+    $$('li', list).forEach((li, k) => li.classList.toggle('on', k <= i));
+    cap.innerHTML = '<p><strong>ขั้นที่ ' + (i + 1) + ':</strong> ' + s.t + '</p>';
+  }
+  function stop() { clearInterval(timer); timer = null; playBtn.textContent = 'เล่น'; }
+  function nextStep() {
+    const F = FLOWS[cur];
+    if (step >= F.steps.length - 1) { stop(); show(0); return; }
+    show(step + 1);
+    if (step >= F.steps.length - 1) stop();
+  }
+  playBtn.addEventListener('click', () => {
+    if (timer) { stop(); return; }
+    if (step >= FLOWS[cur].steps.length - 1) step = -1;
+    playBtn.textContent = 'หยุด';
+    nextStep();
+    timer = setInterval(nextStep, 1700);
+  });
+  $('#flowStep').addEventListener('click', () => { stop(); nextStep(); });
+  flow.addEventListener('click', (e) => {
+    const b = e.target.closest('.node'); if (!b) return;
+    stop();
+    const i = +b.dataset.n;
+    $$('.node', flow).forEach((n) => n.classList.toggle('active', n === b));
+    $$('.edge', flow).forEach((x) => x.classList.remove('active'));
+    cap.innerHTML = '<p><strong>' + FLOWS[cur].nodes[i][0] + ':</strong> ' + FLOWS[cur].info[i] + '</p>';
+  });
+  const tabs = $('.seg', w);
+  tabs.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    setPressed(tabs, b, 'aria-selected');
+    stop(); cur = b.dataset.flow; step = -1; draw();
+    cap.innerHTML = '<p class="muted">กด "เล่น" หรือคลิกที่กล่องแต่ละกล่องเพื่อดูคำอธิบาย</p>';
+  });
+  draw();
+})();
+
+/* ================= W3: invocation simulator ================= */
+(function () {
+  let src = 'apigw', runId = 0;
+  const seg = $('#invSrc'), retry = $('#invRetry'), dest = $('#invDest'), err = $('#invErr');
+  const HINT = { apigw: 'Push · Synchronous — ผู้เรียกรอผล', s3: 'Push · Asynchronous — เข้าคิวก่อน', sqs: 'Pull · Lambda poll คิวเอง', kinesis: 'Pull · Lambda poll stream เอง' };
+  function syncUI() { retry.disabled = src !== 's3'; $('#invHint').textContent = HINT[src]; }
+  seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(seg, b); src = b.dataset.v; syncUI(); });
+  syncUI();
+
+  function build() {
+    const isErr = err.checked, d = dest.value, R = +retry.value;
+    const steps = [];
+    let kv, sum;
+    const add = (cls, html) => steps.push({ cls, html });
+    if (src === 'apigw') {
+      kv = [['Model', 'Push · Synchronous'], ['InvocationType', '<code>RequestResponse</code>'], ['Retry โดย Lambda', 'ไม่มี']];
+      add('info', 'ผู้ใช้เรียก API → <strong>API Gateway</strong> เรียก Lambda แบบ sync และ <strong>รอผล</strong>');
+      if (isErr) {
+        add('bad', 'ครั้งที่ 1: function error');
+        add('bad', 'error ถูกส่งกลับไปที่ API Gateway ทันที → ผู้ใช้ได้ error response');
+        add('warn', 'Lambda <strong>ไม่ retry ให้</strong> — ถ้าจะลองใหม่ ฝั่งผู้เรียก (client) ต้องทำเอง');
+      } else {
+        add('ok', 'ครั้งที่ 1: function สำเร็จ');
+        add('ok', 'ผลลัพธ์ถูกส่งกลับให้ API Gateway → ผู้ใช้ทันที');
+      }
+      if (d !== 'none') add('warn', 'Destination ที่ตั้งไว้ <strong>ไม่มีผล</strong> — Destinations ใช้กับการเรียกแบบ sync ไม่ได้ เพราะผลถูกส่งกลับผู้เรียกโดยตรงอยู่แล้ว');
+      sum = 'function ถูกรันทั้งหมด <strong>1 ครั้ง</strong> · ' + (isErr ? 'ผู้เรียกได้ error ไปจัดการเอง' : 'ผู้เรียกได้ผลลัพธ์ทันที');
+    } else if (src === 's3') {
+      kv = [['Model', 'Push · Asynchronous'], ['InvocationType', '<code>Event</code>'], ['Retry', R + ' ครั้ง (ลองได้สูงสุด ' + (R + 1) + ' ครั้ง)']];
+      add('info', 'S3 ส่ง event <code>ObjectCreated</code> มาให้ Lambda');
+      add('info', 'Lambda นำ event <strong>เข้าคิวภายใน</strong> แล้วตอบ S3 ทันทีว่ารับแล้ว — S3 ไม่ต้องรอผล');
+      let runs = 1;
+      if (isErr) {
+        runs = R + 1;
+        for (let i = 1; i <= R + 1; i++) {
+          add('bad', 'ครั้งที่ ' + i + ': function error');
+          if (i <= R) add('warn', 'Lambda รอสักพักแล้ว <strong>retry อัตโนมัติ</strong> (retry ครั้งที่ ' + i + ' จาก ' + R + ')');
+        }
+        add('bad', 'ล้มเหลวครบ ' + (R + 1) + ' ครั้ง (ครั้งแรก 1 + retry ' + R + ')');
+        if (d === 'fail') add('ok', 'ส่งข้อมูลการเรียกที่ล้มเหลวไปที่ <strong>SNS</strong> (On failure) → ทีมได้รับการแจ้งเตือน');
+        else if (d === 'ok') add('info', 'Destination แบบ On success <strong>ไม่ทำงาน</strong> เพราะ function ล้มเหลว');
+        else add('warn', 'ไม่มี Destination — event ที่ล้มเหลวถูกทิ้งโดยไม่มีใครรู้ (ควรตั้ง On failure)');
+      } else {
+        add('ok', 'ครั้งที่ 1: function สำเร็จ');
+        if (d === 'ok') add('ok', 'ส่งผลลัพธ์ไปที่ <strong>SNS</strong> (On success)');
+        else if (d === 'fail') add('info', 'Destination แบบ On failure ไม่ทำงาน เพราะ function สำเร็จ');
+      }
+      sum = 'function ถูกรันทั้งหมด <strong>' + runs + ' ครั้ง</strong>' + (isErr ? ' — จำไว้: retry ' + R + ' ครั้ง = ลองทั้งหมด ' + (R + 1) + ' ครั้ง' : '');
+    } else {
+      const name = src === 'sqs' ? 'SQS' : 'Kinesis';
+      kv = [['Model', 'Pull · event source mapping'], ['InvocationType', 'ไม่ได้ระบุ — Lambda เรียกเองผ่าน event source mapping'], ['ข้อมูล', 'batch']];
+      add('info', 'Lambda <strong>poll</strong> ' + name + ' ผ่าน <strong>event source mapping</strong>');
+      add('info', 'ได้ข้อมูลเป็น <strong>batch</strong> (เช่น 10 records) แล้วเรียก function พร้อม batch');
+      add('info', 'สิทธิ์อ่าน' + (src === 'sqs' ? 'คิว' : ' stream') + 'อยู่ใน <strong>execution role</strong> ของ Lambda เพราะ Lambda เป็นฝ่ายไปอ่าน ' + EXTRA);
+      if (isErr) {
+        add('bad', 'function error ทั้ง batch');
+        add('warn', (src === 'sqs' ? 'ข้อความยังอยู่ในคิว และจะกลับมาให้ดึงไปประมวลผลใหม่' : 'Lambda จะลองประมวลผล batch เดิมซ้ำจนกว่าจะสำเร็จ ครบจำนวนที่ตั้งไว้ หรือข้อมูลหมดอายุ') + ' ' + EXTRA);
+        if (d === 'fail') add(src === 'sqs' ? 'info' : 'ok', src === 'sqs' ? 'สำหรับ SQS นิยมตั้ง dead-letter queue ที่ตัวคิวเพื่อรองรับข้อความที่ล้มเหลว ' + EXTRA : 'เมื่อลองครบแล้ว ส่งข้อมูลของ batch ที่ล้มเหลวไปที่ <strong>SNS</strong> (On failure)');
+      } else {
+        add('ok', 'ประมวลผล batch สำเร็จ → Lambda poll batch ถัดไป');
+      }
+      if (d === 'ok') add('info', 'สำหรับ event source mapping, AWS รองรับ Destination แบบ On failure เท่านั้น ' + EXTRA);
+      sum = 'ไม่มีใคร push มาเรียก — <strong>Lambda เป็นฝ่ายดึงข้อมูลเอง</strong> แล้วเรียก function เป็น batch';
+    }
+    return { steps, kv, sum };
+  }
+  $('#invGo').addEventListener('click', () => {
+    const id = ++runId;
+    const { steps, kv, sum } = build();
+    const tl = $('#invTl'), s = $('#invSum');
+    tl.innerHTML = ''; s.hidden = true;
+    $('#invKv').innerHTML = kv.map((p) => '<span>' + p[0] + ': <b>' + p[1] + '</b></span>').join('');
+    let i = 0;
+    (function tick() {
+      if (id !== runId) return;
+      if (i >= steps.length) { s.innerHTML = '<p><strong>สรุป:</strong> ' + sum + '</p>'; s.hidden = false; return; }
+      const li = document.createElement('li');
+      li.className = steps[i].cls; li.dataset.i = i + 1; li.innerHTML = steps[i].html;
+      tl.appendChild(li); i++;
+      if (REDUCE) tick(); else setTimeout(tick, 420);
+    })();
+  });
+})();
+
+/* ================= W4: permissions ================= */
+(function () {
+  const ROWS = [
+    { label: '① S3-source → Lambda <span class="muted">(trigger)</span>', type: 'resource', action: 'lambda:InvokeFunction', why: 'S3 เป็นฝ่ายเรียก Lambda (ขาเข้า) จึงต้องอนุญาตใน resource-based policy ของ function' },
+    { label: '② Lambda → S3-source <span class="muted">(อ่านรูป)</span>', type: 'role', action: 's3:GetObject', why: 'Lambda ไปอ่านบริการอื่น (ขาออก) สิทธิ์จึงอยู่ใน execution role' },
+    { label: '③ Lambda → S3-dest <span class="muted">(เขียน .PNG)</span>', type: 'role', action: 's3:PutObject', why: 'Lambda ไปเขียนบริการอื่น (ขาออก) สิทธิ์จึงอยู่ใน execution role' }
+  ];
+  const TYPE = { resource: 'Resource-based policy', role: 'Execution role' };
+  const rows = $('#permRows');
+  rows.innerHTML = ROWS.map((r, i) =>
+    '<div class="prow" data-i="' + i + '"><span class="lbl">' + r.label + '</span>' +
+    '<select aria-label="ที่ตั้งสิทธิ์ของลูกศร ' + (i + 1) + '" class="pt"><option value="">— ตั้งที่ไหน —</option><option value="resource">Resource-based policy</option><option value="role">Execution role</option></select>' +
+    '<select aria-label="action ของลูกศร ' + (i + 1) + '" class="pa"><option value="">— action —</option><option>lambda:InvokeFunction</option><option>s3:GetObject</option><option>s3:PutObject</option></select>' +
+    '<div class="res"></div></div>').join('');
+  $('#permCheck').addEventListener('click', () => {
+    let n = 0;
+    $$('.prow', rows).forEach((row) => {
+      const r = ROWS[+row.dataset.i];
+      const t = $('.pt', row).value, a = $('.pa', row).value;
+      const ok = t === r.type && a === r.action;
+      if (ok) n++;
+      const res = $('.res', row);
+      res.className = 'res show ' + (ok ? 'ok' : 'bad');
+      res.innerHTML = ok ? '✓ ถูกต้อง — ' + r.why
+        : '✗ ยังไม่ถูก — ควรเป็น <strong>' + TYPE[r.type] + '</strong> + <code>' + r.action + '</code>: ' + r.why;
+    });
+    $('#permScore').textContent = 'ถูก ' + n + '/3' + (n === 3 ? ' — ครบทั้ง 2 ฝั่งแล้ว' : '');
+  });
+  $('#permReset').addEventListener('click', () => {
+    $$('select', rows).forEach((s) => { s.value = ''; });
+    $$('.res', rows).forEach((r) => { r.className = 'res'; r.innerHTML = ''; });
+    $('#permScore').textContent = '';
+  });
+
+  const SCEN = [
+    { t: 'อัปโหลดรูปลง S3-source แล้ว function <strong>ไม่ถูกเรียกเลย</strong> ไม่มี log ใน CloudWatch', a: 'resource', why: 'ไม่มี log = function ยังไม่เคยถูกเรียก ผู้เรียก (S3) ไม่มีสิทธิ์ <code>lambda:InvokeFunction</code> ตามที่ resource-based policy กำหนด' },
+    { t: 'function รันแล้ว แต่ได้ <code>AccessDenied</code> ตอน <code>GetObject</code> จาก S3-source', a: 'role', why: 'function ถูกเรียกแล้ว (ขาเข้าผ่าน) ปัญหาคือ Lambda อ่านบริการอื่นไม่ได้ ต้องเพิ่ม <code>s3:GetObject</code> ใน execution role' },
+    { t: 'แปลงรูปเสร็จแล้ว แต่ได้ <code>AccessDenied</code> ตอนเขียน .PNG ลง S3-dest', a: 'role', why: 'สิทธิ์ขาออก ต้องเพิ่ม <code>s3:PutObject</code> บน S3-dest ใน execution role' },
+    { t: 'API Gateway ตอบ 500 และบอกว่าไม่มีสิทธิ์ invoke Lambda function', a: 'resource', why: 'API Gateway เป็นผู้เรียก ต้องได้รับอนุญาตใน resource-based policy ของ function' },
+    { t: 'Lambda ที่ถูก API Gateway เรียก query DynamoDB แล้วได้ <code>AccessDeniedException</code>', a: 'role', why: 'Lambda ไปเรียก DynamoDB = ขาออก ต้องเพิ่ม <code>dynamodb:Query</code> ใน execution role' },
+    { t: 'event source mapping อ่านข้อความจาก SQS ไม่ได้ เพราะไม่มีสิทธิ์ <code>sqs:ReceiveMessage</code>', a: 'role', why: 'pull model: Lambda เป็นฝ่ายไป poll คิว สิทธิ์จึงอยู่ใน execution role ' + EXTRA }
+  ];
+  let cur = -1;
+  function nextScen() {
+    let i; do { i = Math.floor(Math.random() * SCEN.length); } while (i === cur && SCEN.length > 1);
+    cur = i;
+    $('#diagText').innerHTML = 'อาการ: ' + SCEN[i].t;
+    $('#diagFb').innerHTML = '';
+  }
+  $('#permDiag').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-ans]'); if (!b) return;
+    const s = SCEN[cur], ok = b.dataset.ans === s.a;
+    $('#diagFb').innerHTML = '<div class="fb ' + (ok ? 'ok' : 'bad') + '"><strong class="verdict">' + (ok ? '✓ ถูกต้อง' : '✗ ยังไม่ถูก — ต้องแก้ที่ ' + TYPE[s.a]) + '</strong><p>' + s.why + '</p></div>';
+  });
+  $('#diagNext').addEventListener('click', nextScen);
+  nextScen();
+
+  const tabs = $('#w-perm .seg');
+  tabs.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    setPressed(tabs, b, 'aria-selected');
+    $('#permBuild').hidden = b.dataset.pm !== 'build';
+    $('#permDiag').hidden = b.dataset.pm !== 'diag';
+  });
+})();
+
+/* ================= W5: handler explorer ================= */
+(function () {
+  const INFO = {
+    records: ['event', '<code>event.Records</code>', 'S3 ส่งรายการ record ของไฟล์ที่เกิด event มาเป็น array รูปแบบนี้ AWS กำหนดไว้แล้วตามแหล่งที่มา'],
+    eventName: ['event', '<code>eventName</code>', 'ชนิดของ event เช่น <code>ObjectCreated:Put</code> คือมีไฟล์ใหม่ถูกอัปโหลด'],
+    bucket: ['event', '<code>s3.bucket.name</code>', 'ชื่อ bucket ที่ไฟล์ถูกอัปโหลด — มาจาก <strong>event</strong> ไม่ใช่ context และไม่ใช่ environment variable'],
+    key: ['event', '<code>s3.object.key</code>', 'path ของไฟล์ใน bucket — มาจาก <strong>event</strong> เปลี่ยนไปตามไฟล์แต่ละไฟล์'],
+    method: ['event', '<code>event.httpMethod</code>', 'HTTP method ของ request ที่เข้ามาทาง API Gateway'],
+    path: ['event', '<code>event.path</code>', 'path ของ API ที่ถูกเรียก'],
+    query: ['event', '<code>event.queryStringParameters</code>', 'query string ของ request เช่น <code>?category=book</code>'],
+    body: ['event', '<code>event.body</code>', 'body ของ HTTP request (GET จึงเป็น null)'],
+    awsRequestId: ['context', '<code>context.awsRequestId</code>', 'ID ของการเรียกครั้งนี้ ใช้ไล่หา log ของ request นั้น ๆ — ข้อมูลของ <strong>runtime</strong>'],
+    functionName: ['context', '<code>context.functionName</code>', 'ชื่อ function ที่กำลังรัน'],
+    memory: ['context', '<code>context.memoryLimitInMB</code>', 'memory ที่ตั้งไว้ให้ function'],
+    logStream: ['context', '<code>context.logStreamName</code>', 'ชื่อ log stream ใน CloudWatch ที่ log ของการเรียกนี้ถูกเขียนลงไป'],
+    remaining: ['context', '<code>context.getRemainingTimeInMillis()</code>', 'เวลาที่เหลือ (ms) ก่อนถึง timeout ใช้ตัดสินใจระหว่างรันว่าควรหยุดอย่างปลอดภัยไหม — เป็น <strong>method</strong> ของ context']
+  };
+  const T = (text, k) => '<button class="tok' + (INFO[k][0] === 'context' ? ' ctx' : '') + '" data-k="' + k + '">' + text + '</button>';
+  const SAMPLES = {
+    s3: {
+      code: [
+        'const s3 = new S3Client({});   // นอก handler → reuse',
+        '',
+        'export const handler = async (event, context) =&gt; {',
+        '  console.log(\'id\', ' + T('context.awsRequestId', 'awsRequestId') + ');',
+        '  const rec    = ' + T('event.Records[0]', 'records') + ';',
+        '  const bucket = ' + T('rec.s3.bucket.name', 'bucket') + ';',
+        '  const key    = ' + T('rec.s3.object.key', 'key') + ';',
+        '  if (' + T('context.getRemainingTimeInMillis()', 'remaining') + ' &lt; 1000) return;',
+        '  return convertToPng(bucket, key);  // logic แยก module',
+        '};'
+      ].join('\n'),
+      event: [
+        '{',
+        '  ' + T('"Records"', 'records') + ': [{',
+        '    "eventSource": "aws:s3",',
+        '    ' + T('"eventName": "ObjectCreated:Put"', 'eventName') + ',',
+        '    "s3": {',
+        '      "bucket": { ' + T('"name": "s3-source"', 'bucket') + ' },',
+        '      "object": { ' + T('"key": "photos/cat.jpg"', 'key') + ', "size": 48213 }',
+        '    }',
+        '  }]',
+        '}'
+      ].join('\n')
+    },
+    api: {
+      code: [
+        'export const handler = async (event, context) =&gt; {',
+        '  console.log(\'stream\', ' + T('context.logStreamName', 'logStream') + ');',
+        '  const method   = ' + T('event.httpMethod', 'method') + ';',
+        '  const category = ' + T('event.queryStringParameters', 'query') + '.category;',
+        '  const items = await listProducts(category); // query DynamoDB',
+        '  return { statusCode: 200, body: JSON.stringify(items) };',
+        '};'
+      ].join('\n'),
+      event: [
+        '{',
+        '  ' + T('"httpMethod": "GET"', 'method') + ',',
+        '  ' + T('"path": "/products"', 'path') + ',',
+        '  ' + T('"queryStringParameters": { "category": "book" }', 'query') + ',',
+        '  "headers": { "Accept": "application/json" },',
+        '  ' + T('"body": null', 'body'),
+        '}'
+      ].join('\n')
+    }
+  };
+  const ctx = [
+    '{',
+    '  ' + T('awsRequestId: "c6af9ac6-7b61-11e6-9a41-93e8"', 'awsRequestId') + ',',
+    '  ' + T('functionName: "imageConverter"', 'functionName') + ',',
+    '  ' + T('memoryLimitInMB: "128"', 'memory') + ',',
+    '  ' + T('logStreamName: "2026/10/30/[$LATEST]abc123"', 'logStream') + ',',
+    '  ' + T('getRemainingTimeInMillis()', 'remaining') + '  // → 2874',
+    '}'
+  ].join('\n');
+  const w = $('#w-handler');
+  function load(k) {
+    $('#hxCode').innerHTML = SAMPLES[k].code;
+    $('#hxEvent').innerHTML = SAMPLES[k].event;
+    $('#hxCtx').innerHTML = ctx;
+    $('#hxInfo').innerHTML = '<p class="muted">คลิกฟิลด์ที่ไฮไลต์อยู่ในโค้ดหรือใน JSON</p>';
+  }
+  w.addEventListener('click', (e) => {
+    const t = e.target.closest('.tok'); if (!t) return;
+    const k = t.dataset.k, inf = INFO[k];
+    $$('.tok', w).forEach((x) => x.classList.toggle('on', x.dataset.k === k));
+    $('#hxInfo').innerHTML = '<p><span class="badge">มาจาก ' + inf[0] + '</span> ' + inf[1] + '</p><p>' + inf[2] + '</p>';
+  });
+  const tabs = $('.seg', w);
+  tabs.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(tabs, b, 'aria-selected'); load(b.dataset.ev); });
+  load('s3');
+})();
+
+/* ================= W6: concurrency ================= */
+(function () {
+  const req = $('#cReq'), prov = $('#cProv'), resOn = $('#cResOn'), res = $('#cRes'), mem = $('#cMem'), to = $('#cTo');
+  const ACCOUNT = 1000;
+  function render() {
+    res.disabled = !resOn.checked;
+    const R = +req.value, P0 = +prov.value, M = +mem.value, hasRes = resOn.checked, RES = +res.value;
+    $('#cReqV').textContent = fmt(R);
+    $('#cProvV').textContent = fmt(P0);
+    $('#cResV').textContent = hasRes ? fmt(RES) : 'ไม่ได้ตั้ง';
+    $('#cMemV').textContent = fmt(M) + ' MB';
+    const cap = hasRes ? RES : ACCOUNT;
+    const P = hasRes ? Math.min(P0, RES) : P0;
+    const running = Math.min(R, cap), thr = R - running;
+    const warm = Math.min(running, P), cold = running - warm;
+    const tot = Math.max(R, 1);
+    const segs = $$('#cBar div');
+    segs[0].style.width = (warm / tot * 100) + '%';
+    segs[1].style.width = (cold / tot * 100) + '%';
+    segs[2].style.width = (thr / tot * 100) + '%';
+    $('#cBar').setAttribute('aria-label', 'อุ่นอยู่แล้ว ' + warm + ', ต้องสร้าง environment ใหม่ ' + cold + ', ถูก throttle ' + thr);
+    $('#cLegend').innerHTML =
+      '<span><i class="seg-warm"></i>อุ่นอยู่แล้ว (provisioned) <b>' + fmt(warm) + '</b></span>' +
+      '<span><i class="seg-cold"></i>ต้องสร้าง environment ใหม่ (อาจ cold start) <b>' + fmt(cold) + '</b></span>' +
+      '<span><i class="seg-thr"></i>ถูก throttle <b>' + fmt(thr) + '</b></span>';
+    const m = [];
+    if (R === 0) m.push(['ok', 'ไม่มี request → scale to zero ไม่มีค่าใช้จ่ายตอนว่าง' + (P > 0 ? ' (ยกเว้น provisioned ' + P + ' ตัวที่เปิดไว้ ยังคิดเงินอยู่)' : '')]);
+    if (hasRes && RES === 0) m.push(['bad', 'reserved = 0 → function ถูก throttle ทุกครั้ง (ใช้เป็นสวิตช์ปิด function) ' + EXTRA]);
+    else if (thr > 0) m.push(['bad', 'มี <strong>' + fmt(thr) + '</strong> request ถูก throttle เพราะเกิน ' + (hasRes ? '<strong>reserved = ' + fmt(RES) + '</strong> ซึ่งเป็นเพดานของ function นี้' : 'โควตา <strong>1,000 ต่อ Region ต่อ account</strong> (soft limit ขอเพิ่มได้)') + ' — sync ได้ error 429, async Lambda ลองส่งใหม่ให้ ' + EXTRA]);
+    if (hasRes && RES > 0) m.push(['ok', 'reserved = ' + fmt(RES) + ': กันโควตาไว้ให้ function นี้ และเป็นเพดานไม่ให้ใช้เกิน ปกป้องระบบปลายทาง · <strong>ไม่มีค่าใช้จ่ายเพิ่ม</strong> · function อื่นใช้ร่วมกันได้ ' + fmt(ACCOUNT - RES) + ' ' + EXTRA]);
+    if (hasRes && P0 > RES) m.push(['warn', 'provisioned ตั้งเกิน reserved ไม่ได้ ระบบนับให้เท่ากับ ' + fmt(RES) + ' ' + EXTRA]);
+    if (P > 0) m.push(['warn', 'provisioned ' + fmt(P) + ' ตัว อุ่นรอไว้ตลอด → ' + fmt(warm) + ' request แรกไม่มี cold start แต่ <strong>มีค่าใช้จ่ายเพิ่ม</strong> แม้ไม่มี request']);
+    else if (cold > 0) m.push(['', 'ไม่มี provisioned → request ที่ไม่มี environment อุ่นรออยู่ต้องรอเตรียม environment ใหม่ (cold start) — ดู <strong>Init Duration</strong> ใน log']);
+    m.push(['', 'memory ' + fmt(M) + ' MB → CPU ≈ ' + Math.min(6, M / 1769).toFixed(2) + ' vCPU ' + EXTRA + ' · CPU เพิ่มตาม memory ไม่มีช่องตั้ง CPU แยก']);
+    $('#cMsgs').innerHTML = m.map((x) => '<li class="' + x[0] + '">' + x[1] + '</li>').join('');
+  }
+  function renderTo() {
+    const s = +to.value;
+    const txt = s < 60 ? s + ' วินาที' : Math.floor(s / 60) + ' นาที' + (s % 60 ? ' ' + (s % 60) + ' วินาที' : '');
+    $('#cToV').textContent = txt;
+    const msg = $('#cToMsg');
+    if (s > 900) msg.innerHTML = '<span style="color:var(--bad-ink)">✗ ตั้งไม่ได้ — เกินเพดาน <strong>15 นาที</strong> (hard limit ขอเพิ่มไม่ได้)</span> ควรแบ่งงานให้เล็กลง หรือย้ายไปรันแบบ container เช่น Fargate';
+    else if (s === 900) msg.innerHTML = '✓ เพดานพอดี 15 นาที (900 วินาที)';
+    else msg.innerHTML = '✓ ตั้งได้ (ช่วง 1 วินาที – 15 นาที) · timeout ไม่ได้ทำให้โค้ดเร็วขึ้น แค่ให้รันได้นานขึ้น';
+  }
+  [req, prov, resOn, res, mem].forEach((el) => el.addEventListener('input', render));
+  resOn.addEventListener('change', render);
+  to.addEventListener('input', renderTo);
+  render(); renderTo();
+})();
+
+/* ================= W7: good vs bad + chain ================= */
+(function () {
+  const PAIRS = [
+    { name: 'แยก logic',
+      bad: 'export const handler = async (event) => {\n  // ทุกอย่างกองอยู่ใน handler\n  const img = await s3.getObject(...);\n  const png = await toPng(img);\n  await s3.putObject(...);\n  await sendMail(...);\n};',
+      good: '// image.js — business logic\nexport async function convertToPng(bucket, key) { ... }\n\n// index.js — handler บาง ๆ\nimport { convertToPng } from \'./image.js\';\nexport const handler = async (event) => {\n  const { bucket, object } = event.Records[0].s3;\n  return convertToPng(bucket.name, object.key);\n};',
+      exp: '<strong>แยก business logic ออกจาก handler</strong> และเขียนเป็น module → test ได้โดยไม่ต้องสร้าง event ปลอม และย้ายไปใช้ที่อื่นได้' },
+    { name: 'reuse environment',
+      bad: 'export const handler = async (event) => {\n  // สร้าง client ใหม่ทุกครั้งที่ถูกเรียก\n  const db = new DynamoDBClient({});\n  return db.send(new GetItemCommand(...));\n};',
+      good: '// สร้างครั้งเดียวตอน init\n// การเรียกที่ได้ environment เดิม (warm) ใช้ต่อได้\nconst db = new DynamoDBClient({});\n\nexport const handler = async (event) => {\n  return db.send(new GetItemCommand(...));\n};',
+      exp: '<strong>reuse runtime environment</strong>: ของที่สร้างนอก handler อยู่รอดข้ามการเรียกใน environment เดิม แต่ <strong>ห้ามเก็บ state ที่ต้องถูกต้อง</strong> (เช่น session ผู้ใช้) ไว้ตรงนั้น เพราะการเรียกครั้งถัดไปอาจไปรันคนละ environment — function ต้อง stateless' },
+    { name: 'env variables',
+      bad: "const TABLE  = 'orders-prod-2026';   // hard-code\nconst BUCKET = 'my-company-images';",
+      good: 'const TABLE  = process.env.TABLE_NAME;\nconst BUCKET = process.env.BUCKET_NAME;\n// เปลี่ยน dev / prod ได้โดยไม่ต้องแก้โค้ด',
+      exp: 'ใช้ <strong>environment variables</strong> แทนการ hard-code ค่า เช่น ชื่อตาราง ชื่อ bucket' },
+    { name: 'λ เรียก λ',
+      bad: "// λ1\nconst res = await lambda.send(new InvokeCommand({\n  FunctionName: 'lambda2',\n  InvocationType: 'RequestResponse' // นั่งรอ λ2\n}));",
+      good: '// λ1 ส่งงานเข้าคิวแล้วจบ\nawait sqs.send(new SendMessageCommand({\n  QueueUrl: process.env.QUEUE_URL,\n  MessageBody: JSON.stringify(order)\n}));\n// λ2 poll คิวเอง (event source mapping)',
+      exp: '<strong>ไม่ควรให้ function หนึ่งเรียกอีก function หนึ่งโดยตรง</strong>: invocation ทวีคูณ, error ลามต่อกัน และ λ1 ต้องเสียเงินช่วงนั่งรอ ' + EXTRA + ' — ใช้คิว (SQS/SNS) หรือ Step Functions คั่นแทน' },
+    { name: 'recursive',
+      bad: "// trigger: ObjectCreated บน bucket \"photos\"\nexport const handler = async (event) => {\n  const png = await convert(event);\n  await s3.putObject({ Bucket: 'photos', ... });\n  // ↑ เขียนกลับ bucket เดิม → trigger ตัวเองไม่จบ\n};",
+      good: '// trigger: ObjectCreated บน "photos-source"\nexport const handler = async (event) => {\n  const png = await convert(event);\n  await s3.putObject({ Bucket: process.env.DEST_BUCKET, ... });\n  // เขียนลงอีก bucket (S3-dest)\n};',
+      exp: '<strong>หลีกเลี่ยง recursive code</strong> — เขียนผลลงอีก bucket เหมือนตัวอย่าง S3-source → S3-dest ไม่อย่างนั้นจะวนเรียกตัวเองไม่จบ ค่าใช้จ่ายพุ่ง' }
+  ];
+  const tabs = $('#gbTabs');
+  tabs.innerHTML = PAIRS.map((p, i) => '<button role="tab" aria-selected="' + (i === 0) + '" data-i="' + i + '">' + p.name + '</button>').join('');
+  function show(i) {
+    const p = PAIRS[i];
+    $('#gbBody').innerHTML = '<div><div class="h bad-h">✗ แบบที่ควรเลี่ยง</div><pre><code>' + esc(p.bad) + '</code></pre></div>' +
+      '<div><div class="h good-h">✓ แบบที่แนะนำ</div><pre><code>' + esc(p.good) + '</code></pre></div>';
+    $('#gbExp').innerHTML = '<p>' + p.exp + '</p>';
+  }
+  tabs.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(tabs, b, 'aria-selected'); show(+b.dataset.i); });
+  show(0);
+
+  let mode = 'direct';
+  const seg = $('#w-gb .seg[aria-label="รูปแบบการเชื่อม"]');
+  seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(seg, b); mode = b.dataset.ch; chain(); });
+  function chain() {
+    const n = +$('#chReq').value, d = +$('#chDepth').value, err = $('#chErr').checked;
+    $('#chReqV').textContent = n; $('#chDepthV').textContent = d;
+    let h = '<span class="lam q">ผู้ใช้</span> →';
+    for (let i = 1; i <= d; i++) {
+      h += ' <span class="lam' + (err && i === d ? ' err' : '') + '">λ' + i + (err && i === d ? ' ✗' : '') + '</span>';
+      if (i < d) h += mode === 'queue' ? ' → <span class="lam q">คิว</span> →' : ' →';
+    }
+    $('#chain').innerHTML = h;
+    const m = [];
+    if (d === 1) m.push(['', 'มี function เดียว ไม่มีการเรียกต่อ: ' + n + ' request = ' + n + ' invocations']);
+    else {
+      m.push([mode === 'direct' ? 'warn' : '', n + ' request × ' + d + ' function = <strong>' + n * d + '</strong> invocations — ยิ่งสายยาว จำนวนการเรียกยิ่งทวีคูณ']);
+      if (mode === 'direct') m.push(['warn', 'λ1 ต้องนั่งรอจน λ' + d + ' ตอบ — จ่ายค่า duration ซ้อนกัน ' + d + ' ชั้น ' + EXTRA]);
+      else m.push(['ok', 'แต่ละ function ทำงานของตัวเองแล้วส่งต่อเข้าคิว ไม่ต้องนั่งรอกัน']);
+    }
+    if (err) {
+      if (d === 1) m.push(['bad', 'λ1 error → ผู้ใช้ได้ error']);
+      else if (mode === 'direct') m.push(['bad', 'λ' + d + ' error → <strong>ลามกลับ</strong> ไปทุกตัวในสาย → ผู้ใช้ได้ error ทั้ง ' + n + ' request (cascading failure)']);
+      else m.push(['ok', 'λ' + d + ' error → ข้อความค้างอยู่ในคิวรอลองใหม่ ไม่ลามกลับไปหา λ1 ผู้ใช้ไม่ได้รับ error']);
+    }
+    $('#chMsgs').innerHTML = m.map((x) => '<li class="' + x[0] + '">' + x[1] + '</li>').join('');
+  }
+  ['chReq', 'chDepth', 'chErr'].forEach((id) => $('#' + id).addEventListener('input', chain));
+  $('#chErr').addEventListener('change', chain);
+  chain();
+})();
+
+/* ================= W8: versions & alias ================= */
+(function () {
+  let edit = 1, versions = [], alias = null;
+  const log = $('#vLog'), sel = $('#vAlias');
+  const say = (html, cls) => { const li = document.createElement('li'); if (cls) li.className = cls; li.innerHTML = html; log.prepend(li); };
+  function render() {
+    let h = '<div class="vbox latest"><b>$LATEST</b><small>แก้ได้ · edit #' + edit + '</small></div>';
+    h += versions.map((v) => '<div class="vbox' + (v.n === alias ? ' target' : '') + '"><b>:' + v.n + '</b><small>🔒 immutable · edit #' + v.edit + '</small>' + (v.n === alias ? '<span class="alias-pin">PROD</span>' : '') + '</div>').join('');
+    $('#vRow').innerHTML = h;
+    sel.innerHTML = versions.length ? versions.map((v) => '<option value="' + v.n + '"' + (v.n === alias ? ' selected' : '') + '>:' + v.n + '</option>').join('') : '<option>—</option>';
+    sel.disabled = !versions.length;
+    $('#vArn').innerHTML = 'arn:aws:lambda:ap-southeast-1:123456789012:function:imageConverter<strong>:PROD</strong>' +
+      '<br><span class="muted">' + (alias ? '→ ตอนนี้ PROD ชี้ไปที่ version :' + alias + ' (ARN ของ trigger ไม่เคยเปลี่ยน)' : '→ ยังไม่มี alias — publish version ก่อน') + '</span>';
+  }
+  $('#vEdit').addEventListener('click', () => { edit++; say('แก้โค้ดใน <code>$LATEST</code> (edit #' + edit + ') — ยังไม่กระทบ production'); render(); });
+  $('#vPub').addEventListener('click', () => {
+    const last = versions[versions.length - 1];
+    if (last && last.edit === edit) { say('ไม่มีการเปลี่ยนแปลงจาก :' + last.n + ' — AWS ไม่สร้าง version ใหม่ ' + EXTRA); return; }
+    const v = { n: versions.length + 1, edit };
+    versions.push(v);
+    say('publish → ได้ version <code>:' + v.n + '</code> (snapshot ของ edit #' + edit + ') — แก้ไขไม่ได้แล้ว');
+    if (alias == null) { alias = v.n; say('สร้าง alias <code>PROD</code> → <code>:' + v.n + '</code> แล้วผูก S3 trigger กับ ARN ของ alias'); }
+    render();
+  });
+  sel.addEventListener('change', () => {
+    const to = +sel.value; if (to === alias) return;
+    say('ย้าย <code>PROD</code> จาก <code>:' + alias + '</code> → <code>:' + to + '</code> — trigger ยังชี้ ARN เดิม <strong>ไม่ต้องแก้อะไร</strong>');
+    alias = to; render();
+  });
+  $('#vTamper').addEventListener('click', () => {
+    if (!versions.length) { say('ยังไม่มี version ที่ publish — ลองกด Publish ก่อน'); return; }
+    const v = versions[versions.length - 1];
+    say('✗ แก้ <code>:' + v.n + '</code> ไม่ได้ — version ที่ publish แล้ว <strong>immutable</strong> ต้องแก้ใน <code>$LATEST</code> แล้ว publish ใหม่', 'bad');
+  });
+  render();
+  say('เริ่มต้น: มีแค่ <code>$LATEST</code> ลองแก้โค้ด → publish → ย้าย alias');
+})();
+
+/* ================= W9: REPORT + X-Ray ================= */
+(function () {
+  const INFO = {
+    rid: 'RequestId — ID ของการเรียกครั้งนี้ ตรงกับ <code>context.awsRequestId</code>',
+    dur: 'Duration — เวลาที่ handler รันจริง',
+    billed: 'Billed Duration — เวลาที่ถูกคิดเงิน (ปัดขึ้นเป็นมิลลิวินาที)',
+    mem: 'Memory Size — memory ที่ตั้งไว้ให้ function (CPU เพิ่มตามค่านี้)',
+    max: 'Max Memory Used — memory ที่ใช้จริงสูงสุด ใช้ดูว่าตั้ง memory มากหรือน้อยเกินไป',
+    init: '<strong>Init Duration — เวลาที่เสียไปกับ cold start</strong> (เตรียม environment + รันโค้ดนอก handler) มีเฉพาะการเรียกที่เป็น cold start แก้ได้ด้วย provisioned concurrency'
+  };
+  const DATA = {
+    cold: [['RequestId: 3f1c9a2e', 'rid'], ['Duration: 102.35 ms', 'dur'], ['Billed Duration: 103 ms', 'billed'], ['Memory Size: 128 MB', 'mem'], ['Max Memory Used: 71 MB', 'max'], ['Init Duration: 412.80 ms', 'init']],
+    warm: [['RequestId: 8b07d1c4', 'rid'], ['Duration: 38.10 ms', 'dur'], ['Billed Duration: 39 ms', 'billed'], ['Memory Size: 128 MB', 'mem'], ['Max Memory Used: 72 MB', 'max']]
+  };
+  let mode = 'cold';
+  const line = $('#rpLine'), info = $('#rpInfo');
+  function draw() {
+    line.innerHTML = 'REPORT ' + DATA[mode].map((f) => '<button class="tok' + (f[1] === 'init' ? ' ctx' : '') + '" data-k="' + f[1] + '">' + f[0] + '</button>').join(' ');
+    pick(mode === 'cold' ? 'init' : 'dur');
+  }
+  function pick(k) {
+    $$('.tok', line).forEach((t) => t.classList.toggle('on', t.dataset.k === k));
+    info.innerHTML = '<p>' + INFO[k] + '</p>' + (mode === 'warm' ? '<p class="muted">warm start: ไม่มี Init Duration เพราะได้ environment ที่อุ่นอยู่แล้ว Duration จึงสั้นกว่าด้วย</p>' : '');
+  }
+  line.addEventListener('click', (e) => { const t = e.target.closest('.tok'); if (t) pick(t.dataset.k); });
+  const tabs = $('#w-report .seg');
+  tabs.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(tabs, b, 'aria-selected'); mode = b.dataset.rp; draw(); });
+  draw();
+
+  const sdk = $('#xSdk'), map = $('#xMap'), xi = $('#xInfo');
+  const NODES = {
+    client: ['Client', '—', 'ผู้ใช้ที่ส่ง request เข้ามา'],
+    apigw: ['API Gateway', '12 ms', 'API Gateway ใช้เวลาน้อย ไม่ใช่คอขวด'],
+    lambda: ['Lambda', '870 ms', ''],
+    ddb: ['DynamoDB', '760 ms', 'การเรียก DynamoDB ใช้ 760 ms จาก 870 ms — นี่คือคอขวด (outlier)']
+  };
+  function drawMap() {
+    const on = sdk.checked;
+    const ids = on ? ['client', 'apigw', 'lambda', 'ddb'] : ['client', 'apigw', 'lambda'];
+    map.innerHTML = ids.map((id, i) => {
+      const n = NODES[id];
+      const slow = on ? id === 'ddb' : id === 'lambda';
+      const sub = id === 'lambda' && on ? '870 ms (โค้ดเอง 110 ms)' : n[1];
+      return (i ? '<div class="edge"></div>' : '') + '<button class="node' + (slow ? ' slow' : '') + '" data-id="' + id + '">' + n[0] + '<small>' + sub + (slow ? ' · ช้า' : '') + '</small></button>';
+    }).join('');
+    xi.innerHTML = on
+      ? '<p>X-Ray SDK เก็บข้อมูลการเรียก API ผ่าน AWS SDK → service map แสดง <strong>DynamoDB</strong> เป็น node แยก เห็นทันทีว่าใช้ 760 ms คือคอขวด</p>'
+      : '<p>เปิดแค่ active tracing: เห็นว่า <strong>Lambda</strong> ช้า (870 ms) แต่ไม่รู้ว่าช้าเพราะโค้ดเองหรือเพราะการเรียก DynamoDB — ลองติ๊ก "ใช้ X-Ray SDK"</p>';
+  }
+  map.addEventListener('click', (e) => {
+    const b = e.target.closest('.node'); if (!b) return;
+    const id = b.dataset.id;
+    let t = NODES[id][2];
+    if (id === 'lambda') t = sdk.checked ? 'Lambda รวม 870 ms แต่โค้ดของ function เองใช้แค่ 110 ms ที่เหลือคือรอ DynamoDB' : 'Lambda รวม 870 ms — ยังแยกไม่ได้ว่าเวลาหมดไปกับอะไร';
+    xi.innerHTML = '<p><strong>' + NODES[id][0] + ':</strong> ' + t + '</p>';
+  });
+  sdk.addEventListener('change', drawMap);
+  drawMap();
+})();
+
+/* ================= W10: lab stepper ================= */
+(function () {
+  const LAB = [
+    ['สร้าง Lambda function', 'เลือก runtime และผูก execution role ที่อ่าน DynamoDB ได้'],
+    ['เขียน/อัปโหลดโค้ด แล้วทดสอบ', 'โค้ด query DynamoDB และทดสอบด้วย test event'],
+    ['เปลี่ยน integration ใน API Gateway', 'เปลี่ยน method จาก Mock เป็น Lambda — API Gateway จะได้สิทธิ์เรียก Lambda ผ่าน resource-based policy'],
+    ['Deploy API แล้วทดสอบ', 'deploy API แล้วทดสอบเรียก endpoint'],
+    ['(ส่วนที่โชว์เพิ่ม) Destination, X-Ray, CloudWatch', 'ตั้ง Destination เช่น SNS สำหรับ On failure / On success, เปิด X-Ray, ดู log ใน CloudWatch']
+  ];
+  let st = store.get('lab', []);
+  const ol = $('#labSteps');
+  ol.innerHTML = LAB.map((s, i) => '<li><input type="checkbox" id="lab' + i + '" data-i="' + i + '"><label for="lab' + i + '"><b>' + (i + 1) + '. ' + s[0] + '</b><small>' + s[1] + '</small></label></li>').join('');
+  function paint() {
+    $$('input', ol).forEach((c) => { const on = !!st[+c.dataset.i]; c.checked = on; c.closest('li').classList.toggle('done', on); });
+    $('#labCount').textContent = 'ทำแล้ว ' + st.filter(Boolean).length + '/' + LAB.length;
+  }
+  ol.addEventListener('change', (e) => { const c = e.target; st[+c.dataset.i] = c.checked; store.set('lab', st); paint(); });
+  paint();
+})();
+
+/* ================= flashcards ================= */
+const FC = (function () {
+  const card = $('#fcCard');
+  let queue = FLASHCARDS.map((_, i) => i), pos = 0, known = new Set();
+  function face(flipped) {
+    card.classList.toggle('flipped', flipped);
+    $('.fc-front', card).setAttribute('aria-hidden', String(flipped));
+    $('.fc-back', card).setAttribute('aria-hidden', String(!flipped));
+  }
+  function render() {
+    face(false);
+    const empty = !queue.length;
+    if (empty) {
+      $('#fcFront').innerHTML = 'จำได้ครบทั้ง ' + FLASHCARDS.length + ' ใบแล้ว';
+      $('#fcBack').innerHTML = 'กด "สุ่ม" เพื่อเริ่มรอบใหม่';
+    } else {
+      const c = FLASHCARDS[queue[pos]];
+      $('#fcFront').innerHTML = c[0];
+      $('#fcBack').innerHTML = c[1];
+    }
+    $('#fcCount').textContent = (empty ? 'ครบแล้ว' : 'ใบที่ ' + (pos + 1) + '/' + queue.length) + ' · จำได้ ' + known.size + '/' + FLASHCARDS.length;
+    ['fcPrev', 'fcNext', 'fcYes', 'fcNo'].forEach((id) => { $('#' + id).disabled = empty; });
+  }
+  function flip() { if (queue.length) face(!card.classList.contains('flipped')); }
+  card.addEventListener('click', flip);
+  $('#fcNext').addEventListener('click', () => { pos = (pos + 1) % queue.length; render(); });
+  $('#fcPrev').addEventListener('click', () => { pos = (pos - 1 + queue.length) % queue.length; render(); });
+  $('#fcShuffle').addEventListener('click', () => {
+    if (!queue.length) { known.clear(); queue = FLASHCARDS.map((_, i) => i); }
+    queue = shuffle(queue); pos = 0; render();
+  });
+  $('#fcYes').addEventListener('click', () => {
+    known.add(queue[pos]); queue.splice(pos, 1);
+    if (pos >= queue.length) pos = 0;
+    render();
+  });
+  $('#fcNo').addEventListener('click', () => {
+    const c = queue.splice(pos, 1)[0]; queue.push(c);
+    if (pos >= queue.length) pos = 0;
+    render();
+  });
+  render();
+  return { flip, el: $('#flashcards') };
+})();
+
+/* ================= cheatsheet print ================= */
+$('#printCheat').addEventListener('click', () => {
+  document.body.classList.add('print-cheat');
+  const off = () => document.body.classList.remove('print-cheat');
+  addEventListener('afterprint', off, { once: true });
+  window.print();
+  setTimeout(off, 1000);
+});
+
+/* ================= QUIZ ================= */
+(function () {
+  const setup = $('#qSetup'), run = $('#qRun'), result = $('#qResult');
+  let mode = 'practice', S = null, tick = null;
+  let bookmarks = new Set(store.get('bm', []));
+
+  // setup UI
+  const count = (fn) => QUESTIONS.filter(fn).length;
+  $('#qTopics').innerHTML = TOPICS.map((t) => '<label class="chip"><input type="checkbox" value="' + t.key + '" checked> ' + t.label + ' <span class="muted">' + count((q) => q.topic === t.key) + '</span></label>').join('');
+  $('#qDiffs').innerHTML = DIFFS.map((d) => '<label class="chip"><input type="checkbox" value="' + d + '" checked> ' + d + ' <span class="muted">' + count((q) => q.difficulty === d) + '</span></label>').join('');
+  const modeSeg = $('#qMode');
+  modeSeg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(modeSeg, b); mode = b.dataset.m; updatePool(); });
+  setup.addEventListener('change', updatePool);
+
+  function pool() {
+    const ts = $$('#qTopics input:checked').map((i) => i.value);
+    const ds = $$('#qDiffs input:checked').map((i) => i.value);
+    const bmOnly = $('#qOnlyBm').checked;
+    return QUESTIONS.filter((q) => ts.includes(q.topic) && ds.includes(q.difficulty) && (!bmOnly || bookmarks.has(q.id)));
+  }
+  function updatePool() {
+    const p = pool();
+    $('#qCount').disabled = mode === 'timed';
+    $('#qBmN').textContent = '(' + bookmarks.size + ')';
+    const n = mode === 'timed' ? Math.min(20, p.length) : ($('#qCount').value === 'all' ? p.length : Math.min(+$('#qCount').value, p.length));
+    $('#qPoolInfo').textContent = 'ตรงตัวกรอง ' + p.length + ' ข้อ → จะได้ ' + n + ' ข้อ' + (mode === 'timed' ? ' · เวลา 25 นาที ไม่เห็นเฉลยจนกดส่ง' : ' · เห็นเฉลยทันทีหลังตอบ');
+    $('#qStart').disabled = n === 0;
+    const last = store.get('last', null), best = store.get('best', null);
+    $('#qHistory').textContent = last ? 'ครั้งล่าสุด ' + last.c + '/' + last.n + ' (' + last.p + '%)' + (best ? ' · ดีที่สุด ' + best.p + '%' : '') : '';
+  }
+  updatePool();
+
+  function start(ids, forceMode) {
+    const m = forceMode || mode;
+    let qs;
+    if (ids) qs = shuffle(ids.map((id) => qById[id]));
+    else {
+      const p = shuffle(pool());
+      const n = m === 'timed' ? 20 : ($('#qCount').value === 'all' ? p.length : +$('#qCount').value);
+      qs = p.slice(0, n);
+    }
+    if (!qs.length) return;
+    S = { mode: m, items: qs.map((q) => ({ q, order: shuffle([0, 1, 2, 3]) })), idx: 0, ans: qs.map(() => null), endAt: m === 'timed' ? Date.now() + 25 * 60 * 1000 : 0, warned: false, timeout: false };
+    setup.hidden = true; result.hidden = true; run.hidden = false;
+    clearInterval(tick);
+    if (m === 'timed') { tick = setInterval(updTimer, 1000); updTimer(); }
+    render();
+    run.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
+  }
+  function updTimer() {
+    const t = $('#qTimer');
+    const left = Math.max(0, S.endAt - Date.now());
+    const mm = Math.floor(left / 60000), ss = Math.floor(left / 1000) % 60;
+    t.textContent = '⏱ ' + String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+    t.classList.toggle('low', left < 60000);
+    if (left <= 0) { S.timeout = true; finish(); }
+  }
+  function render() {
+    const it = S.items[S.idx], q = it.q, n = S.items.length, a = S.ans[S.idx];
+    $('#qNum').textContent = 'ข้อ ' + (S.idx + 1) + ' / ' + n;
+    $('#qTopic').textContent = topicOf(q.topic).label;
+    const dp = $('#qDiff'); dp.textContent = q.difficulty;
+    dp.className = 'pill' + (q.difficulty === 'ยาก' ? ' d-hard' : q.difficulty === 'ยากมาก' ? ' d-xhard' : '');
+    const bm = $('#qBm'), isBm = bookmarks.has(q.id);
+    bm.setAttribute('aria-pressed', String(isBm)); bm.textContent = (isBm ? '★' : '☆') + ' Bookmark';
+    $('#qTimer').hidden = S.mode !== 'timed';
+    $('#qBar').style.width = (S.ans.filter((x) => x != null).length / n * 100) + '%';
+    $('#qText').innerHTML = q.question;
+    const box = $('#qChoices');
+    box.innerHTML = choiceHTML(q, it.order);
+    const fb = $('#qFb');
+    fb.innerHTML = '';
+    if (a != null) {
+      if (S.mode === 'practice') { revealChoices(box, q, a); fb.innerHTML = feedbackHTML(q, a, it.order); }
+      else { const b = $('.choice[data-orig="' + a + '"]', box); if (b) b.classList.add('selected'); }
+    }
+    $('#qPrev').disabled = S.idx === 0;
+    const last = S.idx === n - 1;
+    $('#qNext').textContent = last ? (S.mode === 'timed' ? 'ส่งคำตอบ' : 'ดูผลสรุป') : 'ถัดไป';
+    $('#qDots').innerHTML = S.items.map((_, i) => '<button class="' + (S.ans[i] != null ? 'ans' : '') + (i === S.idx ? ' cur' : '') + '" data-i="' + i + '" aria-label="ข้อ ' + (i + 1) + '">' + (i + 1) + '</button>').join('');
+  }
+  function choose(pos) {
+    if (!S) return;
+    const it = S.items[S.idx];
+    if (pos < 0 || pos >= it.order.length) return;
+    if (S.mode === 'practice' && S.ans[S.idx] != null) return;
+    S.ans[S.idx] = it.order[pos];
+    S.warned = false;
+    render();
+  }
+  function next() {
+    if (!S) return;
+    if (S.idx < S.items.length - 1) { S.idx++; render(); return; }
+    const un = S.ans.filter((x) => x == null).length;
+    if (un && !S.warned) {
+      S.warned = true;
+      $('#qFb').innerHTML = '<div class="fb bad"><strong class="verdict">ยังไม่ได้ตอบ ' + un + ' ข้อ</strong><p>กด "' + $('#qNext').textContent + '" อีกครั้งเพื่อยืนยัน (ข้อที่ไม่ได้ตอบนับเป็นผิด) หรือคลิกหมายเลขข้อด้านล่างเพื่อกลับไปตอบ</p></div>';
+      return;
+    }
+    finish();
+  }
+  $('#qChoices').addEventListener('click', (e) => { const b = e.target.closest('.choice'); if (b && !b.disabled) choose(+b.dataset.pos); });
+  $('#qNext').addEventListener('click', next);
+  $('#qPrev').addEventListener('click', () => { if (S.idx > 0) { S.idx--; render(); } });
+  $('#qDots').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; S.idx = +b.dataset.i; render(); });
+  $('#qQuit').addEventListener('click', () => { clearInterval(tick); S = null; run.hidden = true; setup.hidden = false; updatePool(); });
+  $('#qBm').addEventListener('click', () => {
+    const id = S.items[S.idx].q.id;
+    bookmarks.has(id) ? bookmarks.delete(id) : bookmarks.add(id);
+    store.set('bm', [...bookmarks]);
+    render();
+  });
+  $('#qStart').addEventListener('click', () => start());
+
+  function finish() {
+    clearInterval(tick);
+    const n = S.items.length;
+    const res = S.items.map((it, i) => ({ it, sel: S.ans[i], ok: S.ans[i] === it.q.answer }));
+    const c = res.filter((r) => r.ok).length, p = Math.round(c / n * 100);
+    store.set('last', { c, n, p });
+    const best = store.get('best', null);
+    if (!best || p > best.p) store.set('best', { c, n, p });
+
+    $('#rScore').textContent = c + '/' + n;
+    $('#rPct').textContent = p + '% · ' + (S.mode === 'timed' ? 'โหมดจับเวลา' : 'โหมดฝึกซ้อม');
+    $('#rMsg').textContent = (S.timeout ? 'หมดเวลา — ' : '') + (p >= 80 ? 'พร้อมสอบแล้ว ทบทวนข้อที่ผิดอีกนิด' : p >= 60 ? 'ใกล้แล้ว ลองย้อนอ่านหัวข้อที่คะแนนต่ำ' : 'ควรกลับไปอ่านเนื้อหาและเล่นแบบจำลองอีกรอบ');
+
+    const by = {};
+    res.forEach((r) => { const k = r.it.q.topic; by[k] = by[k] || { c: 0, t: 0 }; by[k].t++; if (r.ok) by[k].c++; });
+    const rows = TOPICS.filter((t) => by[t.key]);
+    $('#rBars').innerHTML = rows.map((t) => {
+      const b = by[t.key], pp = Math.round(b.c / b.t * 100);
+      return '<div class="tbar"><span>' + t.label + '</span><div class="track" role="img" aria-label="' + t.label + ' ' + pp + '%"><i class="' + (pp >= 80 ? '' : pp >= 50 ? 'mid' : 'low') + '" style="width:' + Math.max(pp, 2) + '%"></i></div><span class="n">' + b.c + '/' + b.t + '</span></div>';
+    }).join('');
+    let weak = null;
+    rows.forEach((t) => { const b = by[t.key], pp = b.c / b.t; if (pp < 1 && (!weak || pp < weak.pp)) weak = { t, pp, b }; });
+    const wk = $('#rWeak');
+    if (weak) {
+      wk.hidden = false;
+      wk.innerHTML = '<span class="k">หัวข้อที่ควรทบทวนที่สุด</span><p><strong>' + weak.t.label + '</strong> — ได้ ' + weak.b.c + '/' + weak.b.t + ' · <a href="#' + weak.t.sec + '">กลับไปอ่านหัวข้อนี้</a></p>';
+    } else wk.hidden = true;
+
+    const wrong = res.filter((r) => !r.ok);
+    $('#rRetryWrong').disabled = !wrong.length;
+    $('#rRetryWrong').onclick = () => start(wrong.map((r) => r.it.q.id), 'practice');
+    $('#rWrongH').hidden = !wrong.length;
+    $('#rWrong').innerHTML = wrong.map((r) => {
+      const q = r.it.q, o = r.it.order, L = (x) => LETTERS[o.indexOf(x)];
+      return '<div class="wrong-item"><p class="qtext">' + q.question + ' <span class="pill">' + topicOf(q.topic).label + '</span></p>' +
+        '<p><span style="color:var(--bad-ink)">✗ คุณตอบ:</span> ' + (r.sel == null ? 'ไม่ได้ตอบ' : L(r.sel) + ') ' + q.choices[r.sel]) + '</p>' +
+        '<p><span style="color:var(--ok-ink)">✓ คำตอบที่ถูก:</span> ' + L(q.answer) + ') ' + q.choices[q.answer] + '</p>' +
+        '<p class="muted">' + q.explain + '</p>' +
+        (r.sel != null && q.whyWrong[r.sel] ? '<p class="muted"><strong>ทำไมที่เลือกผิด:</strong> ' + q.whyWrong[r.sel] + '</p>' : '') + '</div>';
+    }).join('');
+
+    run.hidden = true; result.hidden = false;
+    result.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
+    result.focus({ preventScroll: true });
+    S = null;
+  }
+  $('#rRestart').addEventListener('click', () => { result.hidden = true; setup.hidden = false; updatePool(); setup.scrollIntoView({ block: 'start' }); });
+
+  // keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target;
+    if (t.closest && t.closest('input, select, textarea')) return;
+    if (S && !run.hidden && inView(run)) {
+      const k = e.key.toLowerCase();
+      let pos = '1234'.indexOf(k);
+      if (pos < 0 && k.length === 1) pos = 'abcd'.indexOf(k);
+      if (pos >= 0) { e.preventDefault(); choose(pos); return; }
+      if (e.key === 'Enter') {
+        const onChoice = t.closest && t.closest('.choice');
+        if (onChoice && S.ans[S.idx] == null) return;
+        if (!onChoice && t.closest && t.closest('button, a, summary')) return;
+        e.preventDefault(); next(); return;
+      }
+    }
+    if (e.key === ' ' && inView(FC.el)) {
+      if (t.closest && t.closest('button, a, summary')) return;
+      e.preventDefault(); FC.flip();
+    }
+  });
+})();
+
+})();
+</script>
+<script id="gl-js">
+/* ================= GLOSSARY TOOLTIPS ================= */
+/* ชี้เมาส์ (หรือแตะบนมือถือ) ที่ศัพท์เฉพาะเพื่อดูความหมาย ไม่ใส่ในปุ่ม, โจทย์/ตัวเลือกข้อสอบ, เกม และ flashcard เพื่อไม่ให้เฉลยคำตอบ */
+(() => {
+  const GLOSS = [[["AWS"],"Amazon Web Services ผู้ให้บริการคลาวด์ของ Amazon"],[["cloud"],"การใช้ทรัพยากรคอมพิวเตอร์ (เครื่อง, storage, ฐานข้อมูล ฯลฯ) ผ่านอินเทอร์เน็ตจากผู้ให้บริการ จ่ายตามที่ใช้"],[["serverless"],"รูปแบบที่เราไม่ต้องสร้างหรือดูแลเซิร์ฟเวอร์เอง ผู้ให้บริการดูแลเครื่อง OS และการ scale ให้ เราจ่ายตามการใช้งานจริง"],[["serverless compute"],"บริการรันโค้ดแบบไม่ต้องดูแลเซิร์ฟเวอร์ เช่น AWS Lambda"],[["serverless infrastructure"],"โครงสร้างพื้นฐานที่ไม่ต้องดูแลเครื่องเอง เช่น Fargate ใช้รัน container โดยไม่ต้องจัดการ EC2"],[["On-premises","On-premise","on-premises","on-premise","on-prem","On-Premise"],"การตั้งเซิร์ฟเวอร์และดูแลเองทั้งหมดในสถานที่ขององค์กร ไม่ได้ใช้คลาวด์"],[["VM","Virtual Machine","virtual machine"],"Virtual Machine เครื่องคอมพิวเตอร์เสมือนที่จำลองขึ้นบนเครื่องจริง มี OS ของตัวเอง"],[["OS"],"Operating System ระบบปฏิบัติการ เช่น Linux, Windows"],[["Linux"],"ระบบปฏิบัติการแบบ open source ที่นิยมใช้บนเซิร์ฟเวอร์"],[["Linux distribution","distribution ของ Linux"],"Linux รุ่นที่แต่ละผู้พัฒนาจัดชุดมา เช่น Ubuntu, Amazon Linux"],[["patch"],"การอัปเดตซอฟต์แวร์เพื่อแก้บั๊กหรือช่องโหว่ความปลอดภัย"],[["monitor","monitoring"],"การเฝ้าติดตามสถานะ ประสิทธิภาพ และ error ของระบบอย่างต่อเนื่อง"],[["compute"],"ทรัพยากรด้านการประมวลผล (CPU/หน่วยความจำ) ที่ใช้รันโปรแกรม"],[["infrastructure","infra"],"โครงสร้างพื้นฐานของระบบ เช่น เครื่องเซิร์ฟเวอร์ เครือข่าย storage"],[["business logic"],"ส่วนของโค้ดที่เป็นกฎหรือการทำงานหลักทางธุรกิจของแอป (ไม่ใช่ส่วนจัดการเครื่อง)"],[["scale","scaling"],"การเพิ่มหรือลดทรัพยากรให้พอดีกับปริมาณงาน"],[["scale to zero"],"เมื่อไม่มีงานเข้ามา ระบบลดทรัพยากรเหลือศูนย์ จึงไม่เสียค่าใช้จ่ายตอนว่าง"],[["fault tolerance"],"ความสามารถของระบบที่ยังทำงานต่อได้แม้มีบางส่วนเสียหาย"],[["availability"],"ความพร้อมใช้งาน คือสัดส่วนเวลาที่ระบบใช้งานได้"],[["High Availability","high availability","HA"],"ความพร้อมใช้งานสูง ออกแบบให้ระบบแทบไม่ล่ม เช่น กระจายไว้หลาย AZ"],[["loosely coupled"],"แต่ละส่วนของระบบผูกกันหลวม ๆ ไม่พึ่งกันโดยตรง ส่วนหนึ่งพังไม่ลากส่วนอื่นพังตาม"],[["event-driven"],"สถาปัตยกรรมที่ทำงานเมื่อมี event เกิดขึ้น เช่น มีไฟล์อัปโหลด มีข้อความเข้าคิว"],[["event"],"เหตุการณ์หรือข้อมูลที่บอกว่ามีบางอย่างเกิดขึ้น ใช้กระตุ้นให้ระบบทำงาน"],[["cold start"],"ความหน่วงตอนเรียกครั้งแรก (หรือหลังว่างนาน) เพราะต้องเตรียม environment ใหม่ ทำให้ request แรกช้ากว่าปกติ"],[["warm start"],"การเรียกที่ใช้ environment เดิมซึ่งเตรียมไว้แล้ว จึงเร็วกว่า cold start"],[["warm"],"environment ที่ถูกเตรียมไว้แล้วและยังไม่ถูกปิด เรียกซ้ำได้ทันทีโดยไม่เกิด cold start"],[["request"],"คำขอที่ client ส่งไปให้ server หรือบริการ"],[["response"],"คำตอบที่ server ส่งกลับมาให้ผู้เรียก"],[["client"],"ฝั่งผู้ใช้หรือโปรแกรมที่ส่ง request ไปเรียกบริการ"],[["server"],"เครื่องหรือโปรแกรมที่ให้บริการตอบ request"],[["API"],"Application Programming Interface ช่องทางที่โปรแกรมใช้เรียกใช้งานกันตามรูปแบบที่กำหนด"],[["REST","REST API"],"รูปแบบการออกแบบ API บน HTTP โดยใช้ method อย่าง GET/POST กับ URL ของ resource"],[["HTTP","HTTPS","HTTP/S"],"โปรโตคอลรับส่งข้อมูลบนเว็บ (HTTPS คือแบบเข้ารหัส)"],[["GET"],"HTTP method สำหรับขออ่านข้อมูล"],[["URL","URI"],"ที่อยู่ของ resource บนเครือข่าย เช่น https://example.com/path"],[["endpoint"],"ที่อยู่ (URL) ของบริการที่ใช้เรียกใช้งาน"],[["JSON"],"รูปแบบข้อมูลแบบข้อความที่เป็น key/value อ่านง่าย นิยมใช้รับส่งข้อมูลระหว่างโปรแกรม"],[["CLI"],"Command Line Interface การสั่งงานผ่านการพิมพ์คำสั่งใน terminal"],[["SDK"],"Software Development Kit ชุดไลบรารีสำหรับเขียนโปรแกรมเรียกใช้บริการ"],[["AWS SDK"],"ไลบรารีของ AWS ที่ใช้เรียกบริการ AWS จากในโค้ด เช่น อ่าน S3 หรือเขียน DynamoDB"],[["library","libraries"],"ชุดโค้ดสำเร็จรูปที่นำมาเรียกใช้ในโปรแกรมได้"],[["dependency","dependencies"],"ไลบรารีหรือแพ็กเกจอื่นที่โค้ดของเราต้องใช้จึงจะทำงานได้"],[["runtime"],"สภาพแวดล้อมที่ใช้รันโค้ด เช่น Python 3.12 หรือ Node.js 20"],[["Node.js"],"runtime สำหรับรัน JavaScript ฝั่งเซิร์ฟเวอร์"],[["Python"],"ภาษาโปรแกรมยอดนิยม ใช้เขียน Lambda และงาน automation ได้"],[["debug"],"การหาและแก้ไขข้อผิดพลาดในโปรแกรม"],[["bug"],"ข้อผิดพลาดในโปรแกรมที่ทำให้ทำงานผิดจากที่ตั้งใจ"],[["log","logs","logging"],"บันทึกข้อความที่โปรแกรมเขียนออกมาระหว่างทำงาน ใช้ตรวจสอบย้อนหลังและ debug"],[["metric","metrics"],"ค่าตัวเลขที่วัดสถานะระบบตามเวลา เช่น CPU, จำนวน error, duration"],[["latency"],"ความหน่วง เวลาที่ใช้ตั้งแต่ส่ง request จนได้ response"],[["real-time","Real-time"],"ประมวลผลทันทีที่ข้อมูลเข้ามา แทบไม่มีความหน่วง"],[["batch"],"การรวมข้อมูลหลายรายการเป็นก้อนเดียวแล้วประมวลผลทีเดียว"],[["stateless"],"ไม่เก็บสถานะไว้ในตัวระหว่างการเรียกแต่ละครั้ง ข้อมูลที่ต้องจำเก็บไว้ภายนอก เช่น DB"],[["state"],"ข้อมูลสถานะที่ระบบต้องจำไว้ข้ามการทำงานแต่ละครั้ง"],[["hard-code","hardcode","hard-coded"],"การเขียนค่าตายตัวลงในโค้ด เช่น ชื่อ bucket หรือรหัสผ่าน ทำให้เปลี่ยนค่าได้ยากและไม่ปลอดภัย"],[["production","Production","prod","PROD"],"สภาพแวดล้อมจริงที่ผู้ใช้ใช้งานอยู่"],[["environment"],"สภาพแวดล้อมสำหรับรันโค้ด หรือชุดระบบแยกตามการใช้งาน เช่น dev / test / prod"],[["Region","region"],"พื้นที่ทางภูมิศาสตร์ที่ AWS ตั้งศูนย์ข้อมูล เช่น ap-southeast-1 (สิงคโปร์) แต่ละ Region มีหลาย AZ"],[["AZ","Availability Zone"],"Availability Zone กลุ่มศูนย์ข้อมูลที่แยกกันภายใน Region หนึ่ง กระจายไว้หลาย AZ เพื่อลดความเสี่ยงล่มพร้อมกัน"],[["ap-southeast-1"],"รหัส Region สิงคโปร์ของ AWS"],[["global"],"ทำงานครอบคลุมทุก Region ไม่ผูกกับ Region ใด Region หนึ่ง"],[["account"],"บัญชี AWS ซึ่งแยกทรัพยากรและการเรียกเก็บเงินออกจากกัน"],[["ARN"],"Amazon Resource Name รหัสระบุ resource บน AWS แบบไม่ซ้ำกัน เช่น arn:aws:lambda:..."],[["resource"],"ทรัพยากรที่สร้างบน AWS เช่น EC2 instance, S3 bucket, Lambda function"],[["quota","soft limit"],"ขีดจำกัดการใช้งานของบริการ soft limit คือค่าที่ขอเพิ่มกับ AWS ได้"],[["hard limit"],"ขีดจำกัดตายตัวของบริการที่ขอเพิ่มไม่ได้"],[["MB"],"เมกะไบต์ หน่วยขนาดข้อมูล (≈ 1,000 KB)"],[["KB"],"กิโลไบต์ หน่วยขนาดข้อมูล (≈ 1,000 ไบต์)"],[["GB"],"กิกะไบต์ หน่วยขนาดข้อมูล (≈ 1,000 MB)"],[["ms"],"มิลลิวินาที (1/1000 วินาที)"],[["CPU"],"หน่วยประมวลผลกลางของคอมพิวเตอร์"],[["vCPU"],"virtual CPU หน่วย CPU เสมือนที่ได้รับจัดสรรบนคลาวด์"],[["RAM"],"หน่วยความจำหลัก อ่านเขียนเร็วมากแต่ข้อมูลหายเมื่อปิดเครื่อง"],[["memory"],"หน่วยความจำ (RAM) ที่จัดสรรให้โปรแกรม"],[["storage"],"ที่เก็บข้อมูลถาวร เช่น disk หรือ S3"],[["pay-as-you-go","Pay-as-you-go","pay for value"],"จ่ายเงินตามการใช้งานจริง ไม่ต้องจ่ายล่วงหน้า"],[["IP","IP address"],"หมายเลขที่อยู่ของเครื่องบนเครือข่าย"],[["repository","repo"],"ที่เก็บซอร์สโค้ดพร้อมประวัติการแก้ไขทั้งหมด"],[["EC2","Amazon EC2"],"Amazon Elastic Compute Cloud บริการเช่าเครื่องเสมือน (VM) บน AWS เราต้องดูแล OS เอง"],[["instance","EC2 instance"],"เครื่องเสมือนหนึ่งเครื่องที่สร้างขึ้นใน EC2"],[["instance type"],"ชนิดของเครื่อง EC2 ที่กำหนดจำนวน CPU และหน่วยความจำ เช่น t3.micro"],[["S3","Amazon S3"],"Amazon Simple Storage Service บริการเก็บไฟล์ (object) แบบไม่จำกัดขนาดรวม"],[["bucket"],"ที่เก็บไฟล์ใน S3 ชื่อต้องไม่ซ้ำกันทั่วโลก"],[["object"],"ไฟล์หนึ่งไฟล์ที่เก็บใน S3 พร้อม metadata"],[["Lambda","AWS Lambda"],"บริการ serverless compute ของ AWS รันโค้ดเมื่อมี event โดยไม่ต้องดูแลเซิร์ฟเวอร์ คิดเงินตามจำนวนครั้งและเวลาที่รัน"],[["Lambda function"],"โค้ดหนึ่งชุดที่ deploy ไว้บน Lambda พร้อมการตั้งค่า (memory, timeout, role ฯลฯ)"],[["Fargate","AWS Fargate"],"serverless compute สำหรับ container รัน container ได้โดยไม่ต้องจัดการ EC2 เอง"],[["API Gateway","Amazon API Gateway"],"บริการสร้างและจัดการ API ที่เป็นประตูรับ request จาก client แล้วส่งต่อไปยัง backend เช่น Lambda"],[["DynamoDB","Amazon DynamoDB"],"ฐานข้อมูล NoSQL แบบ key-value ของ AWS แบบ serverless เร็วและ scale อัตโนมัติ"],[["DynamoDB Streams"],"บันทึกการเปลี่ยนแปลงข้อมูลในตาราง DynamoDB ตามลำดับ ให้ Lambda นำไปประมวลผลต่อได้"],[["RDS","Amazon RDS"],"Amazon Relational Database Service ฐานข้อมูลเชิงสัมพันธ์ (เช่น MySQL, PostgreSQL) แบบ managed"],[["database","DB"],"ฐานข้อมูล ระบบเก็บและค้นหาข้อมูลอย่างเป็นระบบ"],[["CloudWatch","Amazon CloudWatch"],"บริการ monitoring ของ AWS เก็บ log และ metric ตั้ง alarm และดู dashboard"],[["CloudWatch Logs"],"ส่วนของ CloudWatch ที่เก็บ log ที่โปรแกรมเขียนออกมา (เช่น log ของ Lambda)"],[["Log group","log group"],"กลุ่มของ log stream ใน CloudWatch Logs ปกติ Lambda หนึ่ง function มีหนึ่ง log group"],[["log stream"],"ลำดับ log จากแหล่งเดียวภายใน log group เช่น จาก execution environment หนึ่งตัว"],[["X-Ray","AWS X-Ray"],"บริการ tracing ของ AWS ติดตาม request ที่วิ่งผ่านหลายบริการ เพื่อหาจุดที่ช้าหรือ error"],[["X-Ray SDK"],"ไลบรารีที่ใส่ในโค้ดเพื่อส่งข้อมูล trace (เช่น การเรียก DynamoDB/S3) ไปยัง X-Ray"],[["service map"],"แผนภาพใน X-Ray ที่แสดงบริการต่าง ๆ และการเชื่อมต่อ พร้อม latency และ error ของแต่ละจุด"],[["trace"],"เส้นทางการทำงานทั้งหมดของ request หนึ่งตัวตั้งแต่ต้นจนจบ"],[["tracing"],"การเก็บข้อมูลเส้นทางของ request ผ่านบริการต่าง ๆ เพื่อดูว่าช้าหรือพังที่ไหน"],[["active tracing"],"การตั้งค่าใน Lambda ให้ส่งข้อมูล trace ไป X-Ray โดยอัตโนมัติ"],[["EventBridge","Amazon EventBridge"],"บริการ event bus ที่รับ event จากหลายแหล่งแล้วส่งต่อไปยังเป้าหมายตามกฎ (rule) รวมถึงตั้งเวลาได้"],[["Step Functions","AWS Step Functions"],"บริการประสานงานหลายขั้นตอน (workflow) ต่อ Lambda หรือบริการอื่นเป็นลำดับ พร้อมจัดการ retry/error"],[["IAM","AWS IAM"],"AWS Identity and Access Management บริการกำหนดว่าใครหรืออะไรทำอะไรกับ resource ไหนได้"],[["policy"],"เอกสาร (JSON) ที่ระบุสิทธิ์ว่าอนุญาตหรือปฏิเสธการกระทำใดกับ resource ใด"],[["role","IAM role","IAM Role"],"ชุดสิทธิ์ที่บริการหรือผู้ใช้ \"สวม\" ใช้ชั่วคราว ไม่มีรหัสผ่านถาวร"],[["execution role","IAM execution role"],"IAM role ที่ Lambda ใช้ตอนรัน กำหนดว่า function มีสิทธิ์เรียกบริการอื่นอะไรได้บ้าง (สิทธิ์ขาออก)"],[["resource-based policy","Resource-based policy"],"policy ที่ติดไว้กับ resource เอง กำหนดว่าใครมีสิทธิ์เรียกใช้ resource นี้ เช่น อนุญาตให้ S3 เรียก Lambda (สิทธิ์ขาเข้า)"],[["permission","permissions"],"สิทธิ์ในการกระทำบางอย่างกับ resource"],[["AccessDenied"],"error ที่เกิดเมื่อไม่มีสิทธิ์ทำสิ่งที่ร้องขอ"],[["Server-side encryption","server-side encryption","SSE"],"การเข้ารหัสข้อมูลฝั่งบริการ (เช่น ตอนเก็บใน SQS/S3) ก่อนบันทึก และถอดรหัสให้ตอนอ่าน"],[["function"],"ในบริบท Lambda คือโค้ดหนึ่งชุดที่ deploy ไว้และถูกเรียกเมื่อมี event"],[["invoke"],"สั่งให้ Lambda function ทำงานหนึ่งครั้ง"],[["invocation","Invocation"],"การเรียกให้ function ทำงานหนึ่งครั้ง"],[["invocation model"],"รูปแบบการเรียก Lambda มี 3 แบบ: synchronous, asynchronous และ poll-based (event source mapping)"],[["InvocationType"],"พารามิเตอร์ตอนเรียก Lambda ผ่าน API: RequestResponse = sync, Event = async, DryRun = ทดสอบสิทธิ์"],[["RequestResponse"],"ค่า InvocationType ที่เรียก Lambda แบบ synchronous รอผลลัพธ์กลับมา"],[["synchronous","sync","Synchronous","Sync"],"การเรียกแบบรอผล ผู้เรียกรอจนได้คำตอบกลับมาก่อนทำงานต่อ"],[["asynchronous","async","Asynchronous","Async"],"การเรียกแบบไม่รอผล ส่งงานแล้วทำอย่างอื่นต่อได้เลย งานถูกประมวลผลภายหลัง"],[["push","push model"],"การส่งข้อมูลออกไปหาปลายทางเอง: (Lambda) ต้นทางเป็นฝ่ายส่ง event มาเรียก function เช่น S3, SNS, API Gateway / (SNS) ส่งข้อความถึง subscriber ทันที / (Docker) อัปโหลด image ขึ้น registry"],[["pull","pull model"],"การเป็นฝ่ายไปดึงข้อมูลเอง: (Lambda) ไปดึงจาก SQS, Kinesis, DynamoDB Streams / (SQS) consumer มาดึงข้อความเอง / (Docker) ดาวน์โหลด image จาก registry"],[["poll","polling"],"การวนถามหรือดึงข้อมูลจากต้นทางเป็นระยะว่ามีข้อมูลใหม่หรือไม่"],[["event source"],"บริการต้นทางที่สร้าง event มากระตุ้น Lambda เช่น S3, SQS"],[["event source mapping"],"ตัวกลางของ Lambda ที่คอย poll ข้อมูลจาก SQS, Kinesis หรือ DynamoDB Streams แล้วเรียก function พร้อมข้อมูลเป็น batch"],[["trigger"],"ตัวกระตุ้นที่ทำให้ function ทำงาน เช่น มีไฟล์ใหม่ใน S3"],[["retry"],"การลองทำซ้ำอัตโนมัติเมื่อครั้งก่อนล้มเหลว"],[["Destination","Destinations","destination"],"ปลายทางที่ Lambda ส่งผลการเรียกแบบ async ไปให้ แยกได้ตามกรณีสำเร็จ (On success) และล้มเหลว (On failure)"],[["On success"],"เงื่อนไขของ Destination ที่ส่งผลไปเมื่อ function ทำงานสำเร็จ"],[["On failure"],"เงื่อนไขของ Destination ที่ส่ง event ไปเมื่อ function ล้มเหลวแม้ retry ครบแล้ว"],[["handler","Handler"],"ฟังก์ชันจุดเริ่มต้นในโค้ดที่ Lambda เรียกเมื่อมี event โดยรับ event และ context เป็นพารามิเตอร์"],[["context","context object"],"ออบเจกต์ที่ Lambda ส่งให้ handler มีข้อมูลการรัน เช่น request ID, ชื่อ function, เวลาที่เหลือ"],[["event object"],"ข้อมูลของ event ที่ส่งเข้ามาให้ handler เช่น รายละเอียดไฟล์ที่อัปโหลด"],[["awsRequestId"],"รหัสประจำการเรียก Lambda แต่ละครั้ง ใช้ค้น log ของ request นั้น"],[["getRemainingTimeInMillis"],"เมธอดของ context ที่บอกว่าเหลือเวลาก่อน timeout อีกกี่มิลลิวินาที"],[["deployment package"],"ไฟล์ zip หรือ container image ที่บรรจุโค้ดและ dependencies สำหรับ deploy ขึ้น Lambda"],[["zip"],"ไฟล์บีบอัดรวมหลายไฟล์ไว้ในไฟล์เดียว"],[["container image"],"แพ็กเกจที่รวมโค้ด runtime และ dependencies ทั้งหมด ใช้สร้าง container ได้"],[["layer","layers","Layer","Layers"],"(Lambda) แพ็กเกจไลบรารีหรือโค้ดที่ใช้ร่วมกันได้หลาย function / (Docker) ชั้นของ image ที่ซ้อนกัน แต่ละคำสั่งใน Dockerfile สร้างหนึ่งชั้น"],[["environment variable","environment variables"],"ค่าตั้งค่าที่ส่งให้โค้ดตอนรัน เช่น ชื่อตาราง เปลี่ยนค่าได้โดยไม่ต้องแก้โค้ด"],[["timeout","Timeout"],"เวลาสูงสุดที่ยอมให้ทำงาน ถ้าเกินจะถูกหยุด (Lambda ตั้งได้สูงสุด 15 นาที)"],[["concurrency","Concurrency"],"จำนวน request ที่ function กำลังประมวลผลพร้อมกันในขณะหนึ่ง"],[["reserved concurrency","Reserved concurrency"],"การกันโควตา concurrency ไว้ให้ function เฉพาะตัว และเป็นเพดานสูงสุดของ function นั้นด้วย"],[["provisioned concurrency","Provisioned concurrency"],"การเตรียม execution environment ให้อุ่นไว้ล่วงหน้าตามจำนวนที่กำหนด เพื่อตัดปัญหา cold start (มีค่าใช้จ่ายเพิ่ม)"],[["throttle","throttling","throttled"],"การจำกัดหรือปฏิเสธ request เมื่อเกินขีดจำกัด เช่น concurrency เต็ม"],[["Init","Init Duration"],"เวลาที่ใช้เตรียม environment และรันโค้ดนอก handler ตอน cold start"],[["Duration"],"เวลาที่ handler ใช้ทำงานในการเรียกครั้งนั้น"],[["Billed Duration"],"เวลาที่ถูกคิดเงินจริง (ปัดขึ้นเป็นมิลลิวินาที)"],[["REPORT"],"บรรทัดสรุปท้ายการเรียกแต่ละครั้งใน log ของ Lambda บอก Duration, Billed Duration, Memory และ Init Duration"],[["outlier"],"ค่าที่ผิดปกติแตกต่างจากค่าส่วนใหญ่มาก เช่น request ที่ช้ากว่าปกติมาก"],[["recursive code","recursive"],"โค้ดที่ไปกระตุ้นตัวเองซ้ำ เช่น Lambda เขียนไฟล์ลง bucket เดียวกับที่ trigger ตัวเอง ทำให้วนไม่จบ"],[["cascading","cascading failure"],"ความล้มเหลวที่ลามต่อเป็นทอด ๆ จากส่วนหนึ่งไปยังส่วนอื่น"],[["connection"],"การเชื่อมต่อกับบริการอื่น เช่น ฐานข้อมูล ควรสร้างไว้นอก handler เพื่อใช้ซ้ำ"],[["reuse"],"นำกลับมาใช้ซ้ำ เช่น ใช้ execution environment หรือ connection เดิมในการเรียกครั้งถัดไป"],[["version","versions","Version"],"สำเนาของ function ที่ publish แล้ว ไม่สามารถแก้ไขได้ (immutable) มีเลขกำกับ 1, 2, 3..."],[["versioning","Versioning"],"การเก็บหลายเวอร์ชันของ function หรือไฟล์ไว้ เพื่อย้อนกลับได้"],[["$LATEST","LATEST"],"เวอร์ชันล่าสุดของ function ที่ยังแก้ไขได้ (ยังไม่ publish)"],[["publish","Publish"],"การสร้าง version ใหม่ที่ล็อกโค้ดและการตั้งค่าไว้ ณ ขณะนั้น"],[["alias","Alias"],"ชื่อเล่นที่ชี้ไปยัง version หนึ่ง เช่น PROD → v3 เปลี่ยนเป้าหมายได้โดยผู้เรียกไม่ต้องแก้ ARN และแบ่ง traffic ได้"],[["immutable","Immutable"],"เปลี่ยนแปลงไม่ได้หลังสร้าง / (Elastic Beanstalk) deploy โดยสร้างเครื่องชุดใหม่ทั้งหมดแทนการแก้เครื่องเดิม"],[["canary","Canary"],"การปล่อยเวอร์ชันใหม่ให้ผู้ใช้กลุ่มเล็กก่อน ถ้าไม่มีปัญหาจึงขยายให้ทุกคน"],[["traffic"],"ปริมาณ request หรือข้อมูลที่วิ่งเข้าระบบ"],[["mock"],"การจำลองบริการหรือข้อมูลขึ้นมาแทนของจริงเพื่อทดสอบ"],[["console","AWS Console"],"หน้าเว็บสำหรับจัดการบริการ AWS ด้วยการคลิก"],[["PutObject","putObject"],"API ของ S3 สำหรับอัปโหลดไฟล์ (object) ลง bucket"],[["GetObject"],"API ของ S3 สำหรับอ่าน/ดาวน์โหลดไฟล์จาก bucket"],[["InvokeFunction"],"สิทธิ์ (action) lambda:InvokeFunction ที่อนุญาตให้เรียก Lambda function"],[["hashtag"],"คำที่ขึ้นต้นด้วย # ในโซเชียลมีเดีย ใช้จัดกลุ่มหัวข้อ"],[["container","Container"],"แพ็กเกจที่รวมแอปกับ dependencies ทั้งหมด รันแยกจากกันโดยใช้ kernel ร่วมกับ OS ของเครื่อง host เบาและเริ่มเร็วกว่า VM"],[["image","images","Image"],"แม่แบบแบบอ่านอย่างเดียวที่บรรจุโค้ด runtime และ dependencies ใช้สร้าง container"],[["tag","Tag"],"ป้ายชื่อเวอร์ชันของ image เช่น myapp:v2 หรือ :latest"],[["cluster"],"กลุ่มเครื่องหรือทรัพยากรที่ทำงานร่วมกันเป็นระบบเดียว"],[["ECR","Amazon ECR"],"Amazon Elastic Container Registry ที่เก็บ container image แบบ private ของ AWS"],[["capacity","Capacity"],"ปริมาณทรัพยากรที่มีไว้รองรับงาน"],[["Reserved Instance","RI"],"การจองใช้ EC2 ระยะยาว 1 หรือ 3 ปี แลกกับส่วนลดสูง"],[["load balancer","Load Balancer","LB"],"ตัวกระจาย request ไปยังหลายเครื่อง เพื่อแบ่งโหลดและข้ามเครื่องที่พัง"],[["deploy","deployment","Deploy","Deployment"],"การนำโค้ดหรือแอปขึ้นไปทำงานบนระบบจริง"],[["cache","Cache"],"ที่เก็บสำเนาข้อมูลชั่วคราวใกล้ผู้ใช้หรือในหน่วยความจำ เพื่อให้อ่านซ้ำได้เร็วโดยไม่ต้องไปถึงต้นทาง"],[["caching","Caching"],"การเก็บข้อมูลที่ถูกเรียกบ่อยไว้ใน cache เพื่อลด latency และโหลดของต้นทาง"],[["cache miss","Cache Miss","miss"],"หาข้อมูลใน cache ไม่เจอ ต้องไปดึงจากต้นทาง (origin/database) ซึ่งช้ากว่า"],[["TTL"],"Time To Live อายุของข้อมูลใน cache เมื่อหมดอายุจะถูกลบหรือต้องดึงใหม่"],[["session"],"ข้อมูลการใช้งานของผู้ใช้ระหว่างที่ล็อกอินอยู่ เช่น ตะกร้าสินค้า"],[["Edge Location","edge location","edge","Edge"],"จุดให้บริการของ CloudFront ที่กระจายอยู่ทั่วโลก ใกล้ผู้ใช้"],[["distribution","Distribution","CloudFront Distribution"],"การตั้งค่า CloudFront หนึ่งชุด ระบุ origin, behavior และ cache policy ได้ domain ของตัวเอง"],[["query string"],"ส่วนหลังเครื่องหมาย ? ใน URL เช่น ?page=2&lang=th"],[["header","Header"],"ข้อมูลเสริมที่แนบมากับ HTTP request/response เช่น Accept-Language"],[["URL path","path"],"ส่วนเส้นทางใน URL หลังชื่อโดเมน เช่น /images/logo.png"],[["message","Message"],"ข้อมูลหนึ่งชิ้นที่ส่งผ่านระบบ messaging เช่น คำสั่งซื้อหนึ่งรายการ"],[["queue","Queue"],"คิวพักข้อความ ผู้ส่งใส่ข้อความเข้าไป ผู้รับดึงไปทำทีละรายการตามจังหวะของตัวเอง"],[["topic","Topic"],"(SNS) ช่องทางกลางที่ publisher ส่งข้อความเข้าไป แล้วกระจายไปยังทุก subscriber"],[["SNS topic"],"topic ของ Amazon SNS ใช้กระจายข้อความไปยังหลาย subscriber"],[["SQS","Amazon SQS"],"Amazon Simple Queue Service บริการ message queue แบบ fully managed ใช้พักข้อความระหว่างระบบ"],[["SNS","Amazon SNS"],"Amazon Simple Notification Service บริการ pub/sub ส่งข้อความหนึ่งครั้งไปยังหลาย subscriber (SQS, Lambda, email, SMS ฯลฯ)"],[["SendMessage","send-message"],"API ของ SQS สำหรับส่งข้อความเข้า queue"],[["ReceiveMessage","receive-message"],"API ของ SQS สำหรับดึงข้อความออกจาก queue (ข้อความยังไม่ถูกลบ)"],[["acknowledge","acknowledgement","ack"],"การยืนยันว่ารับหรือประมวลผลข้อความเรียบร้อยแล้ว (ใน SQS คือการลบข้อความ)"],[["Dead-Letter Queue","dead-letter queue","DLQ"],"queue สำรองที่เก็บข้อความซึ่งประมวลผลไม่สำเร็จเกินจำนวนครั้งที่กำหนด เพื่อนำมาตรวจสอบภายหลัง"],[["Kinesis","Amazon Kinesis"],"กลุ่มบริการของ AWS สำหรับรับและประมวลผลข้อมูล streaming แบบ real-time"],[["stream","Stream"],"กระแสข้อมูลที่ไหลเข้ามาต่อเนื่องตามลำดับเวลา"],[["record","records","Record"],"ข้อมูลหนึ่งรายการ เช่น หนึ่งรายการใน stream, ใน event ที่ส่งให้ Lambda หรือ DNS record"],[["Dev"],"Development ทีมหรือฝั่งที่เขียนและพัฒนาซอฟต์แวร์"],[["CI","Continuous Integration"],"Continuous Integration การรวมโค้ดเข้ากับ repository หลักบ่อย ๆ แล้ว build และ test อัตโนมัติทุกครั้ง"],[["CD"],"Continuous Delivery หรือ Continuous Deployment การส่งโค้ดที่ผ่านการทดสอบไปยัง environment ต่าง ๆ อัตโนมัติ"],[["build","Build"],"ขั้นตอนแปลงซอร์สโค้ดให้พร้อมรัน เช่น compile, ติดตั้ง dependencies หรือสร้าง container image"],[["commit"],"การบันทึกชุดการเปลี่ยนแปลงโค้ดลงใน Git"],[["CodeCommit","AWS CodeCommit"],"บริการเก็บ Git repository แบบ private ของ AWS (ปิดรับลูกค้าใหม่แล้ว)"],[["AWS Config","Config"],"บริการบันทึกและตรวจสอบการตั้งค่าของ resource ว่าเป็นไปตามกฎที่กำหนดหรือไม่"],[["stack","Stack"],"ชุด resource ที่สร้างจาก template หนึ่งไฟล์ จัดการ (สร้าง/อัปเดต/ลบ) พร้อมกันเป็นหน่วยเดียว"],[["Parameters"],"ส่วนของ template ที่รับค่าจากผู้ใช้ตอนสร้าง stack เช่น ชื่อ environment"],[["Ref"],"ฟังก์ชันใน CloudFormation สำหรับอ้างถึงค่าของ parameter หรือ resource อื่น"],[["AWS SAM","SAM"],"AWS Serverless Application Model เฟรมเวิร์ก open source ต่อยอด CloudFormation เขียน template สั้น ๆ สำหรับแอป serverless (Lambda, API Gateway, DynamoDB)"],[["provision","provisioning","Provision"],"การจัดเตรียมและสร้างทรัพยากร เช่น สร้างเครื่องหรือฐานข้อมูลให้พร้อมใช้"]];
+  const SKIP = 'script,style,code,pre,kbd,svg,button,a,input,select,textarea,h1,h2,.gl,.gl-tip,.fc,.choice,.qq,.qtext,.game-q,.diag-card,.sec-label,.eyebrow,.stat,[data-no-gloss]';
+  const root = document.querySelector('main');
+  if (!root || !GLOSS.length) return;
+
+  // alias ที่มีตัวพิมพ์ใหญ่ = จับแบบตรงตัว, ตัวพิมพ์เล็กล้วน = ตัวแรกของแต่ละคำเป็นใหญ่ได้ + พหูพจน์ -s/-es
+  const exact = new Map(), lower = new Map(), pats = [];
+  GLOSS.forEach((g, i) => g[0].forEach((a) => {
+    const cs = /[A-Z]/.test(a);
+    (cs ? exact : lower).set(a, i);
+    let p = a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (!cs) p = p.replace(/(^|[\s\-\/])([a-z])/g, (m, s, c) => s + '[' + c + c.toUpperCase() + ']') + '(?:e?s)?';
+    pats.push([a.length, p]);
+  }));
+  pats.sort((a, b) => b[0] - a[0]);
+  const RE = new RegExp('(?<![A-Za-z0-9@_\\-])(?:' + pats.map((p) => p[1]).join('|') + ')(?![A-Za-z0-9@_\\-])', 'g');
+  const find = (t) => {
+    if (exact.has(t)) return exact.get(t);
+    const l = t.toLowerCase();
+    for (const k of [l, l.replace(/es$/, ''), l.replace(/s$/, '')]) if (lower.has(k)) return lower.get(k);
+    return null;
+  };
+
+  const wrap = (el) => {
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (!n.nodeValue.trim() || n.parentElement.closest(SKIP)) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+    });
+    const nodes = [];
+    while (w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach((n) => {
+      const s = n.nodeValue;
+      let m, last = 0, frag = null;
+      RE.lastIndex = 0;
+      while ((m = RE.exec(s))) {
+        const i = find(m[0]);
+        if (i == null) continue;
+        frag = frag || document.createDocumentFragment();
+        frag.append(s.slice(last, m.index));
+        const sp = document.createElement('span');
+        sp.className = 'gl';
+        sp.dataset.g = i;
+        sp.textContent = m[0];
+        frag.append(sp);
+        last = m.index + m[0].length;
+      }
+      if (frag) { frag.append(s.slice(last)); n.replaceWith(frag); }
+    });
+  };
+
+  // เนื้อหาที่ JS วาดใหม่ภายหลัง (widget, ข้อสอบ, เฉลย) ก็ได้ tooltip ด้วย
+  const mo = new MutationObserver((recs) => {
+    const els = new Set();
+    recs.forEach((r) => r.addedNodes.forEach((n) => {
+      const el = n.nodeType === 1 ? n : n.parentElement;
+      if (el && el.isConnected && !el.closest('.gl')) els.add(el);
+    }));
+    if (!els.size) return;
+    mo.disconnect();
+    els.forEach(wrap);
+    mo.takeRecords();
+    mo.observe(root, { childList: true, subtree: true });
+  });
+  wrap(root);
+  mo.observe(root, { childList: true, subtree: true });
+
+  const tip = document.createElement('div');
+  tip.className = 'gl-tip';
+  tip.setAttribute('role', 'tooltip');
+  tip.hidden = true;
+  document.body.append(tip);
+  let cur = null;
+
+  const hide = () => {
+    if (cur) cur.classList.remove('on');
+    cur = null;
+    tip.hidden = true;
+  };
+  const show = (el) => {
+    if (el === cur) return;
+    hide();
+    const g = GLOSS[el.dataset.g];
+    if (!g) return;
+    tip.innerHTML = '';
+    const b = document.createElement('b');
+    b.textContent = g[0][0];
+    const p = document.createElement('span');
+    p.textContent = g[1];
+    tip.append(b, p);
+    tip.hidden = false;
+    cur = el;
+    el.classList.add('on');
+    const r = el.getClientRects()[0] || el.getBoundingClientRect();
+    const tw = tip.offsetWidth, th = tip.offsetHeight, gap = 8;
+    const headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+    let top = r.top - th - gap;
+    if (top < headerH + gap) top = r.bottom + gap;
+    const left = Math.max(gap, Math.min(r.left + r.width / 2 - tw / 2, innerWidth - tw - gap));
+    tip.style.top = top + 'px';
+    tip.style.left = left + 'px';
+  };
+
+  document.addEventListener('mouseover', (e) => {
+    const t = e.target.closest && e.target.closest('.gl');
+    if (t) show(t); else if (cur) hide();
+  });
+  // มือถือ: แตะที่คำเพื่อเปิด แตะที่อื่นเพื่อปิด
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest && e.target.closest('.gl');
+    if (t) show(t); else hide();
+  });
+  addEventListener('scroll', hide, { passive: true });
+  addEventListener('resize', hide);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
+})();
+</script>
+</body>
+</html>

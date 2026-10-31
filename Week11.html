@@ -1,0 +1,2735 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Messaging — Module 10</title>
+<meta name="description" content="สื่อทบทวนก่อนสอบ ACD Module 10: Developing with Messaging Services (SQS, SNS, Kinesis) แบบ interactive พร้อมข้อสอบจำลอง">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fafafa; --card:#ffffff; --line:#e5e7eb; --line-2:#d1d5db; --text:#111827; --muted:#6b7280; --hover:#f3f4f6; --code-bg:#f6f7f9;
+  --accent:#ff9900; --accent-ink:#b45309; --accent-soft:#fff7ed; --on-accent:#111827;
+  --ok:#16a34a; --ok-ink:#15803d; --ok-soft:#f0fdf4;
+  --bad:#dc2626; --bad-ink:#b91c1c; --bad-soft:#fef2f2;
+  --info:#2563eb; --info-ink:#1d4ed8; --info-soft:#eff6ff;
+  --r:12px; --r-sm:8px;
+  --font:'IBM Plex Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --header-h:56px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0f14; --card:#121821; --line:#1f2937; --line-2:#334155; --text:#e5e7eb; --muted:#9ca3af; --hover:#18212d; --code-bg:#0e141b;
+    --accent:#ff9900; --accent-ink:#ffb547; --accent-soft:#2a1e0b; --on-accent:#111827;
+    --ok:#22c55e; --ok-ink:#4ade80; --ok-soft:#0f2618;
+    --bad:#ef4444; --bad-ink:#f87171; --bad-soft:#2b1214;
+    --info:#3b82f6; --info-ink:#93c5fd; --info-soft:#0f1b30;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b0f14; --card:#121821; --line:#1f2937; --line-2:#334155; --text:#e5e7eb; --muted:#9ca3af; --hover:#18212d; --code-bg:#0e141b;
+  --accent:#ff9900; --accent-ink:#ffb547; --accent-soft:#2a1e0b; --on-accent:#111827;
+  --ok:#22c55e; --ok-ink:#4ade80; --ok-soft:#0f2618;
+  --bad:#ef4444; --bad-ink:#f87171; --bad-soft:#2b1214;
+  --info:#3b82f6; --info-ink:#93c5fd; --info-soft:#0f1b30;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:17px;line-height:1.75;overflow-x:hidden}
+a{color:var(--info-ink);text-underline-offset:3px}
+code{font-family:var(--mono);font-size:.86em;background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:.05em .35em;overflow-wrap:anywhere}
+pre{font-family:var(--mono);font-size:13.5px;line-height:1.65;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 16px;overflow-x:auto;margin:16px 0}
+pre code{background:none;border:0;padding:0;font-size:inherit;white-space:pre}
+h1,h2,h3,h4{line-height:1.35;margin:0}
+h2{font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:600;margin:32px 0 8px}
+p{margin:12px 0}
+ul,ol{padding-left:1.3em;margin:12px 0}
+li{margin:4px 0}
+strong{font-weight:600}
+:focus-visible{outline:2px solid var(--info);outline-offset:2px;border-radius:4px}
+button{font:inherit;color:inherit}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono)}
+
+/* ---------- header ---------- */
+.topbar{position:sticky;top:0;z-index:40;height:var(--header-h);display:flex;align-items:center;gap:12px;padding:0 20px;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;color:var(--text);min-width:0}
+.brand-mark{width:28px;height:28px;border-radius:7px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:700;font-size:16px;flex:none}
+.brand span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .spacer{flex:1}
+.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);background:var(--card);border-radius:var(--r-sm);cursor:pointer;flex:none}
+.icon-btn:hover{background:var(--hover)}
+.icon-btn svg{width:18px;height:18px}
+#menuBtn{display:none}
+.progress{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--accent);transition:width .1s linear}
+
+/* ---------- layout ---------- */
+.layout{display:grid;grid-template-columns:248px minmax(0,1fr);max-width:1180px;margin:0 auto}
+.sidenav{position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:24px 12px 40px 20px;border-right:1px solid var(--line)}
+.sidenav .group{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:20px 10px 6px}
+.sidenav .group:first-child{margin-top:0}
+.sidenav a{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:14.5px;line-height:1.5}
+.sidenav a:hover{background:var(--hover);color:var(--text)}
+.sidenav a.active{color:var(--text);background:var(--hover);box-shadow:inset 2px 0 0 var(--accent)}
+.sidenav .num{font-family:var(--mono);font-size:12px;width:20px;flex:none}
+.sidenav .check{margin-left:auto;color:var(--ok-ink);font-size:13px;visibility:hidden}
+.sidenav a.done .check{visibility:visible}
+.nav-meta{margin:24px 10px 0;font-size:13px;color:var(--muted)}
+.nav-meta .meter{height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:6px}
+.nav-meta .meter i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
+.scrim{display:none}
+main{min-width:0;padding:8px 48px 80px}
+.content{max-width:780px;margin:0 auto}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 48px;border-bottom:1px solid var(--line)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px}
+.eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.hero h1{font-size:clamp(2rem,5vw,2.9rem);font-weight:700;letter-spacing:-.02em;margin:18px 0 12px;line-height:1.2}
+.hero .lead{font-size:1.2rem;color:var(--muted);margin:0 0 28px;max-width:60ch}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+.stats{display:flex;gap:32px;flex-wrap:wrap;margin-top:40px}
+.stat b{display:block;font-size:1.6rem;font-weight:700;line-height:1.2}
+.stat span{font-size:14px;color:var(--muted)}
+.source-note{font-size:14px;color:var(--muted);margin-top:28px;max-width:68ch}
+
+/* ---------- sections ---------- */
+.sec{padding:64px 0 24px;border-bottom:1px solid var(--line);scroll-margin-top:calc(var(--header-h) + 8px)}
+.sec-label{font-family:var(--mono);font-size:13px;color:var(--accent-ink);margin-bottom:8px}
+.tldr{margin:20px 0 24px;padding:14px 18px;border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--card);border-radius:var(--r-sm)}
+.tldr .k{display:block;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.tldr p{margin:0;font-size:1.05rem;font-weight:500}
+.callout{margin:20px 0;padding:14px 18px;border-radius:var(--r-sm);border-left:3px solid}
+.callout .k{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.callout ul{margin:6px 0 0}
+.callout p:first-of-type{margin-top:0}
+.callout p:last-child{margin-bottom:0}
+.trap{background:var(--accent-soft);border-color:var(--accent)}
+.trap .k{color:var(--accent-ink)}
+.note{background:var(--info-soft);border-color:var(--info)}
+.note .k{color:var(--info-ink)}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;line-height:1.5;padding:0 7px;border-radius:999px;border:1px solid var(--line-2);color:var(--muted);vertical-align:2px;white-space:nowrap}
+.badge.extra{border-style:dashed}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin:16px 0;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:15px;line-height:1.6}
+.table-wrap table{min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+th{font-weight:600;background:var(--hover);font-size:14px}
+tr:last-child td{border-bottom:0}
+.sec-foot{display:flex;align-items:center;gap:12px;margin:28px 0 8px;flex-wrap:wrap}
+
+/* ---------- buttons, chips ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:7px 16px;border:1px solid var(--line-2);background:var(--card);border-radius:var(--r-sm);cursor:pointer;font-size:15px;font-weight:500;text-decoration:none;color:var(--text);transition:background .15s,border-color .15s}
+.btn:hover{background:var(--hover)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn-primary:hover{background:#f08c00}
+.btn-sm{min-height:32px;padding:4px 12px;font-size:14px}
+.btn[aria-pressed="true"].done-btn{border-color:var(--ok);color:var(--ok-ink);background:var(--ok-soft)}
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.seg button{border:0;background:transparent;padding:5px 12px;border-radius:7px;cursor:pointer;font-size:14.5px;color:var(--muted)}
+.seg button[aria-pressed="true"],.seg button[aria-selected="true"]{background:var(--card);color:var(--text);box-shadow:0 0 0 1px var(--line-2);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid var(--line-2);border-radius:999px;font-size:14px;cursor:pointer;background:var(--card);user-select:none}
+.chip input{margin:0;accent-color:var(--accent)}
+.chip:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.chip:has(input:focus-visible){outline:2px solid var(--info);outline-offset:2px}
+.field{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+.field > label,.field > .lbl{font-size:14px;font-weight:500}
+select{font:inherit;font-size:15px;color:var(--text);background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:6px 10px;min-height:38px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+/* ---------- widget ---------- */
+.widget{margin:28px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--card);overflow:hidden}
+.widget-head{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.widget-head .tag{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-ink)}
+.widget-head h3{margin:0;font-size:1.05rem}
+.widget-body{padding:20px}
+.widget-body > :first-child{margin-top:0}
+.explain{margin-top:16px;padding:12px 16px;border-radius:var(--r-sm);background:var(--hover);font-size:15.5px;line-height:1.7}
+.explain > :first-child{margin-top:0}.explain > :last-child{margin-bottom:0}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 20px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* responsibility */
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:4px 0 14px}
+.levels button{border:1px solid var(--line);background:var(--bg);border-radius:var(--r-sm);padding:8px 6px;cursor:pointer;font-size:14px;line-height:1.35}
+.levels button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.stack{display:flex;flex-direction:column;gap:4px}
+.layer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 12px;border-radius:7px;border:1px solid var(--line);font-size:14.5px;transition:background .2s,border-color .2s}
+.layer .who{font-size:12.5px;font-weight:600;white-space:nowrap}
+.layer.you{background:var(--accent-soft);border-color:var(--accent)}
+.layer.you .who{color:var(--accent-ink)}
+.layer.aws{background:var(--hover)}
+.layer.aws .who{color:var(--muted)}
+.proscons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.proscons > div{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 14px;font-size:15px}
+.proscons h4{font-size:13px;margin-bottom:4px;color:var(--muted);font-weight:600}
+.proscons ul{margin:0;padding-left:1.1em}
+
+/* flow */
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:4px 2px 10px}
+.node{flex:none;border:1px solid var(--line-2);background:var(--bg);border-radius:10px;padding:10px 12px;min-width:92px;text-align:center;cursor:pointer;font-size:14px;line-height:1.35;transition:border-color .2s,box-shadow .2s,background .2s}
+.node small{display:block;color:var(--muted);font-size:12px}
+.node.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.node.slow{border-color:var(--bad);background:var(--bad-soft)}
+.edge{flex:1 0 22px;min-width:22px;height:2px;background:var(--line-2);position:relative}
+.edge::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid var(--line-2);border-right:0}
+.edge.active{background:var(--accent)}
+.edge.active::after{border-left-color:var(--accent)}
+.edge.active::before{content:"";position:absolute;top:-3px;left:0;width:8px;height:8px;border-radius:50%;background:var(--accent);animation:travel .9s ease-in-out infinite}
+@keyframes travel{from{left:0}to{left:calc(100% - 8px)}}
+.caption{min-height:3.6em}
+.step-list{counter-reset:s;list-style:none;padding:0;margin:12px 0 0;font-size:15px}
+.step-list li{padding:4px 0 4px 30px;position:relative;color:var(--muted)}
+.step-list li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:6px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line-2);font-size:12px;display:grid;place-items:center;font-family:var(--mono)}
+.step-list li.on{color:var(--text)}
+.step-list li.on::before{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+/* timeline */
+.timeline{list-style:none;padding:0;margin:16px 0 0;border-left:2px solid var(--line);margin-left:9px}
+.timeline li{position:relative;padding:4px 0 10px 22px;font-size:15px;line-height:1.6;animation:fadein .25s ease both}
+.timeline li::before{content:attr(data-i);position:absolute;left:-11px;top:6px;width:20px;height:20px;border-radius:50%;background:var(--card);border:2px solid var(--line-2);font-size:11px;display:grid;place-items:center;font-weight:700}
+.timeline li.ok::before{border-color:var(--ok);color:var(--ok-ink)}
+.timeline li.bad::before{border-color:var(--bad);color:var(--bad-ink)}
+.timeline li.warn::before{border-color:var(--accent);color:var(--accent-ink)}
+.timeline li.info::before{border-color:var(--info);color:var(--info-ink)}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.kv{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.kv span{font-size:13.5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;background:var(--bg)}
+.kv b{font-weight:600}
+
+/* permission */
+.pdiag{display:flex;align-items:center;gap:8px;overflow-x:auto;padding-bottom:6px}
+.pnode{flex:none;border:1px solid var(--line-2);border-radius:10px;padding:10px 14px;text-align:center;font-size:14px;background:var(--bg);min-width:100px}
+.pedge{flex:1 0 110px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--muted);text-align:center}
+.pedge span{border-bottom:2px solid var(--line-2);padding-bottom:2px;white-space:nowrap}
+.pedge span.back{border-bottom:0;border-top:2px dashed var(--line-2);padding:2px 0 0}
+.prow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.prow:last-of-type{border-bottom:0}
+.prow .res{grid-column:1/-1;font-size:14.5px;display:none;padding:8px 12px;border-radius:7px}
+.prow .res.show{display:block}
+.res.ok,.fb.ok{background:var(--ok-soft);color:var(--text);border-left:3px solid var(--ok)}
+.res.bad,.fb.bad{background:var(--bad-soft);color:var(--text);border-left:3px solid var(--bad)}
+.diag-card{border:1px dashed var(--line-2);border-radius:var(--r-sm);padding:14px 16px;margin:12px 0;font-weight:500}
+
+/* handler */
+.hx{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.hx pre{margin:0;font-size:13px}
+.hx h4{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 6px}
+.tok{font:inherit;border:0;background:color-mix(in srgb,var(--info) 14%,transparent);color:inherit;border-radius:4px;padding:0 3px;cursor:pointer}
+.tok.ctx{background:color-mix(in srgb,var(--accent) 20%,transparent)}
+.tok:hover,.tok.on{outline:1.5px solid var(--info)}
+.tok.ctx:hover,.tok.ctx.on{outline-color:var(--accent)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:10px 0 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+
+/* concurrency */
+.cbar{display:flex;height:30px;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--line);background:var(--bg);margin:16px 0 8px}
+.cbar div{height:100%;transition:width .25s}
+.seg-warm{background:var(--ok)}
+.seg-cold{background:var(--accent)}
+.seg-thr{background:repeating-linear-gradient(45deg,var(--bad) 0 6px,color-mix(in srgb,var(--bad) 55%,transparent) 6px 12px)}
+.clegend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px}
+.clegend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.val{font-family:var(--mono);font-size:13.5px;color:var(--accent-ink);font-weight:500}
+.msgs{list-style:none;padding:0;margin:14px 0 0;font-size:15px}
+.msgs li{padding:6px 0 6px 22px;position:relative;border-top:1px solid var(--line)}
+.msgs li::before{content:"→";position:absolute;left:0;color:var(--muted)}
+.msgs li.bad::before{content:"✗";color:var(--bad-ink)}
+.msgs li.ok::before{content:"✓";color:var(--ok-ink)}
+.msgs li.warn::before{content:"!";color:var(--accent-ink);font-weight:700;left:4px}
+
+/* good/bad */
+.gb{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.gb > div{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+.gb .h{font-size:13.5px;font-weight:600;padding:6px 12px;border-bottom:1px solid var(--line)}
+.gb .bad-h{background:var(--bad-soft);color:var(--bad-ink)}
+.gb .good-h{background:var(--ok-soft);color:var(--ok-ink)}
+.gb pre{margin:0;border:0;border-radius:0;font-size:12.5px}
+.chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:14px 0}
+.lam{border:1px solid var(--line-2);border-radius:9px;padding:6px 12px;font-family:var(--mono);font-size:14px;background:var(--bg)}
+.lam.err{border-color:var(--bad);background:var(--bad-soft);color:var(--bad-ink)}
+.lam.q{border-style:dashed}
+
+/* versions */
+.vrow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin:14px 0}
+.vbox{position:relative;border:1px solid var(--line-2);border-radius:9px;padding:8px 12px;min-width:84px;font-size:14px;background:var(--bg);text-align:center}
+.vbox b{display:block;font-family:var(--mono);font-size:14px}
+.vbox small{color:var(--muted);font-size:12px;display:block}
+.vbox.latest{border-style:dashed}
+.vbox.target{border-color:var(--accent);background:var(--accent-soft)}
+.alias-pin{display:block;margin-top:6px;font-size:11.5px;font-weight:700;color:var(--on-accent);background:var(--accent);border-radius:999px;padding:0 8px}
+.arn{font-family:var(--mono);font-size:12.5px;word-break:break-all;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg)}
+.log{list-style:none;padding:0;margin:12px 0 0;font-size:14.5px;max-height:180px;overflow:auto}
+.log li{padding:4px 0;border-top:1px solid var(--line)}
+.log li.bad{color:var(--bad-ink)}
+
+/* report */
+.report{font-family:var(--mono);font-size:13px;line-height:2;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;overflow-x:auto}
+.report .tok{white-space:nowrap}
+.loghier{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:14px;margin:8px 0 0}
+.loghier span{border:1px solid var(--line);border-radius:7px;padding:2px 10px;background:var(--bg)}
+
+/* lab stepper */
+.lsteps{list-style:none;padding:0;margin:0}
+.lsteps li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.lsteps li:last-child{border-bottom:0}
+.lsteps input{width:18px;height:18px;margin-top:5px;accent-color:var(--ok);flex:none}
+.lsteps label{cursor:pointer}
+.lsteps li.done label b{text-decoration:line-through;text-decoration-color:var(--muted)}
+.lsteps small{display:block;color:var(--muted);font-size:14px}
+
+/* mini check & quiz choices */
+.mini{margin:28px 0 8px;border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;background:var(--card)}
+.mini-head{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.mq + .mq{border-top:1px solid var(--line);margin-top:18px;padding-top:18px}
+.qtext{font-weight:500;margin:4px 0 12px}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;font-size:15.5px;line-height:1.6;transition:border-color .15s,background .15s}
+.choice:hover:not(:disabled){border-color:var(--line-2);background:var(--hover)}
+.choice:disabled{cursor:default}
+.choice .key{flex:none;width:26px;height:26px;border-radius:7px;border:1px solid var(--line-2);display:grid;place-items:center;font-family:var(--mono);font-size:13px;margin-top:1px}
+.choice .ct{flex:1;min-width:0}
+.choice .st{flex:none;font-size:12.5px;font-weight:600;margin-top:3px}
+.choice.selected{border-color:var(--accent);background:var(--accent-soft)}
+.choice.selected .key{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.choice.correct{border-color:var(--ok);background:var(--ok-soft)}
+.choice.correct .key{background:var(--ok);border-color:var(--ok);color:#fff}
+.choice.correct .st{color:var(--ok-ink)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.choice.wrong .key{background:var(--bad);border-color:var(--bad);color:#fff}
+.choice.wrong .st{color:var(--bad-ink)}
+.fb{margin-top:12px;padding:12px 16px;border-radius:var(--r-sm);font-size:15px;line-height:1.7}
+.fb strong.verdict{display:block;margin-bottom:2px}
+.fb.ok strong.verdict{color:var(--ok-ink)}
+.fb.bad strong.verdict{color:var(--bad-ink)}
+.fb p{margin:6px 0}
+.fb details{margin-top:6px}
+.fb summary{cursor:pointer;color:var(--muted);font-size:14px}
+.fb details ul{margin:6px 0 0;padding-left:1.1em}
+
+/* flashcards */
+.fc-wrap{max-width:560px;margin:20px auto 0}
+.fc{display:block;width:100%;perspective:1200px;border:0;background:none;padding:0;cursor:pointer;text-align:center}
+.fc-inner{position:relative;min-height:230px;transition:transform .45s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d}
+.fc.flipped .fc-inner{transform:rotateY(180deg)}
+.fc-face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px 28px;border:1px solid var(--line);border-radius:16px;background:var(--card);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.fc-face .k{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.fc-front .t{font-size:1.35rem;font-weight:600;line-height:1.45}
+.fc-back{transform:rotateY(180deg);border-color:var(--accent)}
+.fc-back .t{font-size:1.1rem;line-height:1.65}
+.fc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.fc-count{font-family:var(--mono);font-size:14px;color:var(--muted)}
+
+/* cheatsheet */
+.cheat{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:20px 0}
+.cheat > div{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--card);font-size:14.5px;line-height:1.6}
+.cheat h4{font-size:13px;color:var(--accent-ink);margin-bottom:4px;font-weight:600}
+.cheat ul{margin:0;padding-left:1.05em}
+blockquote{margin:16px 0;padding:14px 18px;border-left:3px solid var(--line-2);background:var(--card);border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:1.02rem}
+
+/* quiz */
+.qpanel{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:22px;margin-top:20px}
+.qtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.qtop .spacer{flex:1}
+.pill{font-size:12.5px;border:1px solid var(--line-2);border-radius:999px;padding:1px 10px;color:var(--muted);white-space:nowrap}
+.pill.d-hard{border-color:var(--accent);color:var(--accent-ink)}
+.pill.d-xhard{border-color:var(--bad);color:var(--bad-ink)}
+.qbar{height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin:12px 0 18px}
+.qbar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.qq{font-size:1.1rem;font-weight:500;margin:0 0 16px;line-height:1.7}
+.qnav{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:18px}
+.timer{font-family:var(--mono);font-size:15px;color:var(--text);border:1px solid var(--line-2);border-radius:7px;padding:1px 10px}
+.timer.low{color:var(--bad-ink);border-color:var(--bad)}
+.bm{border:1px solid var(--line-2);background:var(--card);border-radius:7px;padding:2px 10px;cursor:pointer;font-size:13.5px;color:var(--muted)}
+.bm[aria-pressed="true"]{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.dots{display:flex;flex-wrap:wrap;gap:4px;margin-top:16px}
+.dots button{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:var(--bg);font-family:var(--mono);font-size:12px;cursor:pointer}
+.dots button.ans{background:var(--accent-soft);border-color:var(--accent)}
+.dots button.cur{outline:2px solid var(--text);outline-offset:1px}
+.score-big{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.score-big b{font-size:3rem;line-height:1;font-weight:700}
+.score-big span{color:var(--muted)}
+.tbars{margin:20px 0}
+.tbar{display:grid;grid-template-columns:130px minmax(0,1fr) 64px;gap:12px;align-items:center;font-size:14px;padding:5px 0}
+.tbar .track{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.tbar .track i{display:block;height:100%;border-radius:5px;background:var(--ok)}
+.tbar .track i.mid{background:var(--accent)}
+.tbar .track i.low{background:var(--bad)}
+.tbar .n{font-family:var(--mono);font-size:13px;text-align:right;color:var(--muted)}
+.wrong-item{border-top:1px solid var(--line);padding:16px 0}
+.wrong-item .qtext{margin-bottom:6px}
+.wrong-item p{margin:4px 0;font-size:15px}
+.hint{font-size:13.5px;color:var(--muted)}
+kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--card)}
+
+footer{padding:48px 0 24px;font-size:14px;color:var(--muted)}
+footer p{margin:6px 0}
+
+
+/* ---------- Week 11 widgets ---------- */
+.lanes{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.lane{display:grid;grid-template-columns:132px minmax(0,1fr);gap:10px;align-items:center}
+.lane > .lname{font-size:13px;font-weight:600;color:var(--muted);line-height:1.4}
+.lane > .lname small{display:block;font-weight:400}
+.lane > .slot{display:flex;flex-wrap:wrap;gap:6px;min-height:46px;padding:6px 8px;border:1px dashed var(--line-2);border-radius:10px;align-items:center}
+.lane > .slot:empty::after{content:"ว่าง";font-size:12.5px;color:var(--muted)}
+.msg{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:58px;padding:3px 9px;border:1px solid var(--line-2);border-radius:8px;background:var(--card);font-family:var(--mono);font-size:13px;line-height:1.35;animation:fadein .25s ease both}
+.msg small{font-family:var(--font);font-size:11px;color:var(--muted)}
+.msg.vis{border-color:var(--info)}
+.msg.inflight{border-style:dashed;border-color:var(--accent);background:var(--accent-soft)}
+.msg.done{border-color:var(--ok);background:var(--ok-soft)}
+.msg.done b{text-decoration:line-through}
+.msg.dlq{border-color:var(--bad);background:var(--bad-soft)}
+.msg.dup{border-style:dotted;border-color:var(--bad)}
+.clock{font-family:var(--mono);font-size:14px;border:1px solid var(--line-2);border-radius:7px;padding:1px 10px}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.stats span{font-size:13.5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;background:var(--bg)}
+.stats b{font-weight:600}
+.sim .stats{margin-top:0}
+.nodes{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin-top:12px}
+.card-s{flex:1 1 150px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);font-size:14px;line-height:1.55}
+.card-s h4{font-size:14px;margin:0 0 4px}
+.card-s .stt{font-size:13px;font-weight:600;margin-top:6px}
+.card-s.ok{border-color:var(--ok);background:var(--ok-soft)}
+.card-s.ok .stt{color:var(--ok-ink)}
+.card-s.bad{border-color:var(--bad);background:var(--bad-soft)}
+.card-s.bad .stt{color:var(--bad-ink)}
+.card-s.warn{border-color:var(--accent);background:var(--accent-soft)}
+.card-s.warn .stt{color:var(--accent-ink)}
+.card-s.off{opacity:.55;border-style:dashed}
+.card-s .recv{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.node.down{border-color:var(--bad);background:var(--bad-soft);color:var(--bad-ink)}
+.ptrack{position:relative;height:30px;border-bottom:1px solid var(--line-2);margin:4px 0 2px}
+.ptrack .arr{position:absolute;top:0;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--accent);transform:translateX(-6px)}
+.ptrack .req{position:absolute;bottom:3px;width:10px;height:10px;border-radius:50%;transform:translateX(-5px);border:2px solid var(--info);background:var(--card)}
+.ptrack .req.hit{background:var(--info)}
+.ptrack .wait{position:absolute;bottom:7px;height:2px;background:color-mix(in srgb,var(--info) 40%,transparent)}
+.paxis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.prow-lbl{font-size:13.5px;font-weight:600;margin-top:14px}
+.cmds{display:flex;flex-wrap:wrap;gap:6px}
+.cmds button{font-family:var(--mono);font-size:13px;border:1px solid var(--line-2);background:var(--bg);border-radius:7px;padding:4px 10px;cursor:pointer}
+.cmds button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.mtable{width:100%;border-collapse:collapse;font-size:14px;margin-top:12px}
+.mtable td,.mtable th{padding:5px 8px;border-bottom:1px solid var(--line)}
+.mtable .bar{height:10px;border-radius:5px;background:var(--accent);min-width:2px}
+.mtable .bar.over{background:var(--bad)}
+.shards{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.shard{width:64px;border:1px solid var(--line-2);border-radius:8px;padding:4px;text-align:center;font-size:11.5px;font-family:var(--mono);background:var(--bg)}
+.shard .fill{height:36px;border-radius:5px;background:var(--line);position:relative;overflow:hidden;margin-bottom:3px}
+.shard .fill i{position:absolute;left:0;right:0;bottom:0;background:var(--ok)}
+.shard.hot .fill i{background:var(--bad)}
+.game-q{font-size:1.05rem;font-weight:500;margin:6px 0 14px}
+.game-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+@media (max-width: 640px){
+  .lane{grid-template-columns:1fr;gap:4px}
+}
+
+.log li.ok{color:var(--ok-ink)}
+.log li.warn{color:var(--accent-ink)}
+div.node{cursor:default}
+.game-opts .btn.ok{border-color:var(--ok);background:var(--ok-soft);color:var(--ok-ink)}
+.game-opts .btn.bad{border-color:var(--bad);background:var(--bad-soft);color:var(--bad-ink)}
+.game-opts .btn:disabled{opacity:1;cursor:default}
+
+/* ---------- hub navigation ---------- */
+a.icon-btn{color:var(--text);text-decoration:none}
+.sidenav a.navhome{display:flex;align-items:center;gap:8px;margin:0 0 18px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;color:var(--text);font-weight:500;background:var(--card)}
+.sidenav a.navhome:hover{border-color:var(--accent);background:var(--card)}
+.weeknav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:40px 0 0}
+.weeknav a{display:block;border:1px solid var(--line);border-radius:12px;padding:12px 16px;text-decoration:none;color:var(--text);background:var(--card);transition:border-color .15s}
+.weeknav a:hover{border-color:var(--accent)}
+.weeknav small{display:block;color:var(--muted);font-size:12.5px}
+.weeknav b{font-weight:600}
+.weeknav .next{grid-column:2;text-align:right}
+.weeknav .home{grid-column:1/-1;text-align:center}
+@media (max-width: 640px){ .weeknav{grid-template-columns:1fr} .weeknav .next{grid-column:auto} }
+
+@media (max-width: 960px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  #menuBtn{display:grid}
+  .sidenav{position:fixed;top:var(--header-h);left:0;bottom:0;width:280px;height:auto;z-index:35;background:var(--card);transform:translateX(-102%);transition:transform .22s ease;border-right:1px solid var(--line)}
+  .sidenav.open{transform:none}
+  .scrim{display:block;position:fixed;inset:var(--header-h) 0 0 0;background:rgba(0,0,0,.35);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
+  .scrim.show{opacity:1;pointer-events:auto}
+  main{padding:0 16px 64px}
+}
+@media (max-width: 640px){
+  body{font-size:16px}
+  .topbar{padding:0 12px}
+  .hero{padding:40px 0 32px}
+  .sec{padding:44px 0 16px}
+  h2{font-size:1.4rem}
+  .widget-body{padding:16px}
+  .widget-head{padding:12px 16px}
+  .proscons,.hx,.gb{grid-template-columns:1fr}
+  .levels{grid-template-columns:1fr 1fr}
+  .prow{grid-template-columns:1fr 1fr}
+  .prow > .lbl{grid-column:1/-1}
+  .tbar{grid-template-columns:96px minmax(0,1fr) 54px}
+  .qpanel{padding:16px}
+  .stats{gap:22px}
+  .pdiag{flex-direction:column;align-items:stretch}
+  .pedge{flex:none}
+  .pnode{min-width:0}
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+@media print{
+  .topbar,.sidenav,.scrim,.widget,.mini,.sec-foot,#flashcards,#quiz,.hero-actions{display:none !important}
+  .layout{display:block}
+  main{padding:0}
+  body{background:#fff;color:#000;font-size:12pt}
+  .sec{border:0;padding:16px 0;break-inside:avoid-page}
+  body.print-cheat .hero,body.print-cheat .sec:not(#cheatsheet),body.print-cheat footer{display:none !important}
+  .cheat > div{break-inside:avoid}
+}
+</style>
+<script>try{var t=JSON.parse(localStorage.getItem('w11:theme'));if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>try{localStorage.setItem("hub:last",JSON.stringify({w:11,t:Date.now()}))}catch(e){}</script>
+<style id="gl-css">
+/* glossary tooltips */
+.gl{text-decoration:underline dotted;text-decoration-color:var(--muted);text-decoration-thickness:1px;text-underline-offset:3px;cursor:help;border-radius:3px}
+.gl:hover,.gl.on{text-decoration-color:var(--accent);background:var(--accent-soft)}
+.gl-tip{position:fixed;z-index:1000;max-width:min(340px,calc(100vw - 16px));padding:10px 13px;border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--card);color:var(--text);font-family:var(--font);font-size:14px;font-weight:400;line-height:1.6;text-align:left;box-shadow:0 8px 28px rgba(0,0,0,.18);pointer-events:none}
+.gl-tip b{display:block;margin-bottom:2px;font-family:var(--mono);font-size:12.5px;font-weight:500;color:var(--accent-ink)}
+@media print{.gl{text-decoration:none;background:none}.gl-tip{display:none!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn" id="menuBtn" aria-label="เปิดสารบัญ" aria-expanded="false" aria-controls="sidenav">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">✉</span><span>Module 10 · Messaging Services</span></a>
+  <span class="spacer"></span>
+  <!-- hub-nav --><a class="icon-btn" href="index.html" aria-label="ทุกบท (หน้ารวม)" title="ทุกบท"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+  <button class="icon-btn" id="themeBtn" aria-label="สลับธีมสว่าง/มืด"></button>
+  <div class="progress" id="readProgress" aria-hidden="true"></div>
+</header>
+<div class="scrim" id="scrim"></div>
+
+<div class="layout">
+<nav class="sidenav" id="sidenav" aria-label="สารบัญ">
+  <a class="navhome" href="index.html">← ทุกบท</a>
+  <div class="group">เนื้อหา</div>
+  <a href="#s1"><span class="num">01</span>ภาพรวม Messaging<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s2"><span class="num">02</span>Sync vs Async<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s3"><span class="num">03</span>รูปแบบ Messaging 3 แบบ<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s4"><span class="num">04</span>SQS & Visibility Timeout<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s5"><span class="num">05</span>Standard vs FIFO<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s6"><span class="num">06</span>Polling & CLI<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s7"><span class="num">07</span>Security<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s8"><span class="num">08</span>Event-driven architecture<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s9"><span class="num">09</span>Amazon SNS<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s10"><span class="num">10</span>Kinesis & Firehose<span class="check" aria-hidden="true">✓</span></a>
+  <a href="#s11"><span class="num">11</span>Lab<span class="check" aria-hidden="true">✓</span></a>
+  <div class="group">ทบทวน</div>
+  <a href="#game"><span class="num">G</span>เกมเลือก service</a>
+  <a href="#flashcards"><span class="num">F</span>Flashcards</a>
+  <a href="#cheatsheet"><span class="num">S</span>สรุปหน้าเดียว</a>
+  <a href="#quiz"><span class="num">Q</span>ข้อสอบจำลอง</a>
+  <div class="nav-meta"><span id="doneCount">เข้าใจแล้ว 0/11 หัวข้อ</span><div class="meter"><i id="doneMeter"></i></div></div>
+</nav>
+
+<main id="top">
+<div class="content">
+
+<!-- ================= HERO ================= -->
+<section class="hero" aria-labelledby="heroTitle">
+  <span class="eyebrow"><i></i>Week 11 · ACD Module 10</span>
+  <h1 id="heroTitle">Developing with Messaging Services</h1>
+  <p class="lead">SQS, SNS และ Kinesis — ตัวกลางที่ทำให้ service ไม่ต้องคุยกันตรง ๆ</p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="#s1">เริ่มเรียน</a>
+    <a class="btn" href="#quiz">ไปทำข้อสอบ</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>11</b><span>หัวข้อ</span></div>
+    <div class="stat"><b id="statQ">38</b><span>ข้อสอบปรนัย</span></div>
+    <div class="stat"><b id="statF">24</b><span>flashcards</span></div>
+    <div class="stat"><b>12</b><span>แบบจำลอง interactive</span></div>
+  </div>
+  <p class="source-note">สรุปจาก transcript อัตโนมัติของคลิปทั้งคลิป (1:24:23) ในคลิปไม่เห็นสไลด์ และ transcript สะกดคำผิดเยอะ (เช่น "Death Letter Q" = Dead-Letter Queue) ซึ่งแก้ให้ถูกแล้ว จุดที่ติดป้าย <span class="badge extra">เสริม</span> เป็นความรู้จากเอกสาร AWS ที่ผู้สอนไม่ได้พูด</p>
+</section>
+
+<!-- ================= 1 ================= -->
+<section class="sec" id="s1" aria-labelledby="h-s1">
+  <div class="sec-label">01</div>
+  <h2 id="h-s1">ภาพรวมของ Messaging</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>Messaging service คือตัวกลางที่ให้ผู้ส่งวางข้อมูลไว้แล้วไปทำงานต่อ ส่วนผู้รับมารับไปเองเมื่อพร้อม service จึงไม่ต้องคุยกันตรง ๆ</p></div>
+  <ul>
+    <li>โมดูลก่อนหน้าเรียน <strong>Caching, Container และ Serverless</strong> ไปแล้ว โมดูลนี้เรียน <strong>Messaging Service</strong> ซึ่งเป็น "ตัวกลาง" เชื่อม service ต่าง ๆ เข้าด้วยกัน</li>
+    <li>มีประโยชน์มากกับระบบแบบ <strong>Microservice</strong> หรือ <strong>Serverless</strong></li>
+    <li>แนวคิด: service ที่ส่ง <strong>ไม่ต้องคุยกับ service ที่รับโดยตรง</strong> แค่เอาข้อมูลไปวางไว้ที่ messaging service แล้วอีกฝั่งจะมารับไปเอง (ผูกกันหลวม ๆ — loosely coupled)</li>
+  </ul>
+  <p class="muted">เปรียบเทียบให้เห็นภาพ: แทนที่จะโทรหาเพื่อนแล้วต้องรอเพื่อนรับสาย (เรียกตรง) เราฝากของไว้ที่ล็อกเกอร์ แล้วเพื่อนมาเปิดเอาไปเมื่อพร้อม ถ้าเพื่อนยังไม่ว่าง ของก็ยังอยู่ในล็อกเกอร์</p>
+
+  <div class="widget" id="w-couple">
+    <div class="widget-head"><span class="tag">ลองเล่น</span><h3>เรียกตรง vs ผ่าน messaging — ถ้าผู้รับล่มจะเกิดอะไร</h3></div>
+    <div class="widget-body">
+      <div class="row">
+        <div class="seg" role="group" aria-label="รูปแบบการเชื่อม" id="cpMode">
+          <button aria-pressed="true" data-v="direct">เรียกตรง</button>
+          <button aria-pressed="false" data-v="queue">ผ่าน SQS</button>
+        </div>
+        <label class="chip"><input type="checkbox" id="cpDown"> Service B ล่ม</label>
+      </div>
+      <div class="flow" id="cpFlow" style="margin-top:14px"></div>
+      <div class="row" style="margin-top:6px"><button class="btn btn-primary" id="cpSend">Service A ส่งงาน</button><button class="btn btn-sm" id="cpReset">ล้าง</button></div>
+      <div class="stats" id="cpStats"></div>
+      <ul class="log" id="cpLog" aria-live="polite"></ul>
+    </div>
+  </div>
+
+  <h3>Managed service ของ AWS ที่เรียนมี 3 ตัว</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Service</th><th>ชื่อเต็ม</th><th>ใช้กับงานแบบ</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Amazon SQS</strong></td><td>Simple Queue Service</td><td>ส่งเป็นชุดหรือทีละ message (<strong>batch processing</strong>)</td></tr>
+      <tr><td><strong>Amazon SNS</strong></td><td>Simple Notification Service</td><td>ส่งเป็นชุดหรือทีละ message (<strong>batch processing</strong>)</td></tr>
+      <tr><td><strong>Amazon Kinesis</strong></td><td>Kinesis Data Streams</td><td>ข้อมูลไหลเข้ามาต่อเนื่องแบบ real-time (<strong>stream processing</strong>)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>SQS และ SNS = งานแบบ message / batch ส่วน Kinesis = stream real-time (ช้อยหลอกมักสลับกัน)</li>
+      <li>ผ่านตัวกลางแล้วไม่ได้แปลว่า "ได้ผลทันที" — การส่งผ่านตัวกลางเป็นแบบ async</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="1,2"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s1" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 2 ================= -->
+<section class="sec" id="s2" aria-labelledby="h-s2">
+  <div class="sec-label">02</div>
+  <h2 id="h-s2">Synchronous กับ Asynchronous Processing</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>Sync ตอบเร็วแต่ต้องถือ connection ไว้จน resource หมด scale ไม่ดี ส่วน async ตอบแค่ "รับแล้ว" จึงรับ client ได้มากและ scale ดี แต่ไม่รู้ว่างานจะเสร็จเมื่อไร</p></div>
+  <h3>Synchronous</h3>
+  <ul>
+    <li>Client ส่ง request ไปที่ Service A → A ต้องสั่งให้ B ทำงาน และ <strong>รอ B ตอบกลับ</strong> ก่อน A ถึงจะตอบ client ได้</li>
+    <li>ระหว่างนั้นทุกฝ่ายต้อง <strong>คงการเชื่อมต่อ (maintain connection/state)</strong> ไว้ตลอด</li>
+    <li><strong>A ทำงานหนักที่สุด</strong> เพราะต้องถือ connection ทั้งกับ client และ B</li>
+    <li>ข้อดี: ตอบสนองเร็ว เหมาะกับงานที่ต้องได้ผลทันทีหรือ real-time</li>
+    <li>ข้อเสีย: กิน resource มาก ยิ่งมี client มาก resource ของ A ยิ่งลดลงจนอาจให้บริการไม่ได้ → <strong>scale ได้ไม่ดี</strong></li>
+  </ul>
+  <h3>Asynchronous</h3>
+  <ul>
+    <li>A แค่ตอบ client ว่า <strong>ได้รับ request แล้ว (acknowledge)</strong> client ก็ถือว่าจบงานของตัวเอง แล้ว A ค่อยส่งงานต่อให้ B ประมวลผลทีหลัง</li>
+    <li><strong>SQS และ SNS ทำงานแบบนี้</strong></li>
+    <li>ข้อดี: รองรับ client จำนวนมากได้ และ <strong>scale ได้ดี</strong></li>
+    <li>ข้อเสีย: <strong>การันตีไม่ได้ว่างานจะเสร็จเมื่อไร</strong></li>
+  </ul>
+  <h3>ตัวอย่างโรงพยาบาลของผู้สอน</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>โรงพยาบาลรัฐ = Async</th><th>โรงพยาบาลเอกชน = Sync</th></tr></thead>
+    <tbody>
+      <tr><td><strong>จำนวนคนไข้</strong></td><td>เป็นร้อยคน</td><td>น้อย</td></tr>
+      <tr><td><strong>ขั้นตอน</strong></td><td>วางบัตรนัดในตะกร้า → วัดความดัน (<strong>ได้ acknowledge</strong>) → นั่งรอเรียกคิว</td><td>เจ้าหน้าที่มาถามว่ารอนานหรือยัง แล้วช่วยเร่งให้</td></tr>
+      <tr><td><strong>ผล</strong></td><td>ได้ตรวจแน่นอน แต่ไม่รู้ว่าเมื่อไร</td><td>สะดวกและเร็ว แต่ค่าใช้จ่ายสูง (เหมือน sync ที่กิน resource มาก)</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="widget" id="w-hosp">
+    <div class="widget-head"><span class="tag">แบบจำลอง</span><h3>Service A รับ client ได้แค่ไหน</h3></div>
+    <div class="widget-body">
+      <div class="row">
+        <div class="seg" role="group" aria-label="รูปแบบการประมวลผล" id="hpMode">
+          <button aria-pressed="true" data-v="sync">Sync (โรงพยาบาลเอกชน)</button>
+          <button aria-pressed="false" data-v="async">Async (โรงพยาบาลรัฐ)</button>
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px"><label for="hpN">จำนวน client พร้อมกัน <span class="val" id="hpNV"></span></label><input type="range" id="hpN" min="10" max="500" step="10" value="60"></div>
+      <p class="hint" style="margin:0">สมมติ Service A ถือ connection ค้างไว้ได้สูงสุด 100 ตัว และ B ประมวลผลได้ 20 งานต่อนาที</p>
+      <div class="cbar" id="hpBar" role="img"><div class="seg-warm"></div><div class="seg-cold"></div><div class="seg-thr"></div></div>
+      <div class="clegend" id="hpLegend"></div>
+      <ul class="msgs" id="hpMsgs" aria-live="polite"></ul>
+    </div>
+  </div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>ฝั่งที่ทำงานหนักที่สุดใน sync คือ <strong>A</strong> (ตัวกลางที่ถือ connection สองฝั่ง) ไม่ใช่ B</li>
+      <li>"ได้รับ acknowledge" ≠ "งานเสร็จแล้ว" — async ได้แค่รู้ว่าระบบรับเรื่อง</li>
+      <li>งานที่ผู้ใช้ต้องเห็นผลทันทีบนหน้าจอ → sync แม้ SQS จะ reliable ก็ตาม</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="3,5"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s2" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 3 ================= -->
+<section class="sec" id="s3" aria-labelledby="h-s3">
+  <div class="sec-label">03</div>
+  <h2 id="h-s3">รูปแบบของ Messaging 3 แบบ</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>SQS = queue แบบ one-to-one ที่ consumer มาดึง, SNS = pub/sub แบบ one-to-many ที่ push ไปทุก subscriber, Kinesis = stream ข้อมูลไหลต่อเนื่อง</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>รูปแบบ</th><th>Service</th><th>ลักษณะ</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Message Queue</strong></td><td>SQS</td><td><strong>One-to-one</strong>: Producer ส่ง message เข้า Queue แล้ว Consumer มา <strong>ดึง (poll)</strong> ไปประมวลผล</td></tr>
+      <tr><td><strong>Publish/Subscribe</strong></td><td>SNS</td><td><strong>One-to-many</strong>: Publisher ส่ง message ไปที่ <strong>Topic</strong> แล้ว SNS <strong>ส่งต่อ (push)</strong> ไปให้ Subscriber ทุกตัว</td></tr>
+      <tr><td><strong>Data Stream</strong></td><td>Kinesis</td><td>ข้อมูลไหลเข้ามาต่อเนื่อง แล้ว Consumer ดึงไปประมวลผล</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="widget" id="w-pat">
+    <div class="widget-head"><span class="tag">ดูการทำงาน</span><h3>Queue vs Pub/Sub vs Stream</h3></div>
+    <div class="widget-body">
+      <div class="row" style="justify-content:space-between">
+        <div class="seg" role="tablist" aria-label="เลือกรูปแบบ" id="patTabs">
+          <button role="tab" aria-selected="true" data-v="queue">Queue (SQS)</button>
+          <button role="tab" aria-selected="false" data-v="pubsub">Pub/Sub (SNS)</button>
+          <button role="tab" aria-selected="false" data-v="stream">Stream (Kinesis)</button>
+        </div>
+        <div class="row"><button class="btn btn-sm" id="patReset">ล้าง</button><button class="btn btn-sm btn-primary" id="patSend">ส่ง message</button></div>
+      </div>
+      <div class="lanes">
+        <div class="lane"><div class="lname" id="patMidName"></div><div class="slot" id="patMid"></div></div>
+      </div>
+      <div class="nodes" id="patCons"></div>
+      <div class="explain" id="patExp" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <h3>ความต่างที่ต้องจำ (ตามที่ผู้สอนเน้น)</h3>
+  <ul>
+    <li><strong>SQS การันตีว่าส่งถึงจริง (reliable)</strong> เพราะเก็บ message ไว้จนกว่า consumer จะประมวลผลสำเร็จ</li>
+    <li><strong>SNS ส่ง (push) ไปให้ subscriber แล้วลบ message ทิ้งได้เลย</strong> ไม่ได้การันตีแบบ SQS</li>
+  </ul>
+  <div class="callout note"><span class="k">เสริม</span><p>SNS ไม่ได้เก็บ message ไว้ให้ใครมาดึงทีหลังแบบ SQS แต่มี delivery retry policy ในตัวสำหรับการส่งไปยัง endpoint (ปรับแต่งได้สำหรับ HTTP/S) ส่วน DLQ ต้องตั้งเองต่อ subscription — ในข้อสอบให้ยึดหลักของผู้สอน: <strong>SQS reliable โดย default, SNS ต้องตั้งค่าเพิ่ม</strong></p></div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>ต้องการให้ "หลายระบบ" ได้ message เดียวกัน → SNS (fan-out) ไม่ใช่ SQS queue เดียวที่มีหลาย consumer</li>
+      <li>SQS = consumer <strong>poll</strong> / SNS = <strong>push</strong> (ช้อยหลอกมักสลับ)</li>
+      <li>"shard" เป็นคำของ Kinesis, "topic" ของ SNS, "queue" ของ SQS</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="6,8"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s3" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 4 ================= -->
+<section class="sec" id="s4" aria-labelledby="h-s4">
+  <div class="sec-label">04 · สอนละเอียดที่สุด</div>
+  <h2 id="h-s4">Amazon SQS</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>SQS reliable เพราะ message ไม่ถูกลบจนกว่าจะประมวลผลสำเร็จ ระหว่างประมวลผลถูกซ่อนด้วย visibility timeout (default 30 วินาที) และถ้าล้มเหลวซ้ำจนครบ maxReceiveCount จะถูกย้ายไป DLQ</p></div>
+  <h3>แนวคิดหลัก</h3>
+  <ul>
+    <li><strong>Fully managed</strong>: แค่ตั้งชื่อ queue แล้วใช้ค่า default ก็ใช้งานได้ (คล้าย DynamoDB) AWS ดูแลเรื่อง <strong>High Availability, Scaling และ Resilience</strong> ให้</li>
+    <li><strong>เก็บหลายสำเนา</strong>: เบื้องหลังเก็บ message ไว้หลายชุดบนหลาย SQS server ถ้า disk ตัวหนึ่งเสีย ข้อมูลก็ไม่หาย</li>
+    <li><strong>Keyword ของ SQS คือ "Reliable"</strong>: ส่ง message ได้แน่นอน แม้ข้อมูลปริมาณมากและ throughput สูง</li>
+    <li><strong>Pay-as-you-go</strong>: ใช้มากจ่ายมาก ใช้น้อยจ่ายน้อย</li>
+  </ul>
+  <h3>ขั้นตอนการทำงาน</h3>
+  <ol>
+    <li><strong>Producer</strong> ส่ง message เข้า queue (<code>SendMessage</code>) แล้วไปทำงานอื่นต่อได้ทันที</li>
+    <li><strong>Consumer</strong> ดึง message ไปประมวลผล (<code>ReceiveMessage</code>)</li>
+    <li>ถ้าประมวลผล <strong>สำเร็จ</strong> consumer แจ้งกลับมา แล้ว message ถูกลบออกจาก queue</li>
+    <li>ถ้า <strong>ไม่สำเร็จ</strong> message ยังคงอยู่ใน queue</li>
+  </ol>
+  <p><span class="badge extra">เสริม</span> "แจ้งกลับมา" คือ consumer เรียก <code>DeleteMessage</code> เอง ถ้าใช้ Lambda ผ่าน event source mapping (Week 9) Lambda จะลบให้อัตโนมัติเมื่อ function สำเร็จ</p>
+
+  <h3>Visibility Timeout (ค่า default 30 วินาที)</h3>
+  <ul>
+    <li>เมื่อ Consumer 1 ดึง message A ไป message A <strong>ยังไม่ถูกลบ</strong> แต่ consumer อื่นจะ <strong>"มองไม่เห็น" ชั่วคราว</strong></li>
+    <li>ถ้าหมดเวลาแล้ว Consumer 1 ยังไม่แจ้งว่าสำเร็จ message A จะ <strong>กลับมาให้เห็นใน queue</strong> และ consumer ตัวอื่นดึงไปทำแทนได้</li>
+    <li>นี่คือกลไกที่ทำให้ SQS <strong>เชื่อถือได้</strong></li>
+    <li><span class="badge extra">เสริม</span> ตั้งได้ 0 วินาที – 12 ชั่วโมง ควรตั้งให้ <strong>นานกว่าเวลาที่ใช้ประมวลผล message หนึ่งตัว</strong> ไม่อย่างนั้น message จะโผล่กลับมาก่อนประมวลผลเสร็จแล้วถูกประมวลผลซ้ำ</li>
+  </ul>
+  <h3>Dead-Letter Queue (DLQ)</h3>
+  <ul>
+    <li>message ที่ประมวลผลไม่สำเร็จซ้ำ ๆ จนครบจำนวนครั้งที่ตั้งไว้ (<strong>maxReceiveCount</strong> เช่น 2 ครั้ง) จะถูกย้ายไปไว้อีก queue หนึ่ง</li>
+    <li>ประโยชน์: (1) <strong>เคลียร์พื้นที่ของ queue หลัก</strong> ไว้ให้ message ที่ประมวลผลได้จริง (2) <strong>แยก message ที่มีปัญหาออกมา</strong> ให้หาสาเหตุ (troubleshoot) ได้ง่าย</li>
+    <li><span class="badge extra">เสริม</span> DLQ ของ FIFO queue ต้องเป็น FIFO, DLQ ของ standard queue ต้องเป็น standard</li>
+  </ul>
+
+  <div class="widget sim" id="w-sqs">
+    <div class="widget-head"><span class="tag">แบบจำลอง</span><h3>SQS lifecycle — send, receive, visibility timeout, DLQ</h3></div>
+    <div class="widget-body">
+      <div class="controls">
+        <div class="field"><label for="sqVt">Visibility timeout</label><select id="sqVt"><option value="10">10 วินาที</option><option value="30" selected>30 วินาที (default)</option><option value="60">60 วินาที</option></select></div>
+        <div class="field"><label for="sqMax">maxReceiveCount (DLQ)</label><select id="sqMax"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="0">ไม่ตั้ง DLQ</option></select></div>
+        <div class="field"><span class="lbl">เวลาในระบบ</span><span class="clock" id="sqClock" style="align-self:flex-start">t = 0 s</span></div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button class="btn" id="sqSend">Producer: SendMessage</button>
+        <button class="btn" id="sqRecv">Consumer: ReceiveMessage</button>
+        <button class="btn" id="sqDel">สำเร็จ → DeleteMessage</button>
+        <button class="btn" id="sqTick">เดินเวลา +10 วินาที</button>
+      </div>
+      <div class="row" style="margin-top:8px"><button class="btn btn-sm btn-primary" id="sqDemo">เล่นสถานการณ์: consumer crash</button><button class="btn btn-sm" id="sqReset">เริ่มใหม่</button></div>
+      <div class="lanes">
+        <div class="lane"><div class="lname">Queue หลัก<small>มองเห็นได้</small></div><div class="slot" id="sqVis"></div></div>
+        <div class="lane"><div class="lname">In-flight<small>ถูกซ่อนอยู่</small></div><div class="slot" id="sqFly"></div></div>
+        <div class="lane"><div class="lname">ลบแล้ว<small>ประมวลผลสำเร็จ</small></div><div class="slot" id="sqDone"></div></div>
+        <div class="lane"><div class="lname">Dead-Letter Queue<small>ล้มเหลวซ้ำ</small></div><div class="slot" id="sqDlq"></div></div>
+      </div>
+      <ul class="log" id="sqLog" aria-live="polite"></ul>
+    </div>
+  </div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>ReceiveMessage <strong>ไม่ได้ลบ</strong> message — ต้องประมวลผลสำเร็จแล้วลบ</li>
+      <li>visibility timeout default = <strong>30 วินาที</strong> (ไม่ใช่ 20 วินาทีของ long polling หรือ 4 วันของ retention)</li>
+      <li>message ถูกประมวลผลซ้ำ เพราะงานนานกว่า visibility timeout → เพิ่ม visibility timeout</li>
+      <li>maxReceiveCount นับ "จำนวนครั้งที่ถูกรับ" อย่าสับสนกับ retry ของ Lambda async ใน Week 9 (retry 2 = ลอง 3 ครั้ง)</li>
+      <li>message ที่สำเร็จถูกลบ ไม่ได้ไป DLQ</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="10,14"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s4" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 5 ================= -->
+<section class="sec" id="s5" aria-labelledby="h-s5">
+  <div class="sec-label">05</div>
+  <h2 id="h-s5">ประเภทของ Queue: Standard vs FIFO</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>Standard (default) throughput สูงแต่ลำดับไม่แน่นอน ส่วน FIFO ได้ลำดับแน่นอนแต่ throughput จำกัดและตัวช้าข้างหน้าทำให้ตัวหลังต้องรอ</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>Standard (ค่า default)</th><th>FIFO (First-In-First-Out)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ลำดับ</strong></td><td><strong>best-effort ordering</strong> message ที่มาทีหลังอาจถูกประมวลผลก่อนได้</td><td>message ที่มาก่อนต้องประมวลผลเสร็จก่อน ตัวถัดไปถึงจะเริ่มได้</td></tr>
+      <tr><td><strong>Throughput</strong></td><td><strong>สูงแทบไม่จำกัด</strong></td><td><strong>จำกัดกว่า</strong> และมีโอกาสเกิด <strong>delay</strong> มากกว่า</td></tr>
+      <tr><td><strong>ใช้เมื่อ</strong></td><td>ลำดับไม่สำคัญ ต้องการรับโหลดมาก</td><td><strong>ลำดับสำคัญ</strong></td></tr>
+      <tr><td><strong>การส่ง</strong> <span class="badge extra">เสริม</span></td><td>at-least-once (อาจได้ message ซ้ำ)</td><td>exactly-once processing (ไม่ซ้ำ)</td></tr>
+    </tbody>
+  </table></div>
+  <p>ผู้สอนยกตัวอย่าง FIFO ว่าเหมือน <strong>ต่อคิวซื้อกองทุนลดหย่อนภาษีตอนปลายปี</strong> ถ้าคนข้างหน้าใช้เวลาเป็นชั่วโมง คนข้างหลังก็ต้องรอ</p>
+  <p><span class="badge extra">เสริม</span> ใน FIFO ลำดับถูกรักษาภายใน <strong>message group</strong> เดียวกัน และชื่อ FIFO queue ต้องลงท้ายด้วย <code>.fifo</code></p>
+
+  <div class="widget" id="w-order">
+    <div class="widget-head"><span class="tag">เปรียบเทียบ</span><h3>ส่ง M1–M6 แล้วดูลำดับที่เสร็จ</h3></div>
+    <div class="widget-body">
+      <div class="row">
+        <label class="chip"><input type="checkbox" id="odSlow" checked> M2 ใช้เวลานาน (คนข้างหน้าทำธุรกรรมนาน)</label>
+        <button class="btn btn-primary" id="odRun">ส่ง M1–M6</button>
+      </div>
+      <p class="hint" style="margin:8px 0 0">สมมติ message ปกติใช้ 1 วินาที, M2 แบบช้าใช้ 8 วินาที, Standard มี consumer 3 ตัวทำพร้อมกัน</p>
+      <div class="lanes">
+        <div class="lane"><div class="lname">Standard<small id="odStdT"></small></div><div class="slot" id="odStd"></div></div>
+        <div class="lane"><div class="lname">FIFO<small id="odFifoT"></small></div><div class="slot" id="odFifo"></div></div>
+      </div>
+      <div class="explain" id="odExp" aria-live="polite"><p class="muted">กด "ส่ง M1–M6" เพื่อดูผล</p></div>
+    </div>
+  </div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li><strong>Standard คือค่า default</strong> ไม่ใช่ FIFO</li>
+      <li>visibility timeout หรือ long polling <strong>ไม่ได้</strong> ทำให้ standard queue เรียงลำดับ — ต้องใช้ FIFO</li>
+      <li>FIFO ใช้ DLQ ได้ (ช้อย "FIFO ไม่รองรับ DLQ" เป็นช้อยหลอก)</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="17,18"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s5" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 6 ================= -->
+<section class="sec" id="s6" aria-labelledby="h-s6">
+  <div class="sec-label">06</div>
+  <h2 id="h-s6">Polling, Retention และคำสั่ง CLI</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>Short polling ถามบ่อยจึงเร็วแต่แพง long polling ถามน้อยครั้งจึงถูกกว่า (trade-off ระหว่าง cost กับ response time) และ message ที่ค้างเกิน retention period จะถูกลบทิ้ง</p></div>
+  <h3>Short Polling กับ Long Polling</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>Short polling</th><th>Long polling</th></tr></thead>
+    <tbody>
+      <tr><td><strong>วิธีถาม</strong></td><td>ถามบ่อย ๆ</td><td>รอนานขึ้นก่อนตอบ ถามน้อยครั้งลง</td></tr>
+      <tr><td><strong>ความเร็วตอบกลับ</strong></td><td>ได้ response เร็ว</td><td>ต้องยอมรับ delay ได้ (ตามที่ผู้สอนสรุป)</td></tr>
+      <tr><td><strong>ค่าใช้จ่าย</strong></td><td>จำนวนครั้งที่ถามมากขึ้น → <strong>แพงกว่า</strong></td><td><strong>ถูกกว่า</strong></td></tr>
+    </tbody>
+  </table></div>
+  <p>เป็นการแลกกัน (<strong>trade-off</strong>) ระหว่าง <strong>cost กับ response time</strong> AWS จึงให้ผู้ใช้ตั้งค่าเลือกเอง</p>
+  <div class="callout note"><span class="k">เสริม</span><p>ในทางเทคนิค short polling ตอบกลับทันทีแม้ queue ว่าง (ได้ empty response บ่อย) ส่วน long polling ให้ <code>ReceiveMessage</code> รอได้สูงสุด <strong>20 วินาที</strong> (<code>WaitTimeSeconds</code>) และ <strong>ตอบกลับทันทีที่มี message เข้ามา</strong> จึงลด empty response และค่าใช้จ่าย AWS แนะนำให้ใช้ long polling ในกรณีส่วนใหญ่</p></div>
+
+  <div class="widget" id="w-poll">
+    <div class="widget-head"><span class="tag">แบบจำลอง</span><h3>60 วินาทีของ consumer: short vs long polling</h3></div>
+    <div class="widget-body">
+      <div class="row">
+        <label class="row" style="gap:6px;font-size:14px">short polling ถามทุก <select id="plInt" aria-label="ช่วงเวลาที่ short polling ถาม"><option value="1">1 วินาที</option><option value="3" selected>3 วินาที</option><option value="10">10 วินาที</option></select></label>
+        <button class="btn btn-sm" id="plNew">สุ่ม message ใหม่</button>
+      </div>
+      <div class="prow-lbl">Short polling</div>
+      <div class="ptrack" id="plShort"></div>
+      <div class="prow-lbl">Long polling (รอสูงสุด 20 วินาที)</div>
+      <div class="ptrack" id="plLong"></div>
+      <div class="paxis"><span>0s</span><span>15s</span><span>30s</span><span>45s</span><span>60s</span></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>message เข้ามา</span><span><i style="background:var(--info)"></i>request ที่ได้ message</span><span><i style="border:2px solid var(--info)"></i>empty response</span></div>
+      <div class="table-wrap" style="margin-top:14px"><table style="min-width:0">
+        <thead><tr><th></th><th>Short polling</th><th>Long polling</th></tr></thead>
+        <tbody id="plStats"></tbody>
+      </table></div>
+      <div class="explain" id="plExp"></div>
+    </div>
+  </div>
+
+  <h3>การลบ message และ Retention Period</h3>
+  <ul>
+    <li>สั่งลบ message เองได้ แต่โดยปกติ message จะถูกลบเมื่อประมวลผลสำเร็จ</li>
+    <li>ถ้า message อยู่ใน queue <strong>นานเกิน retention period</strong> ก็จะถูกลบทิ้ง</li>
+    <li><span class="badge extra">เสริม</span> retention ค่า default <strong>4 วัน</strong> ตั้งได้ 1 นาที – 14 วัน</li>
+  </ul>
+
+  <h3>คำสั่งพื้นฐาน (CLI/API)</h3>
+  <div class="widget" id="w-cli">
+    <div class="widget-head"><span class="tag">สำรวจ</span><h3>CLI explorer — คลิกคำสั่งเพื่อดูว่าทำอะไร</h3></div>
+    <div class="widget-body">
+      <div class="cmds" id="cliBtns" role="group" aria-label="คำสั่ง SQS"></div>
+      <div class="explain" id="cliInfo" aria-live="polite"><p class="muted">เลือกคำสั่งด้านบน</p></div>
+    </div>
+  </div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li><code>delete-message</code> ลบ message ตัวเดียว / <code>delete-queue</code> ลบ <strong>ทั้ง queue</strong></li>
+      <li>แก้ค่าของ queue ที่มีอยู่ใช้ <code>set-queue-attributes</code> ส่วน <code>get-</code> ใช้ดูอย่างเดียว</li>
+      <li>หมด retention → message ถูก <strong>ลบทิ้ง</strong> ไม่ได้ย้ายไป DLQ</li>
+      <li>ลดค่าใช้จ่ายจาก empty response → <strong>long polling</strong></li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="20,22"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s6" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 7 ================= -->
+<section class="sec" id="s7" aria-labelledby="h-s7">
+  <div class="sec-label">07</div>
+  <h2 id="h-s7">Security ของ SQS และ SNS</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>ควบคุมสิทธิ์ด้วย IAM + resource-based policy, เข้ารหัสด้วย SSE ผ่าน KMS และเชื่อมจาก VPC แบบ private ผ่าน Interface Endpoint (มีค่าใช้จ่าย)</p></div>
+  <ul>
+    <li>ควบคุมการเข้าถึงด้วย <strong>IAM</strong> และ <strong>Resource-based policy (SQS policy)</strong></li>
+    <li>เข้ารหัสข้อมูลด้วย <strong>Server-side encryption (SSE) ผ่าน AWS KMS</strong></li>
+    <li>SQS <strong>อยู่นอก VPC</strong> จึงต้องเชื่อมผ่าน <strong>VPC Endpoint</strong> — ผู้สอนตรวจเอกสารหลังพักแล้วสรุปว่า SQS ใช้ <strong>Interface Endpoint</strong> ซึ่งเป็น private connection และ <strong>มีค่าใช้จ่าย</strong></li>
+    <li><span class="badge extra">เสริม</span> <strong>Gateway Endpoint</strong> (ไม่มีค่าใช้จ่าย) รองรับแค่ <strong>S3 กับ DynamoDB</strong></li>
+    <li><strong>SNS</strong>: เหมือน SQS คือใช้ IAM, SSE ผ่าน KMS และ VPC Interface Endpoint (ผู้สอนบอกว่าจะไปตรวจยืนยันอีกที)</li>
+  </ul>
+  <div class="widget" id="w-ep">
+    <div class="widget-head"><span class="tag">ลองเลือก</span><h3>EC2 ใน private subnet ต้องเชื่อม service ไหนด้วย endpoint แบบไหน</h3></div>
+    <div class="widget-body">
+      <p class="hint" style="margin:0 0 4px">เลือก endpoint ที่ใช้ได้และประหยัดที่สุดสำหรับแต่ละ service</p>
+      <div id="epRows"></div>
+      <div class="row" style="margin-top:12px"><button class="btn btn-primary" id="epCheck">ตรวจคำตอบ</button><span class="hint" id="epScore" aria-live="polite"></span></div>
+      <h4 style="margin:22px 0 6px;font-size:15px">Checklist ความปลอดภัยของ queue "orders"</h4>
+      <div class="chips" id="secChecks">
+        <label class="chip"><input type="checkbox" data-k="iam"> IAM policy ให้ role ของ consumer</label>
+        <label class="chip"><input type="checkbox" data-k="res"> SQS policy (resource-based)</label>
+        <label class="chip"><input type="checkbox" data-k="kms"> SSE ผ่าน KMS</label>
+        <label class="chip"><input type="checkbox" data-k="vpce"> Interface Endpoint</label>
+      </div>
+      <ul class="msgs" id="secMsgs" aria-live="polite"></ul>
+    </div>
+  </div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>"Gateway Endpoint เพราะฟรี" เป็นช้อยหลอกสำหรับ SQS/SNS — Gateway มีแค่ S3 และ DynamoDB</li>
+      <li>IAM = ใครเข้าถึงได้, KMS = เข้ารหัส, Endpoint = เส้นทาง private — คนละหน้าที่กัน</li>
+      <li>ให้ SNS topic ส่งเข้า SQS ได้ ต้องอนุญาตใน <strong>SQS policy</strong> ของ queue</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="24,26"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s7" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 8 ================= -->
+<section class="sec" id="s8" aria-labelledby="h-s8">
+  <div class="sec-label">08</div>
+  <h2 id="h-s8">Architecture ตัวอย่าง: Event-driven</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>อัปโหลดรูป → S3 trigger Lambda → Lambda ส่ง URI เข้า SQS → EC2 ใน Auto Scaling Group ดึงไปแปลงรูป โดย scale EC2 ตามความยาวของ queue</p></div>
+  <pre><code>ผู้ใช้อัปโหลดรูป → S3 (create object event)
+   → S3 Event Notification trigger Lambda
+   → Lambda ส่ง URI ของรูปไปไว้ใน SQS
+   → EC2 ใน Auto Scaling Group ดึง message ไปแปลงรูป → เขียนลง S3 อีก bucket</code></pre>
+  <ul>
+    <li>เรียกว่า <strong>event-driven</strong> เพราะระบบทำงานเฉพาะตอนเกิด event</li>
+    <li><strong>Lambda กับ SQS คิดเงินเฉพาะตอนทำงาน</strong> ส่วน <strong>EC2 ต้องเปิดตลอด</strong></li>
+    <li>ใช้ <strong>ความยาวของ queue</strong> เป็นตัวกำหนดการ scale ได้: queue สั้นใช้ EC2 ตัวเดียว queue ยาวถึงระดับที่ตั้งไว้ก็เพิ่มจำนวน EC2</li>
+    <li><span class="badge extra">เสริม</span> metric ที่ใช้คือ <code>ApproximateNumberOfMessagesVisible</code> ใน CloudWatch</li>
+  </ul>
+  <div class="widget" id="w-asg">
+    <div class="widget-head"><span class="tag">แบบจำลอง</span><h3>Scale EC2 ตามความยาวของ queue (10 นาที)</h3></div>
+    <div class="widget-body">
+      <div class="flow" id="asgFlow"></div>
+      <div class="controls">
+        <div class="field"><label for="asgRate">อัปโหลดรูป (รูป/นาที) <span class="val" id="asgRateV"></span></label><input type="range" id="asgRate" min="0" max="300" step="10" value="120"></div>
+        <div class="field"><label for="asgTh">เพิ่ม EC2 1 ตัวต่อทุก ๆ <span class="val" id="asgThV"></span> message ที่ค้างในคิว</label><input type="range" id="asgTh" min="20" max="200" step="10" value="60"></div>
+      </div>
+      <p class="hint" style="margin:0">สมมติ EC2 1 ตัวแปลงรูปได้ 30 รูป/นาที, ASG มีขั้นต่ำ 1 ตัว สูงสุด 10 ตัว</p>
+      <table class="mtable" id="asgTable" aria-label="ความยาว queue และจำนวน EC2 รายนาที"></table>
+      <ul class="msgs" id="asgMsgs" aria-live="polite"></ul>
+    </div>
+  </div>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>ผู้ trigger Lambda คือ <strong>S3 Event Notification</strong> ไม่ใช่ SQS / ผู้ส่ง URI เข้า SQS คือ <strong>Lambda</strong> ไม่ใช่ EC2</li>
+      <li>"ทุก component คิดเงินเฉพาะตอนทำงาน" ผิด — <strong>EC2 ต้องเปิดตลอด</strong></li>
+      <li>metric ที่ใช้ scale คือ <strong>ความยาวของ queue</strong> ไม่ใช่ visibility timeout</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="27,28"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s8" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 9 ================= -->
+<section class="sec" id="s9" aria-labelledby="h-s9">
+  <div class="sec-label">09</div>
+  <h2 id="h-s9">Amazon SNS</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>SNS เป็น pub/sub ที่ push message เดียวไปหลายปลายทางพร้อมกัน (fan-out) กรอง message ได้ แต่ retry/DLQ ไม่ใช่ค่า default จึงไม่ reliable โดย default</p></div>
+  <h3>แนวคิดหลัก</h3>
+  <ul>
+    <li>เป็น <strong>Fully managed Pub/Sub</strong> คล้าย MQTT เลือกใช้เมื่อต้องการตั้งระบบได้เร็วและยืดหยุ่น แทนการติดตั้ง messaging service เอง</li>
+    <li>รองรับทั้ง <strong>one-to-many</strong> และ <strong>many-to-many</strong></li>
+    <li>เลือกประเภท Topic ได้ทั้ง <strong>Standard</strong> และ <strong>FIFO</strong></li>
+    <li>รองรับ <strong>Retry และ Dead-Letter Queue แต่ไม่ใช่ค่า default</strong> → SNS จึง <strong>ไม่ได้ reliable โดย default</strong> ต่างจาก SQS ที่ reliable โดย default</li>
+    <li><strong>Subscriber / Endpoint ที่รองรับ</strong>: Lambda, SQS, Kinesis Data Firehose, HTTP/S, Email, SMS, Mobile Push Notification</li>
+    <li>มี <strong>Message Filtering</strong> สำหรับกรอง message ตามเงื่อนไขที่กำหนด (<span class="badge extra">เสริม</span> ตั้งเป็น filter policy ที่ subscription แต่ละตัว)</li>
+  </ul>
+  <h3>Fan-out pattern</h3>
+  <p>message เดียวถูกส่งไป <strong>หลายปลายทางพร้อมกัน</strong> เช่น New Order Topic ส่งต่อไปที่ระบบ Fulfillment (ติดตามและจัดส่ง), Data Warehouse (ตัดสต็อก) และระบบอื่นอีกตัว</p>
+
+  <div class="widget" id="w-sns">
+    <div class="widget-head"><span class="tag">แบบจำลอง</span><h3>SNS fan-out, filtering และ serverless image processing</h3></div>
+    <div class="widget-body">
+      <div class="seg" role="tablist" aria-label="เลือกตัวอย่าง" id="snTabs">
+        <button role="tab" aria-selected="true" data-v="fan">Fan-out & filter</button>
+        <button role="tab" aria-selected="false" data-v="img">Image processing</button>
+      </div>
+      <div id="snFan" style="margin-top:14px">
+        <div class="row">
+          <span class="hint">ประเภทออร์เดอร์</span>
+          <div class="seg" role="group" aria-label="ประเภทออร์เดอร์" id="snType"><button aria-pressed="true" data-v="coffee">coffee</button><button aria-pressed="false" data-v="tea">tea</button></div>
+          <button class="btn btn-primary" id="snPub">Publish ไปที่ New Order Topic</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <label class="chip"><input type="checkbox" id="snFilter" checked> Roaster รับเฉพาะ coffee (filter policy)</label>
+          <label class="chip"><input type="checkbox" id="snDown"> HTTP/S endpoint ของ Roaster ล่ม</label>
+          <label class="chip"><input type="checkbox" id="snDlq"> ตั้ง DLQ ให้ subscription นั้น</label>
+        </div>
+        <div class="nodes" id="snSubs"></div>
+        <div class="explain" id="snExp" aria-live="polite"><p class="muted">กด Publish เพื่อดูว่า subscriber แต่ละตัวได้อะไร</p></div>
+      </div>
+      <div id="snImg" hidden style="margin-top:14px">
+        <div class="row"><button class="btn btn-primary" id="imUp">อัปโหลดรูป</button><label class="chip"><input type="checkbox" id="imDown"> Lambda ของ mobile ล่ม</label></div>
+        <div class="lanes" id="imLanes"></div>
+        <div class="explain" id="imExp" aria-live="polite"><p>S3 → SNS Topic → fan out ไป SQS 3 queue → แต่ละ queue trigger Lambda ของตัวเอง → เขียนลง S3 ปลายทาง จ่ายเฉพาะตอนที่ระบบทำงาน</p></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>ตัวอย่าง Image processing แบบ Serverless 100%</h3>
+  <pre><code>อัปโหลดรูป → S3 (create object event ส่ง URI) → SNS Topic
+   ├─► SQS: thumbnail → Lambda → S3 ปลายทาง
+   ├─► SQS: mobile    → Lambda → S3 ปลายทาง
+   └─► SQS: web       → Lambda → S3 ปลายทาง</code></pre>
+  <ul>
+    <li>SNS <strong>fan out</strong> ไปยัง SQS 3 queue แต่ละ queue trigger Lambda ของตัวเอง Lambda ดึงรูปต้นฉบับมาแปลง แล้วเขียนลง S3 ปลายทาง</li>
+    <li><strong>จ่ายเฉพาะตอนที่ระบบทำงาน</strong></li>
+    <li>ใส่ SQS คั่นเพื่อให้แต่ละงานได้ความ <strong>reliable</strong> ของ SQS (message รออยู่ในคิวจนประมวลผลสำเร็จ)</li>
+  </ul>
+  <h3>Security</h3>
+  <p>เหมือน SQS คือใช้ <strong>IAM</strong>, <strong>SSE ผ่าน KMS</strong> และ <strong>VPC Interface Endpoint</strong> (ผู้สอนบอกว่าจะไปตรวจยืนยันอีกที)</p>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>SNS <strong>ส่งหา Lambda ได้</strong> — เหตุผลที่ใส่ SQS คั่นคือความ reliable ไม่ใช่ "SNS ส่ง Lambda ไม่ได้"</li>
+      <li>fan-out ทำโดย <strong>SNS</strong> ไม่ใช่ SQS</li>
+      <li>กรองให้ subscriber รับเฉพาะบาง message → <strong>message filtering</strong> (ไม่ใช่ FIFO / shard / visibility timeout)</li>
+      <li>RDS ไม่อยู่ในรายการ endpoint ของ SNS</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="30,32"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s9" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 10 ================= -->
+<section class="sec" id="s10" aria-labelledby="h-s10">
+  <div class="sec-label">10</div>
+  <h2 id="h-s10">Amazon Kinesis Data Streams & Firehose</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>Kinesis Data Streams รับข้อมูลไหลต่อเนื่องปริมาณมากโดยแบ่งเป็น shard และต้องตั้ง consumer เอง ส่วน Firehose แปลงข้อมูลในตัวโดยไม่ต้องมี compute แต่ส่งได้เฉพาะปลายทางที่รองรับ</p></div>
+  <h3>แนวคิดหลัก</h3>
+  <ul>
+    <li><strong>Fully managed</strong> สำหรับ <strong>real-time data streaming</strong> ข้อมูลไหลเข้ามาต่อเนื่อง ปริมาณมาก ระดับ <strong>MB ต่อวินาที</strong></li>
+    <li><strong>Use case</strong>: financial transaction, social media feed, IT log, database event stream, real-time analytics, เกมออนไลน์</li>
+    <li><strong>Producer</strong> มาจาก data source หลายแหล่ง ข้อมูลใน stream ถูกแบ่งเป็น <strong>Shard</strong></li>
+    <li><strong>ต้องตั้ง Consumer เอง</strong> เพื่อดึงข้อมูลไปประมวลผล เช่น <strong>EC2</strong> (ควบคุมเองได้เต็มที่), <strong>Lambda</strong> (งานไม่ซับซ้อน) หรือ <strong>Kinesis Data Firehose</strong></li>
+    <li><span class="badge extra">เสริม</span> แต่ละ shard รับเขียนได้ราว 1 MB/s หรือ 1,000 records/s และอ่านได้ราว 2 MB/s ข้อมูลเก็บใน stream ค่า default 24 ชั่วโมง (ขยายได้ถึง 365 วัน) consumer หลายตัวอ่านข้อมูลชุดเดียวกันได้ ต่างจาก SQS ที่ message ถูกลบเมื่อประมวลผลแล้ว</li>
+  </ul>
+  <h3>Data Streams กับ Data Firehose</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>Data Streams + EC2/Lambda</th><th>Data Firehose</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Compute</strong></td><td><strong>ต้องสร้าง compute เอง</strong></td><td><strong>ไม่ต้องสร้าง compute</strong> ประมวลผล/แปลงข้อมูล (transform) ในตัว</td></tr>
+      <tr><td><strong>ปลายทาง</strong></td><td>เลือกที่เก็บผลลัพธ์ได้ <strong>หลากหลายกว่า</strong></td><td>ส่งไปเก็บได้ <strong>เฉพาะ storage ที่ Firehose รองรับ</strong> เช่น S3</td></tr>
+    </tbody>
+  </table></div>
+  <p><span class="badge extra">เสริม</span> ปลายทางของ Firehose เช่น S3, Redshift, OpenSearch, Splunk, HTTP endpoint การแปลงข้อมูลแบบกำหนดเองทำผ่าน Lambda ที่ Firehose เรียกให้</p>
+
+  <div class="widget" id="w-kin">
+    <div class="widget-head"><span class="tag">ทดลอง</span><h3>Shard และการเลือก consumer</h3></div>
+    <div class="widget-body">
+      <div class="controls">
+        <div class="field"><label for="knRate">ข้อมูลเข้า (MB/s) <span class="val" id="knRateV"></span></label><input type="range" id="knRate" min="1" max="20" value="6"></div>
+        <div class="field"><label for="knSh">จำนวน shard <span class="val" id="knShV"></span></label><input type="range" id="knSh" min="1" max="16" value="4"></div>
+      </div>
+      <div class="shards" id="knShards" aria-hidden="true"></div>
+      <ul class="msgs" id="knMsgs" aria-live="polite"></ul>
+      <div class="field" style="margin-top:16px"><span class="lbl">เลือก consumer</span>
+        <div class="seg" role="group" aria-label="เลือก consumer" id="knCons">
+          <button aria-pressed="true" data-v="ec2">EC2</button>
+          <button aria-pressed="false" data-v="lambda">Lambda</button>
+          <button aria-pressed="false" data-v="fh">Data Firehose</button>
+        </div>
+      </div>
+      <div class="explain" id="knExp" aria-live="polite"></div>
+    </div>
+  </div>
+  <h3>Kinesis Data Analytics</h3>
+  <ul>
+    <li>ใช้ <strong>วิเคราะห์ข้อมูลจาก stream แบบ real-time</strong></li>
+    <li>ผู้สอนบอกว่าตอนนี้มี <strong>Amazon Quick (AI)</strong> เป็นอีกทางเลือก แต่ยังราคาสูง</li>
+    <li><span class="badge extra">เสริม</span> Kinesis Data Analytics ปัจจุบันเปลี่ยนชื่อเป็น Amazon Managed Service for Apache Flink</li>
+  </ul>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul>
+      <li>"ไม่อยากดูแล compute" + ส่งเข้า S3 → <strong>Firehose</strong></li>
+      <li>"ปลายทางที่ Firehose ไม่รองรับ" หรือ "งานซับซ้อน ควบคุมเต็มที่" → <strong>Data Streams + EC2</strong></li>
+      <li>Lambda เหมาะกับงาน <strong>ไม่ซับซ้อน</strong> ตามที่ผู้สอนบอก</li>
+    </ul>
+  </div>
+  <div class="mini" data-qids="34,36"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s10" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= 11 ================= -->
+<section class="sec" id="s11" aria-labelledby="h-s11">
+  <div class="sec-label">11</div>
+  <h2 id="h-s11">Lab และงานที่ต้องส่ง</h2>
+  <div class="tldr"><span class="k">สรุปใน 1 ประโยค</span><p>Lab Coffee Inventory Update: Supplier ส่งข้อมูลเข้า SNS → SQS → Lambda → Database + ElastiCache โดยใช้ SQS เพราะทุกการอัปเดตต้องถูกประมวลผลแน่นอน</p></div>
+  <p>Setup SQS และ SNS ให้ทำงานร่วมกันในระบบ <strong>Coffee Inventory Update</strong> ของคาเฟ่ ซึ่งต่อยอดจาก lab ก่อนหน้าที่ใช้ ECS</p>
+  <div class="widget" id="w-lab">
+    <div class="widget-head"><span class="tag">ดูเส้นทาง</span><h3>Coffee Inventory Update</h3><span class="hint" id="labCount" style="margin-left:auto"></span></div>
+    <div class="widget-body">
+      <div class="flow" id="labFlow"></div>
+      <div class="explain" id="labInfo" aria-live="polite"><p class="muted">คลิกกล่องแต่ละกล่องเพื่อดูบทบาท</p></div>
+      <h4 style="margin:20px 0 4px;font-size:15px">Checklist</h4>
+      <ol class="lsteps" id="labSteps"></ol>
+    </div>
+  </div>
+  <p class="hint">ขั้นตอนในเช็กลิสต์เรียงจากคำอธิบายแลบแบบย่อ อาจไม่ตรงกับคู่มือแลบทุกคลิก</p>
+  <h3>Assignment Week 11</h3>
+  <ol><li><strong>Lab ACD 10.1</strong></li><li><strong>Knowledge Check ของ ACD Module 10</strong></li></ol>
+  <div class="callout trap"><span class="k">จุดหลอกในข้อสอบ</span>
+    <ul><li>ลำดับคือ Supplier → <strong>SNS → SQS</strong> → Lambda (ช้อยหลอกมักสลับ SNS กับ SQS)</li><li>เหตุผลที่ใช้ SQS คือ <strong>ทุกการอัปเดตต้องถูกประมวลผลแน่นอน</strong> ไม่ใช่เรื่อง real-time หรือ sync</li></ul>
+  </div>
+  <div class="mini" data-qids="37"></div>
+  <div class="sec-foot"><button class="btn btn-sm done-btn" data-sec="s11" aria-pressed="false">เข้าใจแล้ว</button></div>
+</section>
+
+<!-- ================= GAME ================= -->
+<section class="sec" id="game" aria-labelledby="h-game">
+  <div class="sec-label">ทบทวน</div>
+  <h2 id="h-game">เกมเลือก service</h2>
+  <p class="muted">อ่านสถานการณ์ แล้วเลือก service ที่เหมาะที่สุด</p>
+  <div class="qpanel">
+    <div class="qtop"><span id="gmNum"></span><span class="spacer"></span><span id="gmScore"></span></div>
+    <p class="game-q" id="gmQ"></p>
+    <div class="game-opts" id="gmOpts">
+      <button class="btn" data-v="sqs">Amazon SQS</button>
+      <button class="btn" data-v="sns">Amazon SNS</button>
+      <button class="btn" data-v="kds">Kinesis Data Streams</button>
+      <button class="btn" data-v="fh">Kinesis Data Firehose</button>
+    </div>
+    <div id="gmFb" aria-live="polite"></div>
+    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn btn-primary" id="gmNext">ข้อถัดไป</button></div>
+  </div>
+</section>
+
+<!-- ================= FLASHCARDS ================= -->
+<section class="sec" id="flashcards" aria-labelledby="h-fc">
+  <div class="sec-label">ทบทวน</div>
+  <h2 id="h-fc">Flashcards</h2>
+  <p class="muted">คลิกการ์ดหรือกด <kbd>Space</kbd> เพื่อพลิก แล้วบอกตัวเองว่าจำได้หรือยัง การ์ดที่ยังจำไม่ได้จะวนกลับมาอีก</p>
+  <div class="fc-wrap">
+    <button class="fc" id="fcCard" aria-live="polite">
+      <div class="fc-inner">
+        <div class="fc-face fc-front"><span class="k">คำถาม</span><div class="t" id="fcFront"></div></div>
+        <div class="fc-face fc-back"><span class="k">คำตอบ</span><div class="t" id="fcBack"></div></div>
+      </div>
+    </button>
+    <div class="fc-bar">
+      <span class="fc-count" id="fcCount"></span>
+      <div class="row">
+        <button class="btn btn-sm" id="fcPrev">ก่อนหน้า</button>
+        <button class="btn btn-sm" id="fcShuffle">สุ่ม</button>
+        <button class="btn btn-sm" id="fcNext">ถัดไป</button>
+      </div>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:12px">
+      <button class="btn" id="fcNo">ยังไม่ได้</button>
+      <button class="btn btn-primary" id="fcYes">จำได้</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CHEATSHEET ================= -->
+<section class="sec" id="cheatsheet" aria-labelledby="h-cs">
+  <div class="sec-label">ทบทวน</div>
+  <h2 id="h-cs">สรุปหน้าเดียว — จุดที่น่าจะออกสอบ</h2>
+  <div class="row" style="margin-top:12px"><button class="btn btn-sm" id="printCheat">พิมพ์เฉพาะหน้านี้</button></div>
+  <div class="cheat">
+    <div><h4>3 service</h4><ul><li><strong>SQS</strong> = queue one-to-one (poll)</li><li><strong>SNS</strong> = pub/sub one-to-many, fan-out (push)</li><li><strong>Kinesis</strong> = streaming</li></ul></div>
+    <div><h4>Sync vs Async</h4><ul><li><strong>Sync</strong> เร็ว แต่กิน resource scale ไม่ดี</li><li><strong>Async</strong> scale ดี แต่ไม่รู้ว่าเสร็จเมื่อไร</li></ul></div>
+    <div><h4>Reliable</h4><ul><li><strong>SQS</strong> reliable โดย default</li><li><strong>SNS</strong> ไม่ใช่ — Retry และ DLQ ไม่ใช่ค่า default</li></ul></div>
+    <div><h4>Visibility Timeout</h4><ul><li>default <strong>30 วินาที</strong></li><li>ซ่อน message ระหว่างประมวลผล หมดเวลาแล้วกลับมาให้ตัวอื่นทำ</li></ul></div>
+    <div><h4>Dead-Letter Queue</h4><ul><li>แยก message ที่ล้มเหลวครบ <strong>maxReceiveCount</strong></li><li>เคลียร์ queue หลัก + troubleshoot</li></ul></div>
+    <div><h4>Standard vs FIFO</h4><ul><li><strong>Standard</strong> (default) throughput สูง ลำดับไม่แน่นอน</li><li><strong>FIFO</strong> ลำดับแน่นอน throughput จำกัด</li></ul></div>
+    <div><h4>Polling</h4><ul><li><strong>Short</strong> เร็วแต่แพง</li><li><strong>Long</strong> ถูกแต่ช้ากว่า</li></ul></div>
+    <div><h4>CLI</h4><ul><li><code>delete-message</code> ≠ <code>delete-queue</code></li><li><code>set-queue-attributes</code> แก้ค่า</li></ul></div>
+    <div><h4>Security</h4><ul><li>IAM + SQS policy, SSE-KMS</li><li><strong>Interface Endpoint</strong> (มีค่าใช้จ่าย)</li><li>Gateway มีแค่ S3, DynamoDB</li></ul></div>
+    <div><h4>Event-driven</h4><ul><li>S3 → Lambda → SQS → EC2 ASG</li><li>scale EC2 ตาม <strong>ความยาว queue</strong></li></ul></div>
+    <div><h4>Kinesis</h4><ul><li>Data Streams แบ่งเป็น <strong>shard</strong> ต้องตั้ง consumer เอง</li><li><strong>Firehose</strong> แปลงในตัว ไม่ต้องมี compute แต่ส่งได้แค่ปลายทางที่รองรับ</li></ul></div>
+    <div><h4>Lab</h4><ul><li>Supplier → SNS → SQS → Lambda → DB + ElastiCache</li><li>ส่ง Lab ACD 10.1 + Knowledge Check</li></ul></div>
+  </div>
+  <h3>ตัวอย่างการตอบแบบสั้นตรงจุด</h3>
+  <blockquote>"Messaging service เป็นตัวกลางให้ service ไม่ต้องคุยกันตรง ๆ SQS เป็น queue แบบ one-to-one ที่ consumer มาดึงเอง และ reliable เพราะเก็บ message ไว้จนประมวลผลสำเร็จ โดยมี visibility timeout 30 วินาทีกันไม่ให้ consumer อื่นหยิบซ้ำ และ DLQ แยก message ที่ล้มเหลวซ้ำ ๆ ออกมา SNS เป็น pub/sub ที่ push ไปหลายปลายทางพร้อมกัน (fan-out) แต่ retry/DLQ ไม่ใช่ค่า default ส่วน Kinesis ใช้กับข้อมูล stream แบบ real-time ถ้าไม่อยากดูแล compute ให้ใช้ Firehose"</blockquote>
+</section>
+
+<!-- ================= QUIZ ================= -->
+<section class="sec" id="quiz" aria-labelledby="h-quiz">
+  <div class="sec-label">ข้อสอบจำลอง</div>
+  <h2 id="h-quiz">ข้อสอบปรนัย</h2>
+  <p class="muted">ข้อสอบส่วนใหญ่เป็นโจทย์สถานการณ์ ช้อยหลอกมาจากจุดที่สับสนจริง ลำดับข้อและลำดับช้อยสลับทุกครั้ง</p>
+
+  <div class="qpanel" id="qSetup">
+    <div class="field"><span class="lbl">โหมด</span>
+      <div class="seg" role="group" aria-label="โหมด" id="qMode">
+        <button aria-pressed="true" data-m="practice">ฝึกซ้อม — เห็นเฉลยทันที</button>
+        <button aria-pressed="false" data-m="timed">จับเวลา — 20 ข้อ 25 นาที</button>
+      </div>
+    </div>
+    <div class="field"><span class="lbl">หัวข้อ</span><div class="chips" id="qTopics"></div></div>
+    <div class="field"><span class="lbl">ระดับความยาก</span><div class="chips" id="qDiffs"></div></div>
+    <div class="controls">
+      <div class="field"><label for="qCount">จำนวนข้อ</label><select id="qCount"><option value="10">10 ข้อ</option><option value="20" selected>20 ข้อ</option><option value="all">ทั้งหมด</option></select></div>
+      <div class="field"><span class="lbl">ตัวเลือกเพิ่ม</span><label class="chip" style="align-self:flex-start"><input type="checkbox" id="qOnlyBm"> เฉพาะข้อที่ bookmark ไว้ <span id="qBmN" class="muted"></span></label></div>
+    </div>
+    <p class="hint" id="qPoolInfo"></p>
+    <div class="row"><button class="btn btn-primary" id="qStart">เริ่มทำข้อสอบ</button><span class="hint" id="qHistory"></span></div>
+    <p class="hint" style="margin-bottom:0">คีย์ลัด: <kbd>1</kbd>–<kbd>4</kbd> หรือ <kbd>A</kbd>–<kbd>D</kbd> เลือกช้อย · <kbd>Enter</kbd> ไปข้อถัดไป</p>
+  </div>
+
+  <div class="qpanel" id="qRun" hidden>
+    <div class="qtop">
+      <span id="qNum"></span><span class="pill" id="qTopic"></span><span class="pill" id="qDiff"></span>
+      <span class="spacer"></span>
+      <span class="timer" id="qTimer" hidden></span>
+      <button class="bm" id="qBm" aria-pressed="false">☆ Bookmark</button>
+    </div>
+    <div class="qbar"><i id="qBar"></i></div>
+    <p class="qq" id="qText"></p>
+    <div class="choices" id="qChoices"></div>
+    <div id="qFb" aria-live="polite"></div>
+    <div class="qnav">
+      <button class="btn" id="qPrev">ย้อนกลับ</button>
+      <div class="row"><button class="btn" id="qQuit">ออก</button><button class="btn btn-primary" id="qNext">ถัดไป</button></div>
+    </div>
+    <div class="dots" id="qDots" aria-label="ไปยังข้อ"></div>
+  </div>
+
+  <div class="qpanel" id="qResult" hidden tabindex="-1">
+    <div class="score-big"><b id="rScore"></b><span id="rPct"></span></div>
+    <p id="rMsg"></p>
+    <h3 style="margin-top:20px">คะแนนแยกตามหัวข้อ</h3>
+    <div class="tbars" id="rBars"></div>
+    <div class="callout trap" id="rWeak"></div>
+    <div class="row"><button class="btn btn-primary" id="rRetryWrong">ทำเฉพาะข้อที่ผิดอีกรอบ</button><button class="btn" id="rRestart">เริ่มใหม่</button></div>
+    <h3 id="rWrongH">ข้อที่ผิด / ไม่ได้ตอบ</h3>
+    <div id="rWrong"></div>
+  </div>
+</section>
+
+<nav class="weeknav" aria-label="บทอื่น"><a class="prev" href="Week10.html"><small>← บทก่อนหน้า</small><b>Week 10 · Containers บน AWS และ Caching</b></a><a class="next" href="Week12.html"><small>บทถัดไป →</small><b>Week 12 · Containers บน AWS และ Caching</b></a><a class="home" href="index.html"><small>กลับไปเลือกบท</small><b>ทุกบท (หน้ารวม)</b></a></nav>
+<footer>
+  <p>สรุปจาก transcript อัตโนมัติของคลิป CAD Week 11 (ACD Module 10) ในคลิปไม่เห็นสไลด์ ตัวเลขหรือชื่อที่ผู้สอนพูดเร็วอาจตกหล่น ส่วนที่ติดป้าย "เสริม" มาจากเอกสาร AWS</p>
+  <p>ผู้สอนบอกว่าจะไปตรวจยืนยันเรื่อง VPC Interface Endpoint ของ SNS อีกที</p>
+  <p><strong>เช็กประกาศของวิชา:</strong> เรียนครั้งต่อไป "วันศุกร์ที่ 2" — ให้เช็กเดือนกับประกาศ</p>
+</footer>
+
+</div>
+</main>
+</div>
+<script>
+/* ================= DATA ================= */
+const TOPICS = [
+  { key: 'ภาพรวม', label: 'ภาพรวม', sec: 's1' },
+  { key: 'Sync/Async', label: 'Sync/Async', sec: 's2' },
+  { key: 'รูปแบบ', label: 'รูปแบบ Messaging', sec: 's3' },
+  { key: 'SQS', label: 'SQS', sec: 's4' },
+  { key: 'Queue types', label: 'Standard/FIFO', sec: 's5' },
+  { key: 'Polling/CLI', label: 'Polling & CLI', sec: 's6' },
+  { key: 'Security', label: 'Security', sec: 's7' },
+  { key: 'Architecture', label: 'Architecture', sec: 's8' },
+  { key: 'SNS', label: 'SNS', sec: 's9' },
+  { key: 'Kinesis', label: 'Kinesis', sec: 's10' },
+  { key: 'Lab', label: 'Lab', sec: 's11' }
+];
+const DIFFS = ['กลาง', 'ยาก', 'ยากมาก'];
+
+const QUESTIONS = [
+  { id: 1, topic: 'ภาพรวม', difficulty: 'กลาง',
+    question: 'ประโยชน์หลักของการใส่ messaging service คั่นระหว่าง service ในระบบ microservice คือข้อใด',
+    choices: ['ทำให้ service ที่ส่งต้องรู้ address ของ service ที่รับเสมอ',
+              'ทำให้ service ผูกกันหลวม ๆ ผู้ส่งวางข้อมูลไว้ที่ตัวกลางแล้วไปทำงานต่อ ผู้รับมารับไปเองเมื่อพร้อม',
+              'ทำให้ทุก request ได้ผลลัพธ์กลับมาทันทีแบบ real-time',
+              'ทำให้ไม่ต้องตั้งสิทธิ์ IAM ระหว่าง service'],
+    answer: 1,
+    explain: 'messaging service เป็นตัวกลาง ผู้ส่งไม่ต้องคุยกับผู้รับโดยตรง',
+    whyWrong: { 0: 'ตรงข้าม ผู้ส่งไม่ต้องรู้จักผู้รับ', 2: 'การส่งผ่านตัวกลางเป็นแบบ async การันตีไม่ได้ว่าเสร็จเมื่อไร', 3: 'SQS/SNS ยังต้องควบคุมสิทธิ์ด้วย IAM และ resource-based policy' } },
+
+  { id: 2, topic: 'ภาพรวม', difficulty: 'กลาง',
+    question: 'ข้อใดจับคู่ service กับลักษณะงานได้ถูกต้อง',
+    choices: ['SQS = stream processing, SNS = message queue, Kinesis = pub/sub',
+              'ทั้ง SQS, SNS และ Kinesis เหมาะกับข้อมูลที่ไหลต่อเนื่องแบบ real-time',
+              'SQS และ SNS เหมาะกับงานส่งทีละ message หรือเป็นชุด ส่วน Kinesis เหมาะกับข้อมูลที่ไหลต่อเนื่องแบบ real-time',
+              'SQS เหมาะกับ stream ส่วน SNS และ Kinesis เหมาะกับงานแบบ batch'],
+    answer: 2,
+    explain: 'SQS/SNS = batch / ทีละ message ส่วน Kinesis = stream processing',
+    whyWrong: { 0: 'สลับกันทั้งหมด SQS = queue, SNS = pub/sub, Kinesis = stream', 1: 'SQS และ SNS เป็นงานแบบ message/batch', 3: 'สลับบทบาท SQS กับ Kinesis' } },
+
+  { id: 3, topic: 'Sync/Async', difficulty: 'ยาก',
+    question: 'ระบบ synchronous: Client → Service A → Service B เมื่อจำนวน client เพิ่มเป็นหลายพันราย ปัญหาหลักคือข้อใด',
+    choices: ['Service B ต้องถือ connection กับ client ทุกรายโดยตรง',
+              'client จะได้แค่ acknowledge และไม่รู้ว่างานเสร็จเมื่อไร',
+              'message จะถูกย้ายไป Dead-Letter Queue',
+              'Service A ต้องถือ connection/state ทั้งกับ client และ B ระหว่างรอ ทำให้ resource ของ A หมดและ scale ได้ไม่ดี'],
+    answer: 3,
+    explain: 'ใน sync A ทำงานหนักที่สุดเพราะถือ connection สองฝั่ง',
+    whyWrong: { 0: 'client คุยกับ A ไม่ได้คุยกับ B', 1: 'เป็นลักษณะของ async', 2: 'DLQ เป็นกลไกของ queue ไม่เกี่ยวกับการเรียกแบบ sync' } },
+
+  { id: 4, topic: 'Sync/Async', difficulty: 'ยาก',
+    question: 'หน้าชำระเงินต้องแสดงผลว่าบัตรเครดิตผ่านหรือไม่ <strong>ทันที</strong> ก่อนให้ผู้ใช้ไปขั้นถัดไป ควรเลือกแบบใด',
+    choices: ['Synchronous เพราะผู้ใช้ต้องได้ผลทันที', 'Asynchronous ผ่าน SQS เพราะ reliable', 'Asynchronous ผ่าน SNS เพราะ push ได้เร็ว', 'Kinesis Data Streams เพราะเป็น real-time'],
+    answer: 0,
+    explain: 'sync ตอบสนองเร็ว เหมาะกับงานที่ต้องได้ผลทันที',
+    whyWrong: { 1: 'async การันตีไม่ได้ว่าจะเสร็จเมื่อไร ผู้ใช้ไม่ได้ผลทันที', 2: 'SNS ก็เป็น async ผู้เรียกไม่ได้ผลลัพธ์ของการตรวจบัตรกลับมา', 3: 'Kinesis ใช้กับข้อมูลไหลต่อเนื่องปริมาณมาก ไม่ใช่ request/response ของผู้ใช้คนเดียว' } },
+
+  { id: 5, topic: 'Sync/Async', difficulty: 'กลาง',
+    question: 'ในตัวอย่างโรงพยาบาลรัฐของผู้สอน ขั้นตอน "วางบัตรในตะกร้าแล้ววัดความดัน" เทียบกับอะไรในระบบ async',
+    choices: ['การประมวลผลเสร็จสมบูรณ์', 'การได้รับ acknowledge ว่าระบบรับ request แล้ว', 'การย้าย message ไป Dead-Letter Queue', 'การถือ connection ไว้จนได้ผลตรวจ'],
+    answer: 1,
+    explain: 'คนไข้รู้ว่าระบบรับเรื่องแล้ว จากนั้นรอเรียกคิว (ได้ตรวจแน่นอนแต่ไม่รู้ว่าเมื่อไร)',
+    whyWrong: { 0: 'การตรวจจริงเกิดทีหลังตอนเรียกคิว', 2: 'ไม่เกี่ยวกับ DLQ', 3: 'การถือ connection ไว้จนได้ผลคือลักษณะ sync (โรงพยาบาลเอกชน)' } },
+
+  { id: 6, topic: 'รูปแบบ', difficulty: 'ยาก',
+    question: 'คำสั่งซื้อหนึ่งรายการต้องไปถึง 3 ระบบพร้อมกัน (จัดส่ง, คลังสินค้า, ส่งอีเมล) ควรออกแบบอย่างไร',
+    choices: ['SQS queue เดียว ให้ทั้ง 3 ระบบเป็น consumer ของ queue นั้น', 'SQS FIFO queue เพื่อให้ทั้ง 3 ระบบได้ตามลำดับ',
+              'SNS topic แล้วให้ทั้ง 3 ระบบ subscribe (fan-out)', 'Kinesis Data Firehose ส่งตรงไปที่ทั้ง 3 ระบบ'],
+    answer: 2,
+    explain: 'SNS เป็น one-to-many ส่งสำเนาให้ subscriber ทุกตัว',
+    whyWrong: { 0: 'queue เป็น one-to-one แต่ละ message ไปถึง consumer ตัวเดียว ระบบอื่นจะไม่ได้', 1: 'FIFO รักษาลำดับ แต่ยังเป็น one-to-one', 3: 'Firehose ส่งข้อมูล stream ไปปลายทางเก็บข้อมูลที่รองรับ ไม่ใช่ fan-out ไปหลายระบบ' } },
+
+  { id: 7, topic: 'รูปแบบ', difficulty: 'ยาก',
+    question: 'ข้อใดอธิบายวิธีที่ message ไปถึงผู้รับได้ถูกต้อง',
+    choices: ['SQS push message ไปหา consumer ส่วน SNS ให้ subscriber มา poll', 'consumer ของ SQS เป็นฝ่ายดึง (poll) ส่วน SNS เป็นฝ่ายส่ง (push) ไปหา subscriber',
+              'ทั้ง SQS และ SNS push ไปหาผู้รับ', 'ทั้ง SQS และ SNS ให้ผู้รับมา poll'],
+    answer: 1,
+    explain: 'SQS: consumer poll / SNS: push ไปหา subscriber',
+    whyWrong: { 0: 'สลับกัน', 2: 'SQS ไม่ push consumer ต้องมาดึงเอง', 3: 'SNS push ไปหา subscriber' } },
+
+  { id: 8, topic: 'รูปแบบ', difficulty: 'ยากมาก',
+    question: 'SQS queue หนึ่งมี consumer 3 ตัว producer ส่ง message เข้ามา 1 ข้อความ ข้อใดถูกต้อง',
+    choices: ['consumer ทั้ง 3 ตัวได้สำเนาคนละชุดพร้อมกัน', 'message ถูกแบ่งเป็น 3 shard ให้ consumer ละส่วน',
+              'consumer ที่สร้างก่อนเป็นตัวเดียวที่มีสิทธิ์รับ message', 'ปกติจะมี consumer ตัวเดียวดึงไปประมวลผล ระหว่างนั้น message ถูกซ่อนจาก consumer อื่นด้วย visibility timeout'],
+    answer: 3,
+    explain: 'queue เป็น one-to-one และ visibility timeout กันไม่ให้ consumer อื่นหยิบซ้ำ',
+    whyWrong: { 0: 'เป็นพฤติกรรมของ SNS (fan-out)', 1: 'shard เป็นแนวคิดของ Kinesis', 2: 'ไม่ได้เลือกตามลำดับการสร้าง consumer ตัวไหนดึงได้ก่อนก็ได้' } },
+
+  { id: 9, topic: 'SQS', difficulty: 'กลาง',
+    question: 'keyword ที่ผู้สอนให้จำสำหรับ SQS คือข้อใด',
+    choices: ['Reliable — ส่ง message ได้แน่นอน แม้ข้อมูลมากและ throughput สูง', 'Real-time streaming ปริมาณ MB ต่อวินาที', 'Push notification ไปหลายปลายทาง', 'Many-to-many pub/sub'],
+    answer: 0,
+    explain: 'keyword ของ SQS คือ Reliable',
+    whyWrong: { 1: 'เป็นของ Kinesis', 2: 'เป็นของ SNS', 3: 'เป็นของ SNS' } },
+
+  { id: 10, topic: 'SQS', difficulty: 'ยาก',
+    question: 'consumer ดึง message ไปแล้วเครื่อง crash ก่อนประมวลผลเสร็จ จะเกิดอะไรขึ้นกับ message นั้น',
+    choices: ['message หายไปแล้ว เพราะถูกลบตั้งแต่ตอน ReceiveMessage', 'message ถูกย้ายไป Dead-Letter Queue ทันที',
+              'message ยังอยู่ใน queue ถูกซ่อนจนหมด visibility timeout แล้วกลับมาให้ consumer ตัวอื่นดึงไปทำได้', 'SQS ส่ง message กลับไปหา producer ให้ส่งใหม่'],
+    answer: 2,
+    explain: 'นี่คือกลไกที่ทำให้ SQS reliable',
+    whyWrong: { 0: 'การ receive ไม่ได้ลบ message ต้องประมวลผลสำเร็จแล้วลบ', 1: 'จะไป DLQ ก็ต่อเมื่อถูกรับครบ maxReceiveCount แล้ว', 3: 'SQS ไม่ส่งกลับไปหา producer' } },
+
+  { id: 11, topic: 'SQS', difficulty: 'กลาง',
+    question: 'ค่า default ของ visibility timeout ใน SQS คือเท่าใด',
+    choices: ['20 วินาที', '30 วินาที', '4 วัน', '0 วินาที'],
+    answer: 1,
+    explain: 'visibility timeout default = 30 วินาที',
+    whyWrong: { 0: '20 วินาทีคือเวลารอสูงสุดของ long polling (เสริม)', 2: '4 วันคือ retention period default (เสริม)', 3: 'ถ้าเป็น 0 consumer อื่นจะเห็น message ทันที เสี่ยงหยิบซ้ำ' } },
+
+  { id: 12, topic: 'SQS', difficulty: 'ยากมาก',
+    question: 'งานแปลงรูปแต่ละ message ใช้เวลาประมาณ 90 วินาที queue ใช้ visibility timeout ค่า default พบว่ารูปเดียวถูกแปลงซ้ำหลายครั้ง ควรแก้อย่างไร',
+    choices: ['เปลี่ยนเป็น long polling', 'เพิ่ม maxReceiveCount ของ DLQ', 'เปลี่ยนไปใช้ SNS แทน SQS',
+              'เพิ่ม visibility timeout ให้นานกว่าเวลาที่ใช้ประมวลผล เพราะ 30 วินาทีหมดก่อนงานเสร็จ message จึงโผล่ให้ consumer อื่นหยิบซ้ำ'],
+    answer: 3,
+    explain: 'visibility timeout ต้องนานกว่าเวลาประมวลผล (เสริม)',
+    whyWrong: { 0: 'polling มีผลกับการรอ message ไม่ได้แก้การหยิบซ้ำ', 1: 'ยิ่งให้ถูกรับซ้ำได้หลายครั้งขึ้น', 2: 'SNS ไม่เก็บ message ให้ดึงและไม่ได้แก้ปัญหานี้' } },
+
+  { id: 13, topic: 'SQS', difficulty: 'ยาก',
+    question: 'ข้อใดคือประโยชน์ของ Dead-Letter Queue ตามที่ผู้สอนอธิบาย',
+    choices: ['แยก message ที่ประมวลผลไม่สำเร็จซ้ำ ๆ ออกจาก queue หลัก ให้ queue หลักโล่งและหาสาเหตุได้ง่าย', 'เก็บสำเนา message ที่ประมวลผลสำเร็จไว้เป็น backup',
+              'เร่งให้ message สำคัญถูกประมวลผลก่อนตัวอื่น', 'ทำให้ standard queue เรียงลำดับได้แบบ FIFO'],
+    answer: 0,
+    explain: 'DLQ เคลียร์พื้นที่ queue หลักและแยก message ที่มีปัญหาไว้ troubleshoot',
+    whyWrong: { 1: 'message ที่สำเร็จถูกลบ ไม่ได้ไป DLQ', 2: 'DLQ ไม่ใช่ priority queue', 3: 'ลำดับขึ้นกับประเภท queue ไม่เกี่ยวกับ DLQ' } },
+
+  { id: 14, topic: 'SQS', difficulty: 'ยากมาก',
+    question: 'ตั้ง redrive policy ให้ queue โดย maxReceiveCount = 2 และ consumer ประมวลผล message หนึ่งล้มเหลวทุกครั้ง ข้อใดถูกต้อง',
+    choices: ['message ถูกย้ายไป DLQ ทันทีที่ล้มเหลวครั้งแรก', 'message ถูกรับไปครบ 2 ครั้งแล้วยังไม่ถูกลบ จึงถูกย้ายไป DLQ',
+              'SQS retry ให้อีก 2 ครั้งหลังครั้งแรก รวมเป็น 3 ครั้งแล้วค่อยย้าย', 'message อยู่ใน queue หลักจนหมด retention period แล้วจึงย้ายไป DLQ'],
+    answer: 1,
+    explain: 'นับจากจำนวนครั้งที่ถูกรับ (receive count) เมื่อครบตามที่ตั้งก็ย้ายไป DLQ',
+    whyWrong: { 0: 'ต้องครบจำนวนที่ตั้งไว้ก่อน', 2: 'สับสนกับ retry ของ Lambda async (Week 9) ที่ retry 2 = ลอง 3 ครั้ง', 3: 'หมด retention แล้ว message ถูกลบทิ้ง ไม่ได้ย้ายไป DLQ' } },
+
+  { id: 15, topic: 'Polling/CLI', difficulty: 'กลาง',
+    question: 'message ที่ค้างอยู่ใน queue นานเกิน retention period จะเกิดอะไรขึ้น',
+    choices: ['ถูกย้ายไป DLQ อัตโนมัติ', 'ถูกส่งกลับไปหา producer', 'ถูกลบทิ้ง', 'ค้างอยู่ตลอดไปจนกว่าจะมี consumer มารับ'],
+    answer: 2,
+    explain: 'เกิน retention period message จะถูกลบทิ้ง',
+    whyWrong: { 0: 'DLQ ใช้เกณฑ์ maxReceiveCount ไม่ใช่อายุ message', 1: 'SQS ไม่ส่งกลับ producer', 3: 'มี retention period จำกัดอายุ' } },
+
+  { id: 16, topic: 'Queue types', difficulty: 'กลาง',
+    question: 'ข้อใดถูกต้องเกี่ยวกับ Standard queue',
+    choices: ['การันตีลำดับแบบ FIFO เสมอ', 'throughput จำกัด เพื่อรักษาลำดับ', 'ต้องเลือกเองตอนสร้าง ไม่ใช่ค่า default', 'เป็นค่า default เรียงลำดับแบบ best-effort และ throughput สูงแทบไม่จำกัด'],
+    answer: 3,
+    explain: 'Standard = default, best-effort ordering, throughput สูงแทบไม่จำกัด',
+    whyWrong: { 0: 'message ที่มาทีหลังอาจถูกประมวลผลก่อน', 1: 'เป็นลักษณะของ FIFO', 2: 'Standard คือค่า default' } },
+
+  { id: 17, topic: 'Queue types', difficulty: 'ยาก',
+    question: 'ระบบธนาคารต้องประมวลผลรายการ "ฝาก" ก่อน "ถอน" ของบัญชีเดียวกันให้ตรงลำดับเสมอ ควรใช้แบบใด',
+    choices: ['Standard queue พร้อม visibility timeout ยาว ๆ', 'FIFO queue', 'SNS standard topic', 'Standard queue พร้อม long polling'],
+    answer: 1,
+    explain: 'งานที่ลำดับสำคัญใช้ FIFO',
+    whyWrong: { 0: 'visibility timeout ไม่ได้ทำให้เรียงลำดับ', 2: 'standard topic ไม่การันตีลำดับ', 3: 'polling ไม่เกี่ยวกับลำดับ' } },
+
+  { id: 18, topic: 'Queue types', difficulty: 'ยาก',
+    question: 'ข้อใดคือข้อเสียของ FIFO queue ที่ผู้สอนยกตัวอย่างเรื่องคิวซื้อกองทุนลดหย่อนภาษี',
+    choices: ['ลำดับการประมวลผลไม่แน่นอน', 'ไม่รองรับ Dead-Letter Queue', 'throughput จำกัดกว่า และถ้า message ข้างหน้าใช้เวลานาน message ข้างหลังต้องรอ', 'ต้องเปิด EC2 ไว้ตลอดเวลา'],
+    answer: 2,
+    explain: 'FIFO ได้ลำดับแต่แลกกับ throughput และ delay',
+    whyWrong: { 0: 'FIFO ลำดับแน่นอน (นั่นคือข้อดี)', 1: 'FIFO ใช้ DLQ ได้ (ต้องเป็น FIFO DLQ — เสริม)', 3: 'SQS เป็น fully managed ไม่ต้องเปิด EC2' } },
+
+  { id: 19, topic: 'Queue types', difficulty: 'ยากมาก',
+    question: '(เสริม) consumer ของ Standard queue ได้รับ message เดิมซ้ำเป็นครั้งคราว ข้อใดอธิบายได้ถูกต้อง',
+    choices: ['Standard queue ส่งแบบ at-least-once จึงอาจได้ซ้ำ consumer ควรออกแบบให้ประมวลผลซ้ำได้โดยไม่เกิดผลเสีย (idempotent)',
+              'Standard queue ส่งแบบ exactly-once การได้ซ้ำแปลว่า queue เสีย', 'เป็นเพราะ message ถูกย้ายไป DLQ แล้วย้ายกลับ', 'เป็นเพราะเปิด long polling'],
+    answer: 0,
+    explain: 'Standard = at-least-once ส่วน FIFO = exactly-once processing (ความรู้เสริม)',
+    whyWrong: { 1: 'exactly-once เป็นของ FIFO', 2: 'DLQ ไม่ได้ย้ายกลับเอง', 3: 'long polling ไม่ทำให้เกิด message ซ้ำ' } },
+
+  { id: 20, topic: 'Polling/CLI', difficulty: 'ยาก',
+    question: 'ทีมพบว่าค่าใช้จ่าย SQS สูง เพราะ consumer เรียก ReceiveMessage ถี่มากและได้ response ว่างเป็นส่วนใหญ่ ควรแก้อย่างไร',
+    choices: ['เปลี่ยนเป็น FIFO queue', 'ลด visibility timeout', 'เพิ่ม retention period', 'เปิด long polling เพื่อให้ถามน้อยครั้งลง'],
+    answer: 3,
+    explain: 'long polling ถามน้อยครั้งลง ลด empty response ค่าใช้จ่ายจึงต่ำลง',
+    whyWrong: { 0: 'ประเภท queue ไม่ได้ลดจำนวนครั้งที่ถาม', 1: 'visibility timeout ไม่เกี่ยวกับการถาม', 2: 'ยิ่งเก็บนานไม่ได้ลดจำนวน request' } },
+
+  { id: 21, topic: 'Polling/CLI', difficulty: 'กลาง',
+    question: 'ตามที่ผู้สอนสรุป ข้อใดอธิบาย trade-off ของ short polling กับ long polling ได้ถูกต้อง',
+    choices: ['short polling ถามน้อยครั้งจึงถูก ส่วน long polling ถามบ่อยจึงแพง',
+              'short polling ได้ response เร็วแต่ถามบ่อยจึงแพงกว่า ส่วน long polling ถามน้อยครั้งจึงถูกกว่าแต่ต้องยอมรับ delay',
+              'ทั้งสองแบบค่าใช้จ่ายเท่ากัน ต่างกันแค่ลำดับ message', 'long polling ใช้ได้เฉพาะ FIFO queue'],
+    answer: 1,
+    explain: 'trade-off ระหว่าง cost กับ response time',
+    whyWrong: { 0: 'สลับกัน', 2: 'จำนวนครั้งที่ถามต่างกัน ค่าใช้จ่ายจึงต่างกัน', 3: 'ใช้ได้ทั้ง Standard และ FIFO (เสริม)' } },
+
+  { id: 22, topic: 'Polling/CLI', difficulty: 'ยาก',
+    question: 'consumer ประมวลผล message สำเร็จแล้ว ต้องการเอา <strong>message นั้น</strong> ออกจาก queue ควรใช้คำสั่งใด',
+    choices: ['<code>delete-queue</code>', '<code>receive-message</code>', '<code>delete-message</code>', '<code>set-queue-attributes</code>'],
+    answer: 2,
+    explain: '<code>delete-message</code> ลบ message ตัวเดียว',
+    whyWrong: { 0: 'ลบทั้ง queue พร้อม message ทั้งหมด', 1: 'เป็นการดึง message ไม่ใช่ลบ', 3: 'ใช้แก้ค่าตั้งของ queue' } },
+
+  { id: 23, topic: 'Polling/CLI', difficulty: 'ยาก',
+    question: 'ต้องการเปลี่ยน visibility timeout ของ queue ที่สร้างไว้แล้ว ควรใช้คำสั่งใด',
+    choices: ['<code>get-queue-attributes</code>', '<code>set-queue-attributes</code>', '<code>create-queue</code>', '<code>get-queue-url</code>'],
+    answer: 1,
+    explain: '<code>set-queue-attributes</code> ใช้แก้ค่าตั้งของ queue ที่มีอยู่',
+    whyWrong: { 0: 'ใช้ดูค่า ไม่ได้แก้', 2: 'ใช้สร้าง queue ใหม่', 3: 'ใช้หา URL ของ queue' } },
+
+  { id: 24, topic: 'Security', difficulty: 'ยาก',
+    question: 'EC2 ใน private subnet ต้องส่ง message เข้า SQS โดยไม่ออก internet ควรใช้อะไร',
+    choices: ['Gateway VPC Endpoint เพราะไม่มีค่าใช้จ่าย', 'Interface VPC Endpoint ซึ่งเป็น private connection และมีค่าใช้จ่าย', 'Internet Gateway', 'VPC peering กับ VPC ของ SQS'],
+    answer: 1,
+    explain: 'SQS อยู่นอก VPC และใช้ Interface Endpoint',
+    whyWrong: { 0: 'Gateway Endpoint รองรับแค่ S3 และ DynamoDB (เสริม)', 2: 'เป็นการออก internet ซึ่งโจทย์ไม่ต้องการ', 3: 'SQS เป็นบริการ managed ไม่ได้อยู่ใน VPC ของลูกค้าให้ peering' } },
+
+  { id: 25, topic: 'Security', difficulty: 'กลาง',
+    question: 'ต้องการเข้ารหัส message ที่เก็บอยู่ใน SQS ควรใช้อะไร',
+    choices: ['Server-side encryption ผ่าน AWS KMS', 'IAM policy', 'VPC Interface Endpoint', 'Dead-Letter Queue'],
+    answer: 0,
+    explain: 'เข้ารหัสด้วย SSE ผ่าน KMS',
+    whyWrong: { 1: 'IAM ควบคุมว่าใครเข้าถึงได้ ไม่ได้เข้ารหัส', 2: 'ทำให้เชื่อมต่อแบบ private แต่ไม่ได้เข้ารหัสข้อมูลที่เก็บ', 3: 'ใช้แยก message ที่ล้มเหลว' } },
+
+  { id: 26, topic: 'Security', difficulty: 'ยากมาก',
+    question: 'ต้องการให้ SNS topic ส่ง message เข้า SQS queue ได้ ควรตั้งค่าที่ใด',
+    choices: ['เพิ่ม Gateway VPC Endpoint ให้ SNS', 'ตั้ง visibility timeout ของ queue ให้ยาวขึ้น',
+              'resource-based policy ของ SQS queue (SQS policy) อนุญาตให้ topic นั้นส่ง message เข้ามาได้', 'เปิด SSE-KMS ที่ SNS อย่างเดียว'],
+    answer: 2,
+    explain: 'SQS ควบคุมผู้ที่ส่งเข้ามาได้ด้วย resource-based policy',
+    whyWrong: { 0: 'Gateway Endpoint ไม่รองรับ SNS และไม่ใช่เรื่องสิทธิ์', 1: 'ไม่เกี่ยวกับสิทธิ์', 3: 'การเข้ารหัสไม่ได้ให้สิทธิ์ส่ง' } },
+
+  { id: 27, topic: 'Architecture', difficulty: 'ยาก',
+    question: 'ใน architecture S3 → Lambda → SQS → EC2 Auto Scaling Group ค่าใดเหมาะเป็นตัวกำหนดจำนวน EC2 มากที่สุด',
+    choices: ['ความยาวของ queue (จำนวน message ที่รออยู่)', 'จำนวน bucket ใน S3', 'ค่า visibility timeout', 'memory ของ Lambda'],
+    answer: 0,
+    explain: 'queue สั้นใช้ EC2 ตัวเดียว queue ยาวถึงระดับที่ตั้งไว้ก็เพิ่ม EC2',
+    whyWrong: { 1: 'ไม่สะท้อนปริมาณงาน', 2: 'เป็นค่าคงที่ ไม่บอกปริมาณงาน', 3: 'Lambda เป็นแค่ผู้ส่ง URI เข้า queue' } },
+
+  { id: 28, topic: 'Architecture', difficulty: 'ยาก',
+    question: 'ข้อใดอธิบาย architecture S3 → Lambda → SQS → EC2 ได้ถูกต้อง',
+    choices: ['ทุก component คิดเงินเฉพาะตอนทำงาน รวมถึง EC2', 'Lambda และ SQS คิดเงินเฉพาะตอนทำงาน ส่วน EC2 ต้องเปิดตลอด แต่ scale ตามความยาว queue ได้',
+              'EC2 เป็นผู้ส่ง URI ของรูปเข้า SQS', 'SQS เป็นผู้ trigger Lambda เมื่อมีการอัปโหลดรูป'],
+    answer: 1,
+    explain: 'Lambda/SQS จ่ายตามใช้งาน EC2 เปิดตลอดแต่ scale ตาม queue',
+    whyWrong: { 0: 'EC2 ต้องเปิดตลอด', 2: 'Lambda เป็นผู้ส่ง URI เข้า SQS ส่วน EC2 เป็นผู้ดึงไปแปลงรูป', 3: 'S3 Event Notification เป็นผู้ trigger Lambda' } },
+
+  { id: 29, topic: 'SNS', difficulty: 'กลาง',
+    question: 'ข้อใด <strong>ไม่ใช่</strong> subscriber/endpoint ที่ SNS รองรับตามเนื้อหา',
+    choices: ['AWS Lambda', 'Amazon SQS', 'Email และ SMS', 'Amazon RDS โดยตรง'],
+    answer: 3,
+    explain: 'endpoint ที่รองรับคือ Lambda, SQS, Kinesis Data Firehose, HTTP/S, Email, SMS, Mobile Push',
+    whyWrong: { 0: 'Lambda เป็น endpoint ที่ SNS รองรับ', 1: 'SQS เป็น endpoint ที่ SNS รองรับ', 2: 'Email และ SMS เป็น endpoint ที่ SNS รองรับ' } },
+
+  { id: 30, topic: 'SNS', difficulty: 'ยากมาก',
+    question: 'ข้อใดถูกต้องตามที่ผู้สอนเน้นเรื่องความ reliable',
+    choices: ['SNS เก็บ message ไว้ให้ subscriber มาดึงทีหลังได้ จึง reliable กว่า SQS', 'SNS ไม่รองรับ Dead-Letter Queue เลย',
+              'ทั้ง SQS และ SNS reliable โดย default เท่ากัน', 'SQS reliable โดย default ส่วน SNS รองรับ retry และ DLQ แต่ไม่ใช่ค่า default ต้องตั้งเพิ่ม'],
+    answer: 3,
+    explain: 'ประเด็นที่ผู้สอนเน้น: SQS reliable โดย default, SNS ไม่ใช่',
+    whyWrong: { 0: 'SNS push แล้วไม่ได้เก็บ message ให้ดึงทีหลัง', 1: 'SNS รองรับ DLQ แต่ต้องตั้งเอง', 2: 'ผู้สอนเน้นว่า SNS ไม่ reliable โดย default' } },
+
+  { id: 31, topic: 'SNS', difficulty: 'ยาก',
+    question: 'topic "orders" มีทั้งออร์เดอร์กาแฟและชา subscriber ตัวหนึ่งต้องการรับเฉพาะออร์เดอร์กาแฟ ควรทำอย่างไร',
+    choices: ['ใช้ Message Filtering ตั้งเงื่อนไขให้ subscription นั้นรับเฉพาะ message ที่ตรง', 'เปลี่ยน topic เป็น FIFO', 'ตั้ง visibility timeout ให้ subscriber', 'แบ่ง topic เป็น shard ตามประเภทสินค้า'],
+    answer: 0,
+    explain: 'SNS มี message filtering (ตั้ง filter policy ที่ subscription — เสริม)',
+    whyWrong: { 1: 'FIFO เรื่องลำดับ ไม่ได้กรอง', 2: 'visibility timeout เป็นของ SQS', 3: 'shard เป็นของ Kinesis' } },
+
+  { id: 32, topic: 'SNS', difficulty: 'ยากมาก',
+    question: 'ระบบ image processing แบบ serverless: S3 → SNS → SQS 3 queue (thumbnail, mobile, web) → Lambda ทำไมจึงใส่ SQS คั่นระหว่าง SNS กับ Lambda',
+    choices: ['เพราะ SNS ส่ง message ไปหา Lambda ไม่ได้', 'เพราะ SQS เก็บ message ไว้จนประมวลผลสำเร็จ แต่ละงานจึงได้ความ reliable และประมวลผลตามจังหวะของตัวเอง',
+              'เพราะ SQS ทำ fan-out ได้ดีกว่า SNS', 'เพื่อลดจำนวน bucket ของ S3'],
+    answer: 1,
+    explain: 'SQS ให้ความ reliable กับแต่ละงานหลัง fan-out',
+    whyWrong: { 0: 'Lambda เป็น endpoint ที่ SNS รองรับ', 2: 'fan-out ทำโดย SNS ส่วน SQS เป็น one-to-one', 3: 'ไม่เกี่ยวกับจำนวน bucket' } },
+
+  { id: 33, topic: 'Kinesis', difficulty: 'กลาง',
+    question: 'งานใดเหมาะกับ Kinesis Data Streams มากที่สุด',
+    choices: ['ส่งอีเมลแจ้งเตือนเมื่อมีออร์เดอร์ใหม่', 'เก็บ IT log และ clickstream ที่ไหลเข้ามาต่อเนื่องหลาย MB ต่อวินาทีเพื่อวิเคราะห์แบบ real-time',
+              'คิวงานแปลงรูปที่ต้องประมวลผลแต่ละงานให้สำเร็จแน่นอน', 'ส่ง push notification ไปยังมือถือ'],
+    answer: 1,
+    explain: 'Kinesis Data Streams ใช้กับข้อมูลไหลต่อเนื่องปริมาณมากแบบ real-time',
+    whyWrong: { 0: 'เป็นงานของ SNS (Email)', 2: 'เป็นงานของ SQS', 3: 'เป็นงานของ SNS (Mobile Push)' } },
+
+  { id: 34, topic: 'Kinesis', difficulty: 'ยาก',
+    question: 'ต้องการส่ง log จาก stream ไปเก็บใน S3 พร้อมแปลงรูปแบบข้อมูล โดย <strong>ไม่อยากสร้างหรือดูแล compute เอง</strong> ควรใช้อะไร',
+    choices: ['Kinesis Data Streams + EC2 consumer', 'SQS FIFO', 'Kinesis Data Firehose', 'SNS กับ Email subscriber'],
+    answer: 2,
+    explain: 'Firehose แปลงข้อมูลในตัว ไม่ต้องสร้าง compute และส่งไป S3 ได้',
+    whyWrong: { 0: 'ต้องสร้างและดูแล EC2 เอง', 1: 'เป็น queue ไม่ได้ส่งเข้า S3 เอง', 3: 'ไม่ใช่การเก็บ log' } },
+
+  { id: 35, topic: 'Kinesis', difficulty: 'กลาง',
+    question: 'ข้อมูลใน Kinesis Data Streams ถูกแบ่งเป็นหน่วยที่เรียกว่าอะไร',
+    choices: ['Topic', 'Message group', 'Queue', 'Shard'],
+    answer: 3,
+    explain: 'ข้อมูลใน stream ถูกแบ่งเป็น shard',
+    whyWrong: { 0: 'topic เป็นของ SNS', 1: 'message group เป็นของ SQS FIFO (เสริม)', 2: 'queue เป็นของ SQS' } },
+
+  { id: 36, topic: 'Kinesis', difficulty: 'ยากมาก',
+    question: 'ต้องการประมวลผลข้อมูล stream แบบซับซ้อนและควบคุมได้เต็มที่ แล้วเก็บผลลงฐานข้อมูลที่ Firehose ไม่รองรับ ควรเลือกแบบใด',
+    choices: ['Kinesis Data Streams โดยมี EC2 เป็น consumer', 'Kinesis Data Firehose เพราะไม่ต้องดูแล compute', 'SNS fan-out ไปหาฐานข้อมูล', 'Lambda เป็น consumer เพราะเหมาะกับงานซับซ้อนที่สุด'],
+    answer: 0,
+    explain: 'Data Streams + compute เอง เลือกปลายทางได้หลากหลายกว่า และ EC2 ควบคุมได้เต็มที่',
+    whyWrong: { 1: 'Firehose ส่งได้เฉพาะปลายทางที่รองรับ', 2: 'SNS ไม่ใช่ stream processing', 3: 'ผู้สอนบอกว่า Lambda เหมาะกับงานไม่ซับซ้อน' } },
+
+  { id: 37, topic: 'Lab', difficulty: 'ยาก',
+    question: 'ใน Lab Coffee Inventory Update ทำไมต้องมี SQS คั่นระหว่าง SNS กับ Lambda',
+    choices: ['เพื่อให้ supplier ได้ผลลัพธ์กลับแบบ synchronous', 'เพราะ SNS ส่งต่อไปหา Lambda ไม่ได้', 'เพื่อลด latency ให้เป็น real-time stream',
+              'เพราะการอัปเดต inventory ทุกครั้งต้องถูกประมวลผลแน่นอน SQS เก็บไว้จนประมวลผลสำเร็จ'],
+    answer: 3,
+    explain: 'ทุกการอัปเดต inventory ต้องถูกประมวลผลแน่นอน จึงต้องใช้ SQS',
+    whyWrong: { 0: 'SNS/SQS เป็น async', 1: 'Lambda เป็น endpoint ที่ SNS รองรับ', 2: 'เหตุผลคือความ reliable ไม่ใช่ real-time' } },
+
+  { id: 38, topic: 'Lab', difficulty: 'กลาง',
+    question: 'ข้อใดเรียงเส้นทางข้อมูลใน Lab Coffee Inventory Update ได้ถูกต้อง',
+    choices: ['Supplier → SQS → SNS → Lambda → Database + ElastiCache', 'Supplier → SNS → SQS → Lambda → Database + ElastiCache',
+              'Supplier → Lambda → SNS → SQS → Database', 'Supplier → Kinesis → Firehose → ElastiCache'],
+    answer: 1,
+    explain: 'Supplier → SNS → SQS → Lambda → Database + ElastiCache',
+    whyWrong: { 0: 'สลับ SNS กับ SQS', 2: 'Lambda อยู่ท้ายสุดเป็นผู้ประมวลผล', 3: 'lab นี้ใช้ SNS และ SQS ไม่ได้ใช้ Kinesis' } }
+];
+
+const FLASHCARDS = [
+  ['Messaging service มีไว้ทำอะไร', 'เป็น <strong>ตัวกลาง</strong> ให้ service ไม่ต้องคุยกันตรง ๆ (decouple)'],
+  ['SQS ใช้รูปแบบไหน', '<strong>Message Queue</strong> · one-to-one<br>consumer <strong>poll</strong> ไปเอง'],
+  ['SNS ใช้รูปแบบไหน', '<strong>Publish/Subscribe</strong> · one-to-many<br>SNS <strong>push</strong> ไปทุก subscriber'],
+  ['Kinesis ใช้รูปแบบไหน', '<strong>Data Stream</strong> · ข้อมูลไหลต่อเนื่อง real-time'],
+  ['Sync: ข้อดี / ข้อเสีย', 'ตอบเร็ว เหมาะงาน real-time<br>แต่กิน resource <strong>scale ไม่ดี</strong>'],
+  ['Async: ข้อดี / ข้อเสีย', 'รับ client ได้มาก <strong>scale ดี</strong><br>แต่การันตีไม่ได้ว่าเสร็จเมื่อไร'],
+  ['Keyword ของ SQS', '<strong>Reliable</strong> — เก็บ message จนประมวลผลสำเร็จ'],
+  ['Visibility timeout default', '<strong>30 วินาที</strong>'],
+  ['Visibility timeout ทำอะไร', 'ซ่อน message จาก consumer อื่นระหว่างประมวลผล<br>หมดเวลาแล้วยังไม่สำเร็จ → กลับมาให้ตัวอื่นทำ'],
+  ['Dead-Letter Queue', 'รับ message ที่ล้มเหลวครบ <strong>maxReceiveCount</strong><br>เคลียร์ queue หลัก + troubleshoot'],
+  ['Standard queue', '<strong>default</strong> · best-effort ordering<br>throughput สูงแทบไม่จำกัด'],
+  ['FIFO queue', 'ลำดับแน่นอน · throughput จำกัด<br>ตัวหน้าช้า ตัวหลังต้องรอ'],
+  ['Short polling', 'ถามบ่อย · response เร็ว · <strong>แพงกว่า</strong>'],
+  ['Long polling', 'ถามน้อยครั้ง · <strong>ถูกกว่า</strong> · ยอมรับ delay<br>(เสริม: รอสูงสุด 20 วินาที)'],
+  ['delete-message vs delete-queue', '<code>delete-message</code> ลบ message ตัวเดียว<br><code>delete-queue</code> ลบทั้ง queue'],
+  ['หมด retention period', 'message ถูก <strong>ลบทิ้ง</strong> (เสริม: default 4 วัน)'],
+  ['SQS เชื่อมจาก VPC ด้วยอะไร', '<strong>Interface Endpoint</strong> (private, มีค่าใช้จ่าย)'],
+  ['Gateway Endpoint รองรับอะไร', 'แค่ <strong>S3 และ DynamoDB</strong> (ไม่มีค่าใช้จ่าย)'],
+  ['Security ของ SQS/SNS', 'IAM + resource-based policy<br>SSE ผ่าน <strong>KMS</strong>'],
+  ['SNS reliable โดย default ไหม', '<strong>ไม่</strong> — Retry และ DLQ ไม่ใช่ค่า default'],
+  ['SNS endpoint ที่รองรับ', 'Lambda, SQS, Firehose, HTTP/S, Email, SMS, Mobile Push'],
+  ['Fan-out pattern', 'message เดียวส่งไป <strong>หลายปลายทางพร้อมกัน</strong> ผ่าน SNS'],
+  ['Kinesis Data Streams แบ่งข้อมูลเป็น', '<strong>Shard</strong> · ต้องตั้ง consumer เอง (EC2 / Lambda / Firehose)'],
+  ['Data Firehose', 'แปลงข้อมูลในตัว <strong>ไม่ต้องมี compute</strong><br>แต่ส่งได้แค่ปลายทางที่รองรับ เช่น S3']
+];
+
+const GAME = [
+  { q: 'ออร์เดอร์ใหม่ต้องแจ้งระบบจัดส่ง ระบบคลังสินค้า และส่งอีเมลยืนยัน <strong>พร้อมกัน</strong>', a: 'sns', why: 'message เดียวไปหลายปลายทาง = fan-out ของ SNS' },
+  { q: 'งานแปลงวิดีโอที่แต่ละงานต้องทำให้สำเร็จแน่นอน worker ดึงไปทำตามกำลังของตัวเอง', a: 'sqs', why: 'SQS reliable เก็บ message จนประมวลผลสำเร็จ และ consumer ดึงไปทำตามจังหวะตัวเอง' },
+  { q: 'clickstream หลายพัน event ต่อวินาที ต้องวิเคราะห์แบบ real-time ด้วยโค้ดที่ควบคุมเองบน EC2', a: 'kds', why: 'ข้อมูลไหลต่อเนื่องปริมาณมาก + ต้องการ consumer ที่ควบคุมเอง = Kinesis Data Streams' },
+  { q: 'ส่ง log stream ไปเก็บใน S3 พร้อมแปลงรูปแบบ โดยไม่อยากดูแล server เลย', a: 'fh', why: 'Firehose แปลงข้อมูลในตัว ไม่ต้องมี compute และส่งเข้า S3 ได้' },
+  { q: 'ข้อมูลอัปเดต inventory จาก supplier ต้องถูกประมวลผลทุกครั้ง แม้ Lambda ปลายทางล่มชั่วคราว', a: 'sqs', why: 'message รออยู่ใน queue จนกว่า Lambda จะกลับมาประมวลผลสำเร็จ' },
+  { q: 'ส่ง SMS แจ้งลูกค้าเมื่อพัสดุถึงสาขา', a: 'sns', why: 'SNS รองรับ SMS เป็น endpoint' },
+  { q: 'ธุรกรรมการเงินไหลเข้าตลอดเวลา และ consumer หลายตัวต้องอ่านข้อมูลชุดเดียวกัน', a: 'kds', why: 'stream เก็บข้อมูลไว้ให้ consumer หลายตัวอ่านได้ (เสริม) ต่างจาก SQS ที่ message ถูกลบหลังประมวลผล' },
+  { q: 'รายการฝาก–ถอนของแต่ละบัญชีต้องถูกประมวลผลตรงลำดับ ทีละรายการ', a: 'sqs', why: 'ใช้ SQS แบบ FIFO queue เพื่อรักษาลำดับ' },
+  { q: 'ข้อมูลจากอุปกรณ์ IoT ต้องแปลงรูปแบบแล้วเก็บลง S3 อัตโนมัติ ทีมไม่มีคนดูแล compute', a: 'fh', why: 'Firehose transform ในตัวและส่งไป S3 ได้โดยไม่ต้องสร้าง compute' },
+  { q: 'ระบบภายนอกหลายรายต้องได้ webhook (HTTP/S) ทุกครั้งที่ราคาสินค้าเปลี่ยน', a: 'sns', why: 'SNS push ไปหลาย HTTP/S endpoint พร้อมกัน' }
+];
+</script>
+<script>
+(function () {
+'use strict';
+
+/* ================= helpers ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const REDUCE = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const LETTERS = ['A', 'B', 'C', 'D'];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('w11:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('w11:' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+};
+const shuffle = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = (n) => Number(n).toLocaleString('en-US');
+const EXTRA = '<span class="badge extra">เสริม</span>';
+const qById = Object.fromEntries(QUESTIONS.map((q) => [q.id, q]));
+const topicOf = (k) => TOPICS.find((t) => t.key === k) || { key: k, label: k, sec: 's1' };
+function setPressed(group, btn, attr) { $$('button', group).forEach((b) => b.setAttribute(attr || 'aria-pressed', String(b === btn))); }
+function inView(el) { if (!el || el.hidden) return false; const r = el.getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; }
+
+/* ================= theme ================= */
+const themeBtn = $('#themeBtn');
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+function effectiveTheme() {
+  const t = document.documentElement.getAttribute('data-theme');
+  if (t) return t;
+  return window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function paintTheme() {
+  const dark = effectiveTheme() === 'dark';
+  themeBtn.innerHTML = dark ? SUN : MOON;
+  themeBtn.setAttribute('aria-label', dark ? 'เปลี่ยนเป็นธีมสว่าง' : 'เปลี่ยนเป็นธีมมืด');
+}
+themeBtn.addEventListener('click', () => {
+  const next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  store.set('theme', next);
+  paintTheme();
+});
+paintTheme();
+
+/* ================= nav / progress ================= */
+const sidenav = $('#sidenav'), scrim = $('#scrim'), menuBtn = $('#menuBtn');
+function setMenu(open) {
+  sidenav.classList.toggle('open', open);
+  scrim.classList.toggle('show', open);
+  menuBtn.setAttribute('aria-expanded', String(open));
+}
+menuBtn.addEventListener('click', () => setMenu(!sidenav.classList.contains('open')));
+scrim.addEventListener('click', () => setMenu(false));
+$$('a', sidenav).forEach((a) => a.addEventListener('click', () => setMenu(false)));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+
+const prog = $('#readProgress');
+function onScroll() {
+  const h = document.documentElement.scrollHeight - innerHeight;
+  prog.style.width = (h > 0 ? Math.min(100, (scrollY / h) * 100) : 0) + '%';
+}
+addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+const navLinks = $$('a[href^="#"]', sidenav);
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      navLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
+    });
+  }, { rootMargin: '-35% 0px -60% 0px' });
+  navLinks.forEach((a) => { const s = $(a.getAttribute('href')); if (s) io.observe(s); });
+}
+
+/* ================= done marks ================= */
+let done = new Set(store.get('done', []));
+function paintDone() {
+  $$('.done-btn').forEach((b) => {
+    const on = done.has(b.dataset.sec);
+    b.setAttribute('aria-pressed', String(on));
+    b.textContent = on ? '✓ เข้าใจแล้ว' : 'เข้าใจแล้ว';
+  });
+  navLinks.forEach((a) => a.classList.toggle('done', done.has(a.getAttribute('href').slice(1))));
+  const n = [...done].filter((s) => /^s\d+$/.test(s)).length;
+  $('#doneCount').textContent = 'เข้าใจแล้ว ' + n + '/11 หัวข้อ';
+  $('#doneMeter').style.width = (n / 11 * 100) + '%';
+}
+$$('.done-btn').forEach((b) => b.addEventListener('click', () => {
+  const s = b.dataset.sec;
+  done.has(s) ? done.delete(s) : done.add(s);
+  store.set('done', [...done]);
+  paintDone();
+}));
+paintDone();
+
+$('#statQ').textContent = QUESTIONS.length;
+$('#statF').textContent = FLASHCARDS.length;
+
+/* ================= shared: choice + feedback ================= */
+function choiceHTML(q, order) {
+  return order.map((o, pos) =>
+    '<button class="choice" data-orig="' + o + '" data-pos="' + pos + '"><span class="key">' + LETTERS[pos] + '</span><span class="ct">' + q.choices[o] + '</span><span class="st"></span></button>'
+  ).join('');
+}
+function revealChoices(box, q, sel) {
+  $$('.choice', box).forEach((b) => {
+    const o = +b.dataset.orig;
+    b.disabled = true;
+    if (o === q.answer) { b.classList.add('correct'); $('.st', b).textContent = '✓ ถูก'; }
+    else if (o === sel) { b.classList.add('wrong'); $('.st', b).textContent = '✗ ที่เลือก'; }
+  });
+}
+function feedbackHTML(q, sel, order) {
+  const L = (o) => LETTERS[order.indexOf(o)];
+  const ok = sel === q.answer;
+  let h = '<div class="fb ' + (ok ? 'ok' : 'bad') + '"><strong class="verdict">' +
+    (ok ? '✓ ถูกต้อง' : (sel == null ? '— ไม่ได้ตอบ' : '✗ ยังไม่ถูก') + ' — คำตอบที่ถูกคือ ' + L(q.answer)) + '</strong>';
+  h += '<p>' + q.explain + '</p>';
+  if (!ok && sel != null && q.whyWrong[sel]) h += '<p><strong>ทำไม ' + L(sel) + ' ผิด:</strong> ' + q.whyWrong[sel] + '</p>';
+  const others = order.filter((o) => o !== q.answer).map((o) => '<li><strong>' + L(o) + '</strong> — ' + (q.whyWrong[o] || '') + '</li>').join('');
+  h += '<details><summary>ดูเหตุผลของช้อยที่ผิดทั้งหมด</summary><ul>' + others + '</ul></details></div>';
+  return h;
+}
+
+/* ================= mini checks ================= */
+$$('.mini').forEach((box) => {
+  const ids = box.dataset.qids.split(',').map((s) => +s.trim());
+  box.innerHTML = '<div class="mini-head">Mini check · ' + ids.length + ' ข้อ</div>' + ids.map((id) => {
+    const q = qById[id];
+    const order = shuffle([0, 1, 2, 3]);
+    return '<div class="mq" data-id="' + id + '" data-order="' + order.join(',') + '"><p class="qtext">' + q.question +
+      ' <span class="pill">' + q.difficulty + '</span></p><div class="choices">' + choiceHTML(q, order) + '</div><div class="mfb" aria-live="polite"></div></div>';
+  }).join('');
+  $$('.mq', box).forEach((mq) => {
+    const q = qById[+mq.dataset.id];
+    const order = mq.dataset.order.split(',').map(Number);
+    mq.addEventListener('click', (e) => {
+      const b = e.target.closest('.choice');
+      if (!b || b.disabled) return;
+      const sel = +b.dataset.orig;
+      revealChoices(mq, q, sel);
+      $('.mfb', mq).innerHTML = feedbackHTML(q, sel, order);
+    });
+  });
+});
+
+/* ================= shared for W11 ================= */
+const logger = (ul) => (html, cls) => {
+  const li = document.createElement('li');
+  if (cls) li.className = cls;
+  li.innerHTML = html;
+  ul.prepend(li);
+};
+const later = (fn, ms) => (REDUCE ? fn() : setTimeout(fn, ms));
+
+/* ================= W1: coupling ================= */
+(function () {
+  let mode = 'direct', waiting = 0, n = 0, ok = 0, fail = 0;
+  const flow = $('#cpFlow'), down = $('#cpDown'), log = $('#cpLog'), say = logger(log);
+  function draw() {
+    const isDown = down.checked;
+    let h = '<div class="node">Service A<small>ผู้ส่ง</small></div><div class="edge"></div>';
+    if (mode === 'queue') h += '<div class="node">SQS<small>รออยู่ ' + waiting + ' message</small></div><div class="edge"></div>';
+    h += '<div class="node' + (isDown ? ' down' : '') + '">Service B<small>' + (isDown ? 'ล่ม ✗' : 'ทำงานปกติ') + '</small></div>';
+    flow.innerHTML = h;
+    $('#cpStats').innerHTML = '<span>ส่งแล้ว <b>' + n + '</b></span><span>สำเร็จ <b>' + ok + '</b></span><span>ล้มเหลว / หาย <b>' + fail + '</b></span>' +
+      (mode === 'queue' ? '<span>รอในคิว <b>' + waiting + '</b></span>' : '');
+  }
+  function reset() { waiting = n = ok = fail = 0; log.innerHTML = ''; draw(); }
+  $('#cpSend').addEventListener('click', () => {
+    n++;
+    const isDown = down.checked;
+    if (mode === 'direct') {
+      if (isDown) { fail++; say('✗ งาน #' + n + ': A เรียก B ตรง แต่ B ล่ม → <strong>ล้มเหลว</strong> A ต้องจัดการ error เอง งานนี้อาจหาย', 'bad'); }
+      else { ok++; say('งาน #' + n + ': A เรียก B ตรง และต้อง <strong>รอ</strong> B ตอบก่อนไปทำอย่างอื่น → สำเร็จ'); }
+    } else if (isDown) {
+      waiting++;
+      say('งาน #' + n + ': A วาง message ไว้ใน SQS แล้วไปทำงานต่อทันที — B ล่มอยู่ message <strong>รอในคิว</strong> ไม่หาย', 'warn');
+    } else {
+      ok++;
+      say('งาน #' + n + ': A วาง message ใน SQS → B มาดึงไปทำ → สำเร็จ (A ไม่ต้องรู้จักหรือรอ B)', 'ok');
+    }
+    draw();
+  });
+  down.addEventListener('change', () => {
+    if (!down.checked && mode === 'queue' && waiting) {
+      say('✓ B กลับมาแล้ว ดึง ' + waiting + ' message ที่ค้างในคิวไปทำต่อ — <strong>ไม่มีงานหาย</strong>', 'ok');
+      ok += waiting; waiting = 0;
+    } else say(down.checked ? 'Service B ล่ม' : 'Service B กลับมาทำงาน');
+    draw();
+  });
+  const seg = $('#cpMode');
+  seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(seg, b); mode = b.dataset.v; reset(); });
+  $('#cpReset').addEventListener('click', reset);
+  draw();
+})();
+
+/* ================= W2: hospital ================= */
+(function () {
+  let mode = 'sync';
+  const CAP = 100, RATE = 20;
+  function render() {
+    const N = +$('#hpN').value;
+    $('#hpNV').textContent = N;
+    const segs = $$('#hpBar div'), m = [];
+    if (mode === 'sync') {
+      const held = Math.min(N, CAP), rej = N - held, free = CAP - held, tot = Math.max(N, CAP);
+      segs[0].style.width = (free / tot * 100) + '%';
+      segs[1].style.width = (held / tot * 100) + '%';
+      segs[2].style.width = (rej / tot * 100) + '%';
+      $('#hpLegend').innerHTML = '<span><i class="seg-warm"></i>resource ว่าง <b>' + free + '</b></span><span><i class="seg-cold"></i>connection ที่ A ถือค้าง <b>' + held + '</b></span><span><i class="seg-thr"></i>client ถูกปฏิเสธ <b>' + rej + '</b></span>';
+      m.push(['', 'A ถือ connection ค้าง ' + held + ' ตัว (ทั้งกับ client และ B) เหลือ resource ' + Math.round(free / CAP * 100) + '%']);
+      if (rej > 0) m.push(['bad', '<strong>' + rej + '</strong> client ถูกปฏิเสธ — resource ของ A หมด นี่คือเหตุที่ sync <strong>scale ได้ไม่ดี</strong>']);
+      else m.push(['ok', 'client ทุกคนได้ผลเร็ว เหมือนโรงพยาบาลเอกชนที่คนไข้น้อยและมีเจ้าหน้าที่ช่วยเร่งให้']);
+      m.push(['warn', 'ต้องมี resource รองรับทุก connection ที่รออยู่ → ค่าใช้จ่ายสูง']);
+      $('#hpBar').setAttribute('aria-label', 'ว่าง ' + free + ', ถือค้าง ' + held + ', ถูกปฏิเสธ ' + rej);
+    } else {
+      segs[0].style.width = '100%'; segs[1].style.width = '0'; segs[2].style.width = '0';
+      const mins = Math.ceil(N / RATE);
+      $('#hpLegend').innerHTML = '<span><i class="seg-warm"></i>ได้ acknowledge ทันที <b>' + N + '</b></span><span><i class="seg-thr"></i>ถูกปฏิเสธ <b>0</b></span>';
+      m.push(['ok', 'client ทั้ง ' + N + ' คนได้ <strong>acknowledge</strong> ทันทีแล้วจบงานฝั่งตัวเอง — เหมือนวางบัตรในตะกร้าแล้ววัดความดัน']);
+      m.push(['ok', 'A ไม่ต้องถือ connection ค้าง จึงรับ client ได้มากและ <strong>scale ได้ดี</strong>']);
+      m.push(['', 'งานเข้าคิว ' + N + ' งาน B ทำได้ ' + RATE + ' งาน/นาที → คนสุดท้ายรอประมาณ <strong>' + mins + ' นาที</strong>']);
+      m.push(['warn', 'ได้ตรวจแน่นอน แต่ <strong>การันตีไม่ได้ว่าเสร็จเมื่อไร</strong>']);
+      $('#hpBar').setAttribute('aria-label', 'ได้ acknowledge ทั้งหมด ' + N);
+    }
+    $('#hpMsgs').innerHTML = m.map((x) => '<li class="' + x[0] + '">' + x[1] + '</li>').join('');
+  }
+  const seg = $('#hpMode');
+  seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(seg, b); mode = b.dataset.v; render(); });
+  $('#hpN').addEventListener('input', render);
+  render();
+})();
+
+/* ================= W3: pattern animator ================= */
+(function () {
+  const CFG = {
+    queue: { mid: 'SQS Queue<small>รอให้ consumer ดึง</small>', cons: ['Consumer 1', 'Consumer 2', 'Consumer 3'] },
+    pubsub: { mid: 'SNS Topic<small>ไม่เก็บ message</small>', cons: ['Subscriber: Fulfillment', 'Subscriber: Data Warehouse', 'Subscriber: Email'] },
+    stream: { mid: 'Kinesis Stream<small>เก็บเรียงตามลำดับ</small>', cons: ['Consumer A: dashboard (อ่านทันที)', 'Consumer B: Firehose → S3 (อ่านทีละ 3)'] }
+  };
+  let mode = 'queue', k = 0, mid = [], cons = [], rr = 0, ptr = [], timers = [];
+  function reset() {
+    timers.forEach(clearTimeout); timers = [];
+    k = 0; mid = []; rr = 0;
+    cons = CFG[mode].cons.map(() => []); ptr = CFG[mode].cons.map(() => 0);
+    $('#patExp').innerHTML = '<p class="muted">กด "ส่ง message" แล้วดูว่า message ไปถึงใครบ้าง</p>';
+    draw();
+  }
+  function draw() {
+    $('#patMidName').innerHTML = CFG[mode].mid;
+    $('#patMid').innerHTML = mid.map((id) => '<span class="msg vis"><b>' + (mode === 'stream' ? '#' : 'M') + id + '</b></span>').join('');
+    $('#patCons').innerHTML = CFG[mode].cons.map((name, i) => {
+      const got = mode === 'stream' ? mid.slice(0, ptr[i]) : cons[i];
+      const sub = mode === 'stream' ? 'อ่านถึง #' + ptr[i] : 'ได้รับ ' + got.length + ' message';
+      return '<div class="card-s"><h4>' + name + '</h4><span class="muted" style="font-size:13px">' + sub + '</span><div class="recv">' +
+        got.slice(-8).map((id) => '<span class="msg done"><b>' + (mode === 'stream' ? '#' : 'M') + id + '</b></span>').join('') + '</div></div>';
+    }).join('');
+  }
+  $('#patSend').addEventListener('click', () => {
+    const id = ++k;
+    if (mode === 'queue') {
+      mid.push(id); draw();
+      const t = later(() => {
+        const c = rr++ % 3;
+        mid.splice(mid.indexOf(id), 1); cons[c].push(id); draw();
+        $('#patExp').innerHTML = '<p><strong>M' + id + '</strong> ถูก <strong>' + CFG.queue.cons[c] + '</strong> ดึงไป <strong>ตัวเดียว</strong> (one-to-one) consumer ตัวอื่นไม่ได้ message นี้ — consumer เป็นฝ่าย <strong>poll</strong></p>';
+      }, 700);
+      if (t) timers.push(t);
+    } else if (mode === 'pubsub') {
+      mid = [id]; draw();
+      const t = later(() => {
+        cons.forEach((c) => c.push(id)); mid = []; draw();
+        $('#patExp').innerHTML = '<p>SNS <strong>push</strong> สำเนาของ <strong>M' + id + '</strong> ให้ subscriber <strong>ทั้ง 3 ตัว</strong> พร้อมกัน (one-to-many / fan-out) แล้ว topic ไม่ได้เก็บ message ไว้ให้ดึงทีหลัง</p>';
+      }, 700);
+      if (t) timers.push(t);
+    } else {
+      mid.push(id);
+      ptr[0] = mid.length;
+      const unread = mid.length - ptr[1];
+      if (unread >= 3) ptr[1] = mid.length;
+      draw();
+      $('#patExp').innerHTML = '<p>record <strong>#' + id + '</strong> ถูกต่อท้าย stream และ <strong>ยังอยู่ใน stream</strong> consumer แต่ละตัวอ่านตามจังหวะของตัวเอง: A อ่านทันที, B ' +
+        (unread >= 3 ? 'อ่านเป็น batch ครบ 3 แล้ว' : 'รอให้ครบ 3 record ก่อน (ยังขาด ' + (3 - unread) + ')') + ' ' + EXTRA + ' ข้อมูลเก็บใน stream ค่า default 24 ชั่วโมง</p>';
+    }
+  });
+  $('#patReset').addEventListener('click', reset);
+  const tabs = $('#patTabs');
+  tabs.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(tabs, b, 'aria-selected'); mode = b.dataset.v; reset(); });
+  reset();
+})();
+
+/* ================= W4: SQS lifecycle ================= */
+(function () {
+  let t = 0, msgs = [], k = 0, demo = [];
+  const log = $('#sqLog'), say = logger(log);
+  const vt = () => +$('#sqVt').value, mx = () => +$('#sqMax').value;
+  function chip(m) {
+    const map = {
+      visible: ['vis', 'รับแล้ว ' + m.rc + ' ครั้ง'],
+      inflight: ['inflight', 'ซ่อนอีก ' + Math.max(0, m.visibleAt - t) + 's · รับ ' + m.rc],
+      done: ['done', 'ลบแล้ว'],
+      dlq: ['dlq', 'รับไป ' + m.rc + ' ครั้ง']
+    }[m.state];
+    return '<span class="msg ' + map[0] + '"><b>M' + m.id + '</b><small>' + map[1] + '</small></span>';
+  }
+  function render() {
+    $('#sqClock').textContent = 't = ' + t + ' s';
+    const by = (s) => msgs.filter((m) => m.state === s).map(chip).join('');
+    $('#sqVis').innerHTML = by('visible');
+    $('#sqFly').innerHTML = by('inflight');
+    $('#sqDone').innerHTML = by('done');
+    $('#sqDlq').innerHTML = by('dlq');
+    $('#sqDel').disabled = !msgs.some((m) => m.state === 'inflight');
+  }
+  function send() {
+    msgs.push({ id: ++k, state: 'visible', rc: 0, visibleAt: 0 });
+    say('Producer ส่ง <strong>M' + k + '</strong> เข้า queue (<code>SendMessage</code>) แล้วไปทำงานอื่นต่อทันที');
+    render();
+  }
+  function recv() {
+    for (;;) {
+      const m = msgs.find((x) => x.state === 'visible');
+      if (!m) { say('ReceiveMessage: ไม่มี message ที่มองเห็นได้ → empty response'); break; }
+      if (mx() > 0 && m.rc >= mx()) {
+        m.state = 'dlq';
+        say('M' + m.id + ' ถูกรับไปแล้ว ' + m.rc + ' ครั้ง ครบ maxReceiveCount = ' + mx() + ' โดยไม่ถูกลบ → ย้ายไป <strong>Dead-Letter Queue</strong>', 'bad');
+        continue;
+      }
+      m.rc++; m.state = 'inflight'; m.visibleAt = t + vt();
+      say('Consumer ดึง <strong>M' + m.id + '</strong> (<code>ReceiveMessage</code> ครั้งที่ ' + m.rc + ') — message <strong>ยังไม่ถูกลบ</strong> แต่ถูกซ่อนจาก consumer อื่น ' + vt() + ' วินาที');
+      break;
+    }
+    render();
+  }
+  function del() {
+    const fly = msgs.filter((m) => m.state === 'inflight').sort((a, b) => a.visibleAt - b.visibleAt);
+    if (!fly.length) { say('ไม่มี message ที่กำลังประมวลผลอยู่'); return; }
+    fly[0].state = 'done';
+    say('Consumer ประมวลผล <strong>M' + fly[0].id + '</strong> สำเร็จ → <code>DeleteMessage</code> → ลบออกจาก queue', 'ok');
+    render();
+  }
+  function tick() {
+    t += 10;
+    msgs.filter((m) => m.state === 'inflight' && m.visibleAt <= t).forEach((m) => {
+      m.state = 'visible';
+      say('t = ' + t + 's หมด visibility timeout: <strong>M' + m.id + '</strong> ยังไม่ถูกลบ (consumer อาจ crash) → <strong>กลับมาให้เห็นใน queue</strong> consumer ตัวอื่นดึงไปทำแทนได้', 'warn');
+    });
+    render();
+  }
+  function stopDemo() { demo.forEach(clearTimeout); demo = []; }
+  function reset() { stopDemo(); t = 0; msgs = []; k = 0; log.innerHTML = ''; render(); }
+  $('#sqSend').addEventListener('click', send);
+  $('#sqRecv').addEventListener('click', recv);
+  $('#sqDel').addEventListener('click', del);
+  $('#sqTick').addEventListener('click', tick);
+  $('#sqReset').addEventListener('click', reset);
+  ['sqVt', 'sqMax'].forEach((id) => $('#' + id).addEventListener('change', () => say('ตั้งค่าใหม่: visibility timeout = ' + vt() + 's, maxReceiveCount = ' + (mx() || 'ไม่ตั้ง DLQ') + ' (มีผลกับการรับครั้งถัดไป)')));
+  $('#sqDemo').addEventListener('click', () => {
+    reset();
+    const crash = () => say('✗ consumer crash ระหว่างประมวลผล — ไม่ได้เรียก <code>DeleteMessage</code>', 'bad');
+    const waitOut = () => { const n = Math.ceil(vt() / 10); const a = []; for (let i = 0; i < n; i++) a.push(tick); return a; };
+    const rounds = Math.max(mx(), 2);
+    let steps = [send, send, recv, del, recv, crash].concat(waitOut());
+    for (let r = 1; r < rounds; r++) steps = steps.concat([recv, crash]).concat(waitOut());
+    steps.push(recv);
+    steps.push(() => say(mx() ? 'สรุป: M1 สำเร็จและถูกลบ ส่วน M2 ล้มเหลวซ้ำจนครบ maxReceiveCount จึงถูกแยกไป DLQ ให้ queue หลักโล่งและ troubleshoot ได้'
+      : 'สรุป: ไม่ได้ตั้ง DLQ — M2 จะวนกลับมาให้ประมวลผลซ้ำไปเรื่อย ๆ จนหมด retention period', 'ok'));
+    if (REDUCE) { steps.forEach((f) => f()); return; }
+    steps.forEach((f, i) => demo.push(setTimeout(f, i * 650)));
+  });
+  render();
+})();
+
+/* ================= W5: Standard vs FIFO ================= */
+(function () {
+  $('#odRun').addEventListener('click', () => {
+    const slow = $('#odSlow').checked;
+    const ids = [1, 2, 3, 4, 5, 6];
+    const dur = (id) => (id === 2 && slow ? 8 : 1);
+    // Standard: best-effort ordering + 3 consumers in parallel
+    const order = ids.slice();
+    for (let i = 1; i < order.length; i++) if (Math.random() < 0.35) [order[i - 1], order[i]] = [order[i], order[i - 1]];
+    const free = [0, 0, 0];
+    const std = order.map((id) => {
+      const w = free.indexOf(Math.min(...free));
+      const start = free[w], end = start + dur(id);
+      free[w] = end;
+      return { id, end };
+    }).sort((a, b) => a.end - b.end || a.id - b.id);
+    let dup = null;
+    if (Math.random() < 0.4) { dup = std[Math.floor(Math.random() * std.length)]; std.push({ id: dup.id, end: Math.max(...std.map((x) => x.end)), dup: true }); }
+    const stdT = Math.max(...std.map((x) => x.end));
+    let acc = 0;
+    const fifo = ids.map((id) => { acc += dur(id); return { id, end: acc }; });
+    const chips = (arr) => arr.map((x, i) => '<span class="msg ' + (x.dup ? 'dup' : 'done') + '" style="animation-delay:' + (i * 0.1) + 's"><b>M' + x.id + '</b><small>' + (x.dup ? 'ได้ซ้ำ' : 'เสร็จ ' + x.end + 's') + '</small></span>').join('');
+    $('#odStd').innerHTML = chips(std);
+    $('#odFifo').innerHTML = chips(fifo);
+    $('#odStdT').textContent = 'เสร็จใน ' + stdT + ' วินาที';
+    $('#odFifoT').textContent = 'เสร็จใน ' + acc + ' วินาที';
+    const inOrder = std.filter((x) => !x.dup).every((x, i, a) => !i || a[i - 1].id < x.id);
+    let h = '<p><strong>Standard:</strong> ทำพร้อมกันหลายตัว (throughput สูง) เสร็จใน ' + stdT + ' วินาที แต่ลำดับที่เสร็จคือ ' + std.filter((x) => !x.dup).map((x) => 'M' + x.id).join(' → ') +
+      (inOrder ? ' (รอบนี้บังเอิญตรงลำดับ — แต่ไม่การันตี)' : ' — <strong>ไม่ตรงกับลำดับที่ส่ง</strong> (best-effort ordering)') + '</p>';
+    if (dup) h += '<p>M' + dup.id + ' ถูกส่งซ้ำอีกครั้ง — Standard ส่งแบบ at-least-once consumer ควรรับมือ message ซ้ำได้ ' + EXTRA + '</p>';
+    h += '<p><strong>FIFO:</strong> เสร็จตรงลำดับ M1 → M6 เสมอ แต่ใช้ ' + acc + ' วินาที' + (slow ? ' เพราะ M3–M6 ต้อง <strong>รอ M2 ที่ช้า</strong> เหมือนต่อคิวซื้อกองทุนแล้วคนข้างหน้าใช้เวลาเป็นชั่วโมง' : ' เพราะต้องทำทีละตัว') + '</p>';
+    h += '<p class="muted">' + EXTRA + ' ลำดับใน FIFO ถูกรักษาภายใน message group เดียวกัน ถ้าแยก group ต่างกัน FIFO ประมวลผลหลาย group พร้อมกันได้</p>';
+    $('#odExp').innerHTML = h;
+  });
+})();
+
+/* ================= W6: polling + CLI ================= */
+(function () {
+  let arrivals = [];
+  function gen() {
+    const s = new Set();
+    while (s.size < 5) s.add(2 + Math.floor(Math.random() * 56));
+    arrivals = [...s].sort((a, b) => a - b);
+  }
+  function simShort(I) {
+    const del = new Set(), reqs = [], lat = [];
+    for (let t = 0; t <= 60; t += I) {
+      const got = arrivals.filter((a) => a <= t && !del.has(a));
+      got.forEach((a) => { del.add(a); lat.push(t - a); });
+      reqs.push({ t, hit: got.length > 0 });
+    }
+    return { reqs, lat };
+  }
+  function simLong() {
+    const del = new Set(), reqs = [], lat = [];
+    let t = 0;
+    while (t < 60) {
+      const pending = arrivals.filter((a) => a <= t && !del.has(a));
+      if (pending.length) {
+        pending.forEach((a) => { del.add(a); lat.push(t - a); });
+        reqs.push({ start: t, t, hit: true }); t += 0.5; continue;
+      }
+      const nx = arrivals.find((a) => a > t && !del.has(a));
+      if (nx !== undefined && nx - t <= 20) {
+        del.add(nx); lat.push(0);
+        reqs.push({ start: t, t: nx, hit: true }); t = nx + 0.5;
+      } else {
+        const end = Math.min(t + 20, 60);
+        reqs.push({ start: t, t: end, hit: false }); t = end;
+      }
+    }
+    return { reqs, lat };
+  }
+  const pct = (x) => (x / 60 * 100) + '%';
+  function track(el, r, long) {
+    el.innerHTML = arrivals.map((a) => '<span class="arr" style="left:' + pct(a) + '"></span>').join('') +
+      (long ? r.reqs.map((q) => '<span class="wait" style="left:' + pct(q.start) + ';width:' + pct(q.t - q.start) + '"></span>').join('') : '') +
+      r.reqs.map((q) => '<span class="req' + (q.hit ? ' hit' : '') + '" style="left:' + pct(q.t) + '"></span>').join('');
+  }
+  function render() {
+    const I = +$('#plInt').value;
+    const s = simShort(I), l = simLong();
+    track($('#plShort'), s, false);
+    track($('#plLong'), l, true);
+    const avg = (a) => (a.length ? (a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) : '0') + ' วินาที';
+    const row = (k, a, b) => '<tr><td>' + k + '</td><td>' + a + '</td><td>' + b + '</td></tr>';
+    $('#plStats').innerHTML =
+      row('จำนวน request (≈ ค่าใช้จ่าย)', '<strong>' + s.reqs.length + '</strong>', '<strong>' + l.reqs.length + '</strong>') +
+      row('empty response', s.reqs.filter((q) => !q.hit).length, l.reqs.filter((q) => !q.hit).length) +
+      row('เวลารอเฉลี่ยก่อนได้ message', avg(s.lat), avg(l.lat));
+    $('#plExp').innerHTML = '<p><strong>ตามที่ผู้สอนสรุป:</strong> short polling ถามทุก ' + I + ' วินาที ยิ่งถามถี่ยิ่งได้ message เร็ว แต่จำนวน request (ค่าใช้จ่าย) ยิ่งสูง ส่วน long polling ถามน้อยครั้งกว่าจึงถูกกว่า — เป็น trade-off ระหว่าง cost กับ response time ลองเปลี่ยนช่วงเวลาดู</p>' +
+      '<p>' + EXTRA + ' แบบจำลองนี้ใช้พฤติกรรมตามเอกสาร AWS: long polling รอได้สูงสุด 20 วินาทีและตอบทันทีที่มี message เข้ามา จึงได้ทั้ง request น้อยและรอไม่นาน ในข้อสอบของวิชาให้ตอบตามที่ผู้สอนสรุป</p>';
+  }
+  $('#plInt').addEventListener('change', render);
+  $('#plNew').addEventListener('click', () => { gen(); render(); });
+  gen(); render();
+
+  const CMDS = [
+    ['create-queue', 'สร้าง queue ใหม่', 'aws sqs create-queue --queue-name orders', 'ถ้าเป็น FIFO ชื่อต้องลงท้ายด้วย .fifo ' + EXTRA],
+    ['list-queues', 'แสดงรายชื่อ queue ทั้งหมด', 'aws sqs list-queues', ''],
+    ['get-queue-url', 'หา URL ของ queue จากชื่อ (คำสั่งอื่นต้องอ้างถึง queue ด้วย URL)', 'aws sqs get-queue-url --queue-name orders', ''],
+    ['get-queue-attributes', 'ดูค่าตั้งของ queue เช่น visibility timeout, จำนวน message', 'aws sqs get-queue-attributes --queue-url URL --attribute-names All', 'ใช้ดูอย่างเดียว — ถ้าจะแก้ต้องใช้ set-queue-attributes'],
+    ['set-queue-attributes', 'แก้ค่าตั้งของ queue ที่มีอยู่ เช่น visibility timeout หรือ redrive policy (DLQ)', 'aws sqs set-queue-attributes --queue-url URL --attributes VisibilityTimeout=120', ''],
+    ['send-message', 'producer ส่ง message เข้า queue', 'aws sqs send-message --queue-url URL --message-body "order#42"', ''],
+    ['receive-message', 'consumer ดึง message — <strong>ยังไม่ลบ</strong> แค่ซ่อนตาม visibility timeout', 'aws sqs receive-message --queue-url URL --wait-time-seconds 20', 'ใส่ --wait-time-seconds มากกว่า 0 คือ long polling ' + EXTRA],
+    ['delete-message', 'ลบ <strong>message ตัวเดียว</strong> หลังประมวลผลสำเร็จ', 'aws sqs delete-message --queue-url URL --receipt-handle HANDLE', 'ใช้ receipt handle ที่ได้จาก receive-message ' + EXTRA + ' · อย่าสับสนกับ delete-queue'],
+    ['delete-queue', 'ลบ <strong>ทั้ง queue</strong> พร้อม message ทั้งหมด', 'aws sqs delete-queue --queue-url URL', 'ช้อยหลอกยอดนิยมเมื่อโจทย์ถามว่า "ลบ message ที่ประมวลผลแล้ว"']
+  ];
+  const box = $('#cliBtns');
+  box.innerHTML = CMDS.map((c, i) => '<button aria-pressed="false" data-i="' + i + '">' + c[0] + '</button>').join('');
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    setPressed(box, b);
+    const c = CMDS[+b.dataset.i];
+    $('#cliInfo').innerHTML = '<p><code>' + c[0] + '</code> — ' + c[1] + '</p><pre><code>' + esc(c[2]) + '</code></pre>' + (c[3] ? '<p class="muted">' + c[3] + '</p>' : '');
+  });
+})();
+
+/* ================= W7: endpoints + security ================= */
+(function () {
+  const ROWS = [
+    ['Amazon SQS', 'interface', 'SQS อยู่นอก VPC ใช้ <strong>Interface Endpoint</strong> (private connection มีค่าใช้จ่าย)'],
+    ['Amazon SNS', 'interface', 'เหมือน SQS ใช้ <strong>Interface Endpoint</strong> (ผู้สอนบอกว่าจะตรวจยืนยันอีกที)'],
+    ['Amazon S3', 'gateway', '<strong>Gateway Endpoint</strong> ไม่มีค่าใช้จ่าย จึงประหยัดที่สุด ' + EXTRA + ' S3 ใช้ Interface Endpoint ได้ด้วยแต่มีค่าใช้จ่าย'],
+    ['Amazon DynamoDB', 'gateway', '<strong>Gateway Endpoint</strong> ไม่มีค่าใช้จ่าย ' + EXTRA]
+  ];
+  const rows = $('#epRows');
+  rows.innerHTML = ROWS.map((r, i) => '<div class="prow" data-i="' + i + '"><span class="lbl">' + r[0] + '</span>' +
+    '<select aria-label="endpoint สำหรับ ' + r[0] + '"><option value="">— เลือก —</option><option value="gateway">Gateway Endpoint (ฟรี)</option><option value="interface">Interface Endpoint (มีค่าใช้จ่าย)</option></select><span></span><div class="res"></div></div>').join('');
+  $('#epCheck').addEventListener('click', () => {
+    let n = 0;
+    $$('.prow', rows).forEach((row) => {
+      const r = ROWS[+row.dataset.i], v = $('select', row).value, ok = v === r[1];
+      if (ok) n++;
+      const res = $('.res', row);
+      res.className = 'res show ' + (ok ? 'ok' : 'bad');
+      res.innerHTML = (ok ? '✓ ถูกต้อง — ' : '✗ ยังไม่ถูก — ') + r[2];
+    });
+    $('#epScore').textContent = 'ถูก ' + n + '/4' + (n === 4 ? ' — จำไว้: Gateway มีแค่ S3 กับ DynamoDB' : '');
+  });
+  const MSG = {
+    iam: ['IAM: role ของ consumer มีสิทธิ์ ReceiveMessage / DeleteMessage เท่าที่จำเป็น', 'ยังไม่กำหนด IAM — ควบคุมไม่ได้ว่า user/role ไหนเข้าถึง queue'],
+    res: ['SQS policy: กำหนดว่าใครหรือบริการไหน (เช่น SNS topic) ส่ง message เข้า queue ได้', 'ไม่มี SQS policy — SNS topic จะส่งเข้า queue ไม่ได้ และคุมผู้ส่งจากภายนอกไม่ได้'],
+    kms: ['SSE ผ่าน KMS: message ที่เก็บอยู่ถูกเข้ารหัสด้วย key ที่เราควบคุม', 'ยังไม่ได้ใช้ KMS key ' + EXTRA + ' queue ใหม่เปิด SSE แบบ SQS-managed ให้เป็นค่าเริ่มต้นแล้ว แต่ถ้าต้องควบคุม key เองต้องใช้ SSE-KMS'],
+    vpce: ['Interface Endpoint: EC2 ใน private subnet คุยกับ SQS แบบ private ไม่ออก internet (มีค่าใช้จ่าย)', 'EC2 ใน private subnet ต้องออก internet (เช่นผ่าน NAT) เพื่อคุยกับ SQS']
+  };
+  function sec() {
+    $('#secMsgs').innerHTML = $$('#secChecks input').map((c) => { const m = MSG[c.dataset.k]; return '<li class="' + (c.checked ? 'ok' : 'bad') + '">' + (c.checked ? m[0] : m[1]) + '</li>'; }).join('');
+  }
+  $('#secChecks').addEventListener('change', sec);
+  sec();
+})();
+
+/* ================= W8: queue-depth autoscaling ================= */
+(function () {
+  $('#asgFlow').innerHTML = [['S3', 'อัปโหลดรูป'], ['Lambda', 'จ่ายตามใช้'], ['SQS', 'จ่ายตามใช้'], ['EC2 ASG', 'เปิดตลอด'], ['S3', 'bucket ปลายทาง']]
+    .map((n, i) => (i ? '<div class="edge"></div>' : '') + '<div class="node">' + n[0] + '<small>' + n[1] + '</small></div>').join('');
+  const PER = 30, MAXI = 10;
+  function render() {
+    const rate = +$('#asgRate').value, th = +$('#asgTh').value;
+    $('#asgRateV').textContent = rate;
+    $('#asgThV').textContent = th;
+    let inst = 1, queue = 0;
+    const rows = [];
+    for (let m = 1; m <= 10; m++) {
+      queue += rate;
+      const done = Math.min(queue, inst * PER);
+      queue -= done;
+      rows.push({ m, inst, done, queue });
+      inst = Math.max(1, Math.min(MAXI, Math.ceil(queue / th)));
+    }
+    const max = Math.max(1, ...rows.map((r) => r.queue));
+    $('#asgTable').innerHTML = '<thead><tr><th>นาที</th><th>EC2</th><th>แปลงแล้ว</th><th style="width:45%">ค้างในคิว</th></tr></thead><tbody>' +
+      rows.map((r) => '<tr><td>' + r.m + '</td><td>' + r.inst + '</td><td>' + r.done + '</td><td><div class="row" style="gap:8px;flex-wrap:nowrap"><div class="bar' + (r.inst === MAXI && r.queue > 0 ? ' over' : '') + '" style="width:' + (r.queue / max * 100) + '%"></div><span class="mono" style="font-size:12px">' + r.queue + '</span></div></td></tr>').join('') + '</tbody>';
+    const last = rows[rows.length - 1], peak = Math.max(...rows.map((r) => r.inst));
+    const m = [];
+    if (rate === 0) m.push(['', 'ไม่มีรูปเข้ามา: Lambda และ SQS <strong>ไม่คิดเงิน</strong> แต่ EC2 ยังต้องเปิดอย่างน้อย 1 ตัว']);
+    else if (peak === 1) m.push(['ok', 'queue สั้น → ใช้ EC2 ตัวเดียวพอ']);
+    else {
+      const maxQ = Math.max(...rows.map((r) => r.queue));
+      const trend = last.queue < maxQ ? 'แล้วคิวค่อย ๆ ลดลง' : last.inst === MAXI && rows[8].queue < last.queue ? 'แต่ถึงเพดาน 10 ตัวแล้ว คิวยังยาวขึ้น' : 'จนคิวหยุดยาวขึ้น (message ค้างต่อ EC2 1 ตัวไม่เกินเกณฑ์)';
+      m.push(['warn', 'queue ยาวเกินระดับที่ตั้งไว้ → ASG เพิ่ม EC2 สูงสุด ' + peak + ' ตัว ' + trend]);
+    }
+    m.push(['', 'นาทีที่ 10: EC2 ' + last.inst + ' ตัว คิวค้าง ' + last.queue + ' รูป · ยิ่งตั้งเกณฑ์ต่ำ ยิ่ง scale out เร็ว']);
+    m.push(['', 'Lambda กับ SQS คิดเงินเฉพาะตอนทำงาน ส่วน EC2 ต้องเปิดตลอด — เกณฑ์ scale ใช้ความยาว queue ' + EXTRA + ' metric <code>ApproximateNumberOfMessagesVisible</code>']);
+    $('#asgMsgs').innerHTML = m.map((x) => '<li class="' + x[0] + '">' + x[1] + '</li>').join('');
+  }
+  $('#asgRate').addEventListener('input', render);
+  $('#asgTh').addEventListener('input', render);
+  render();
+})();
+
+/* ================= W9: SNS ================= */
+(function () {
+  const SUBS = [
+    { name: 'Fulfillment', proto: 'SQS', role: 'ติดตามและจัดส่ง' },
+    { name: 'Data Warehouse', proto: 'Lambda', role: 'ตัดสต็อก' },
+    { name: 'Coffee Roaster', proto: 'HTTP/S', role: 'สั่งคั่วเมล็ดเพิ่ม', special: true },
+    { name: 'ผู้จัดการร้าน', proto: 'Email', role: 'แจ้งเตือน' }
+  ];
+  let type = 'coffee', n = 0, status = SUBS.map(() => null);
+  const got = SUBS.map(() => 0);
+  function draw() {
+    $('#snSubs').innerHTML = SUBS.map((s, i) => {
+      const st = status[i];
+      const cls = st ? st[0] : '';
+      return '<div class="card-s ' + cls + '"><h4>' + s.name + '</h4><span class="muted" style="font-size:13px">' + s.proto + ' · ' + s.role + '</span>' +
+        '<div class="stt">' + (st ? st[1] : 'รอ publish') + '</div><span class="muted" style="font-size:12.5px">ได้รับแล้ว ' + got[i] + ' ครั้ง</span></div>';
+    }).join('');
+  }
+  const typeSeg = $('#snType');
+  typeSeg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(typeSeg, b); type = b.dataset.v; });
+  $('#snPub').addEventListener('click', () => {
+    n++;
+    const filt = $('#snFilter').checked, down = $('#snDown').checked, dlq = $('#snDlq').checked;
+    let lost = false, toDlq = false, filtered = false;
+    status = SUBS.map((s, i) => {
+      if (s.special && filt && type !== 'coffee') { filtered = true; return ['off', '— ถูกกรองออก (ไม่ตรง filter policy)']; }
+      if (s.special && down) {
+        if (dlq) { toDlq = true; return ['warn', '→ ส่งไม่ถึง ย้ายไป DLQ ไว้ตรวจสอบ']; }
+        lost = true; return ['bad', '✗ ส่งไม่ถึง → message หาย'];
+      }
+      got[i]++;
+      return ['ok', '✓ ได้รับ (push)'];
+    });
+    draw();
+    const okN = status.filter((s) => s[0] === 'ok').length;
+    let h = '<p>SNS <strong>push</strong> สำเนาของ order #' + n + ' (' + type + ') ไปยัง subscriber ' + okN + ' ตัวพร้อมกัน (<strong>fan-out</strong>)</p>';
+    if (filtered) h += '<p>Coffee Roaster ตั้ง <strong>message filtering</strong> ไว้รับเฉพาะ coffee จึงไม่ได้รับออร์เดอร์ tea ' + EXTRA + ' ตั้งเป็น filter policy ที่ subscription</p>';
+    if (lost) h += '<p><strong>message หาย</strong> — SNS ไม่ได้เก็บ message ไว้ให้ดึงทีหลังแบบ SQS และ DLQ <strong>ไม่ใช่ค่า default</strong> นี่คือเหตุผลที่ผู้สอนบอกว่า SNS ไม่ reliable โดย default ' + EXTRA + ' SNS จะลอง retry ตาม delivery policy ก่อนแล้วจึงถือว่าล้มเหลว</p>';
+    if (toDlq) h += '<p>ตั้ง DLQ ไว้ message ที่ส่งไม่ถึงจึงถูกเก็บใน SQS DLQ ให้ตรวจสอบและส่งใหม่ได้ — ต้องตั้งเอง ไม่ใช่ค่า default</p>';
+    $('#snExp').innerHTML = h;
+  });
+  draw();
+
+  // image processing tab
+  const Q = ['thumbnail', 'mobile', 'web'];
+  let k = 0, wait = { thumbnail: [], mobile: [], web: [] }, done = { thumbnail: [], mobile: [], web: [] };
+  function drawImg() {
+    const down = $('#imDown').checked;
+    $('#imLanes').innerHTML = Q.map((q) => '<div class="lane"><div class="lname">SQS: ' + q + '<small>→ Lambda ' + (q === 'mobile' && down ? '<span style="color:var(--bad-ink)">ล่ม</span>' : 'พร้อม') + ' → S3</small></div><div class="slot">' +
+      wait[q].map((id) => '<span class="msg vis"><b>IMG' + id + '</b><small>รอในคิว</small></span>').join('') +
+      done[q].slice(-5).map((id) => '<span class="msg done"><b>IMG' + id + '</b><small>แปลงแล้ว</small></span>').join('') + '</div></div>').join('');
+  }
+  $('#imUp').addEventListener('click', () => {
+    const id = ++k;
+    Q.forEach((q) => wait[q].push(id));
+    drawImg();
+    later(() => {
+      const down = $('#imDown').checked;
+      Q.forEach((q) => { if (!(q === 'mobile' && down)) { done[q] = done[q].concat(wait[q]); wait[q] = []; } });
+      drawImg();
+      $('#imExp').innerHTML = '<p>S3 ส่ง URI ของ IMG' + id + ' ไปที่ SNS → SNS fan out ไป SQS ทั้ง 3 queue → Lambda ของแต่ละ queue แปลงรูปแล้วเขียนลง S3 ปลายทาง</p>' +
+        (down ? '<p>Lambda ของ mobile ล่มอยู่ แต่รูป <strong>รออยู่ใน SQS: mobile</strong> ไม่หาย — นี่คือเหตุผลที่ใส่ SQS คั่นหลัง SNS (reliable)</p>' : '<p>ทั้งระบบเป็น serverless 100% จ่ายเฉพาะตอนที่มีรูปเข้ามา</p>');
+    }, 600);
+  });
+  $('#imDown').addEventListener('change', () => {
+    if (!$('#imDown').checked && wait.mobile.length) {
+      const n2 = wait.mobile.length;
+      done.mobile = done.mobile.concat(wait.mobile); wait.mobile = [];
+      $('#imExp').innerHTML = '<p>Lambda ของ mobile กลับมาแล้ว ดึงรูปที่ค้าง ' + n2 + ' รูปจาก SQS ไปแปลงต่อ — ไม่มีงานหาย</p>';
+    }
+    drawImg();
+  });
+  drawImg();
+
+  const tabs = $('#snTabs');
+  tabs.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    setPressed(tabs, b, 'aria-selected');
+    $('#snFan').hidden = b.dataset.v !== 'fan';
+    $('#snImg').hidden = b.dataset.v !== 'img';
+  });
+})();
+
+/* ================= W10: Kinesis ================= */
+(function () {
+  const INFO = {
+    ec2: '<p><strong>EC2</strong> — ควบคุมเองได้เต็มที่ เหมาะกับงานประมวลผลซับซ้อน</p><ul><li>ต้องสร้างและดูแล compute เอง</li><li>เก็บผลลัพธ์ได้ทุกที่ที่โค้ดเขียนไปถึง (หลากหลายกว่า Firehose)</li></ul>',
+    lambda: '<p><strong>Lambda</strong> — เหมาะกับงาน <strong>ไม่ซับซ้อน</strong> ตามที่ผู้สอนบอก</p><ul><li>ไม่ต้องดูแล server แต่ยังต้องเขียนโค้ดเอง</li><li>Lambda poll stream ผ่าน event source mapping (Week 9)</li><li>เก็บผลลัพธ์ได้หลากหลาย</li></ul>',
+    fh: '<p><strong>Data Firehose</strong> — <strong>ไม่ต้องสร้าง compute</strong> แปลงข้อมูล (transform) ในตัว</p><ul><li>ส่งได้ <strong>เฉพาะปลายทางที่รองรับ</strong> เช่น S3</li><li>' + EXTRA + ' ปลายทางอื่น เช่น Redshift, OpenSearch, Splunk, HTTP endpoint</li></ul>'
+  };
+  function render() {
+    const R = +$('#knRate').value, S = +$('#knSh').value;
+    $('#knRateV').textContent = R + ' MB/s';
+    $('#knShV').textContent = S;
+    const load = R / S;
+    $('#knShards').innerHTML = Array.from({ length: S }, (_, i) => '<div class="shard' + (load > 1 ? ' hot' : '') + '"><div class="fill"><i style="height:' + Math.min(100, load * 100) + '%"></i></div>shard ' + (i + 1) + '</div>').join('');
+    const m = [];
+    if (load > 1) m.push(['bad', 'ข้อมูลเข้า ' + R + ' MB/s เกินความจุราว ' + S + ' MB/s → producer ถูก throttle ต้องเพิ่ม shard ' + EXTRA]);
+    else m.push(['ok', S + ' shard รับเขียนได้ราว ' + S + ' MB/s พอสำหรับ ' + R + ' MB/s (ใช้ไป ' + Math.round(load * 100) + '% ต่อ shard) ' + EXTRA]);
+    m.push(['', 'ข้อมูลยังอยู่ใน stream ให้ consumer หลายตัวอ่านได้ ค่า default 24 ชั่วโมง ' + EXTRA + ' ต่างจาก SQS ที่ message ถูกลบเมื่อประมวลผลแล้ว']);
+    $('#knMsgs').innerHTML = m.map((x) => '<li class="' + x[0] + '">' + x[1] + '</li>').join('');
+  }
+  const seg = $('#knCons');
+  seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(seg, b); $('#knExp').innerHTML = INFO[b.dataset.v]; });
+  $('#knExp').innerHTML = INFO.ec2;
+  $('#knRate').addEventListener('input', render);
+  $('#knSh').addEventListener('input', render);
+  render();
+})();
+
+/* ================= W11: lab ================= */
+(function () {
+  const NODES = {
+    supplier: ['Supplier', 'ผู้ส่งข้อมูลอัปเดต inventory (publisher)'],
+    sns: ['SNS', 'รับข้อมูลจาก supplier แล้ว <strong>push</strong> ต่อไปยัง subscriber — ในแลบนี้คือ SQS queue'],
+    sqs: ['SQS', 'เก็บทุกการอัปเดตไว้จนประมวลผลสำเร็จ — <strong>เหตุผลที่ต้องใช้ SQS คือการอัปเดต inventory ทุกครั้งต้องถูกประมวลผลแน่นอน</strong>'],
+    lambda: ['Lambda', 'ดึง message จาก SQS ไปประมวลผล แล้วบันทึกผล'],
+    db: ['Database', 'บันทึกข้อมูล inventory'],
+    cache: ['ElastiCache', 'อัปเดต cache ให้ข้อมูลที่อ่านบ่อยเป็นปัจจุบัน (ต่อยอดเรื่อง caching)']
+  };
+  const nb = (k) => '<button class="node" data-k="' + k + '">' + NODES[k][0] + '</button>';
+  const flow = $('#labFlow');
+  flow.innerHTML = nb('supplier') + '<div class="edge"></div>' + nb('sns') + '<div class="edge"></div>' + nb('sqs') + '<div class="edge"></div>' + nb('lambda') +
+    '<div class="edge"></div><div style="display:flex;flex-direction:column;gap:6px;flex:none">' + nb('db') + nb('cache') + '</div>';
+  flow.addEventListener('click', (e) => {
+    const b = e.target.closest('.node'); if (!b) return;
+    $$('.node', flow).forEach((x) => x.classList.toggle('active', x === b));
+    const n = NODES[b.dataset.k];
+    $('#labInfo').innerHTML = '<p><strong>' + n[0] + ':</strong> ' + n[1] + '</p>';
+  });
+  const LAB = [
+    ['สร้าง SNS topic', 'สำหรับรับข้อมูลอัปเดต inventory จาก supplier'],
+    ['สร้าง SQS queue แล้ว subscribe เข้ากับ topic', EXTRA + ' queue ต้องมี SQS policy อนุญาตให้ topic ส่ง message เข้ามาได้'],
+    ['ตั้ง Lambda ให้ดึง message จาก SQS', EXTRA + ' ผ่าน event source mapping (Week 9)'],
+    ['Lambda บันทึกลง database และอัปเดต ElastiCache', ''],
+    ['ทดสอบส่งข้อมูลอัปเดต inventory', 'ดูว่าข้อมูลไปถึง database และ cache'],
+    ['ส่งงาน: Lab ACD 10.1', ''],
+    ['ส่งงาน: Knowledge Check ของ ACD Module 10', '']
+  ];
+  let st = store.get('lab', []);
+  const ol = $('#labSteps');
+  ol.innerHTML = LAB.map((s, i) => '<li><input type="checkbox" id="lab' + i + '" data-i="' + i + '"><label for="lab' + i + '"><b>' + (i + 1) + '. ' + s[0] + '</b>' + (s[1] ? '<small>' + s[1] + '</small>' : '') + '</label></li>').join('');
+  function paint() {
+    $$('input', ol).forEach((c) => { const on = !!st[+c.dataset.i]; c.checked = on; c.closest('li').classList.toggle('done', on); });
+    $('#labCount').textContent = 'ทำแล้ว ' + st.filter(Boolean).length + '/' + LAB.length;
+  }
+  ol.addEventListener('change', (e) => { const c = e.target; st[+c.dataset.i] = c.checked; store.set('lab', st); paint(); });
+  paint();
+})();
+
+/* ================= game ================= */
+(function () {
+  const NAME = { sqs: 'Amazon SQS', sns: 'Amazon SNS', kds: 'Kinesis Data Streams', fh: 'Kinesis Data Firehose' };
+  let deck = shuffle(GAME), i = 0, score = 0, answered = false;
+  const opts = $('#gmOpts');
+  function render() {
+    if (i >= deck.length) {
+      $('#gmNum').textContent = 'จบเกม';
+      $('#gmQ').innerHTML = 'ได้ ' + score + ' / ' + deck.length + ' ข้อ — กด "เล่นอีกรอบ" เพื่อสุ่มใหม่';
+      $$('button', opts).forEach((b) => { b.disabled = true; b.classList.remove('ok', 'bad'); });
+      $('#gmFb').innerHTML = '';
+      $('#gmNext').textContent = 'เล่นอีกรอบ';
+      return;
+    }
+    answered = false;
+    $('#gmNum').textContent = 'ข้อ ' + (i + 1) + ' / ' + deck.length;
+    $('#gmScore').textContent = 'ถูก ' + score;
+    $('#gmQ').innerHTML = deck[i].q;
+    $$('button', opts).forEach((b) => { b.disabled = false; b.classList.remove('ok', 'bad'); });
+    $('#gmFb').innerHTML = '';
+    $('#gmNext').textContent = 'ข้อถัดไป';
+  }
+  opts.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b || answered) return;
+    answered = true;
+    const g = deck[i], ok = b.dataset.v === g.a;
+    if (ok) score++;
+    $$('button', opts).forEach((x) => { x.disabled = true; if (x.dataset.v === g.a) x.classList.add('ok'); else if (x === b) x.classList.add('bad'); });
+    $('#gmScore').textContent = 'ถูก ' + score;
+    $('#gmFb').innerHTML = '<div class="fb ' + (ok ? 'ok' : 'bad') + '"><strong class="verdict">' + (ok ? '✓ ถูกต้อง' : '✗ ยังไม่ถูก — คำตอบคือ ' + NAME[g.a]) + '</strong><p>' + g.why + '</p></div>';
+  });
+  $('#gmNext').addEventListener('click', () => {
+    if (i >= deck.length) { deck = shuffle(GAME); i = 0; score = 0; } else i++;
+    render();
+  });
+  render();
+})();
+
+/* ================= flashcards ================= */
+const FC = (function () {
+  const card = $('#fcCard');
+  let queue = FLASHCARDS.map((_, i) => i), pos = 0, known = new Set();
+  function face(flipped) {
+    card.classList.toggle('flipped', flipped);
+    $('.fc-front', card).setAttribute('aria-hidden', String(flipped));
+    $('.fc-back', card).setAttribute('aria-hidden', String(!flipped));
+  }
+  function render() {
+    face(false);
+    const empty = !queue.length;
+    if (empty) {
+      $('#fcFront').innerHTML = 'จำได้ครบทั้ง ' + FLASHCARDS.length + ' ใบแล้ว';
+      $('#fcBack').innerHTML = 'กด "สุ่ม" เพื่อเริ่มรอบใหม่';
+    } else {
+      const c = FLASHCARDS[queue[pos]];
+      $('#fcFront').innerHTML = c[0];
+      $('#fcBack').innerHTML = c[1];
+    }
+    $('#fcCount').textContent = (empty ? 'ครบแล้ว' : 'ใบที่ ' + (pos + 1) + '/' + queue.length) + ' · จำได้ ' + known.size + '/' + FLASHCARDS.length;
+    ['fcPrev', 'fcNext', 'fcYes', 'fcNo'].forEach((id) => { $('#' + id).disabled = empty; });
+  }
+  function flip() { if (queue.length) face(!card.classList.contains('flipped')); }
+  card.addEventListener('click', flip);
+  $('#fcNext').addEventListener('click', () => { pos = (pos + 1) % queue.length; render(); });
+  $('#fcPrev').addEventListener('click', () => { pos = (pos - 1 + queue.length) % queue.length; render(); });
+  $('#fcShuffle').addEventListener('click', () => {
+    if (!queue.length) { known.clear(); queue = FLASHCARDS.map((_, i) => i); }
+    queue = shuffle(queue); pos = 0; render();
+  });
+  $('#fcYes').addEventListener('click', () => {
+    known.add(queue[pos]); queue.splice(pos, 1);
+    if (pos >= queue.length) pos = 0;
+    render();
+  });
+  $('#fcNo').addEventListener('click', () => {
+    const c = queue.splice(pos, 1)[0]; queue.push(c);
+    if (pos >= queue.length) pos = 0;
+    render();
+  });
+  render();
+  return { flip, el: $('#flashcards') };
+})();
+
+/* ================= cheatsheet print ================= */
+$('#printCheat').addEventListener('click', () => {
+  document.body.classList.add('print-cheat');
+  const off = () => document.body.classList.remove('print-cheat');
+  addEventListener('afterprint', off, { once: true });
+  window.print();
+  setTimeout(off, 1000);
+});
+
+/* ================= QUIZ ================= */
+(function () {
+  const setup = $('#qSetup'), run = $('#qRun'), result = $('#qResult');
+  let mode = 'practice', S = null, tick = null;
+  let bookmarks = new Set(store.get('bm', []));
+
+  // setup UI
+  const count = (fn) => QUESTIONS.filter(fn).length;
+  $('#qTopics').innerHTML = TOPICS.map((t) => '<label class="chip"><input type="checkbox" value="' + t.key + '" checked> ' + t.label + ' <span class="muted">' + count((q) => q.topic === t.key) + '</span></label>').join('');
+  $('#qDiffs').innerHTML = DIFFS.map((d) => '<label class="chip"><input type="checkbox" value="' + d + '" checked> ' + d + ' <span class="muted">' + count((q) => q.difficulty === d) + '</span></label>').join('');
+  const modeSeg = $('#qMode');
+  modeSeg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; setPressed(modeSeg, b); mode = b.dataset.m; updatePool(); });
+  setup.addEventListener('change', updatePool);
+
+  function pool() {
+    const ts = $$('#qTopics input:checked').map((i) => i.value);
+    const ds = $$('#qDiffs input:checked').map((i) => i.value);
+    const bmOnly = $('#qOnlyBm').checked;
+    return QUESTIONS.filter((q) => ts.includes(q.topic) && ds.includes(q.difficulty) && (!bmOnly || bookmarks.has(q.id)));
+  }
+  function updatePool() {
+    const p = pool();
+    $('#qCount').disabled = mode === 'timed';
+    $('#qBmN').textContent = '(' + bookmarks.size + ')';
+    const n = mode === 'timed' ? Math.min(20, p.length) : ($('#qCount').value === 'all' ? p.length : Math.min(+$('#qCount').value, p.length));
+    $('#qPoolInfo').textContent = 'ตรงตัวกรอง ' + p.length + ' ข้อ → จะได้ ' + n + ' ข้อ' + (mode === 'timed' ? ' · เวลา 25 นาที ไม่เห็นเฉลยจนกดส่ง' : ' · เห็นเฉลยทันทีหลังตอบ');
+    $('#qStart').disabled = n === 0;
+    const last = store.get('last', null), best = store.get('best', null);
+    $('#qHistory').textContent = last ? 'ครั้งล่าสุด ' + last.c + '/' + last.n + ' (' + last.p + '%)' + (best ? ' · ดีที่สุด ' + best.p + '%' : '') : '';
+  }
+  updatePool();
+
+  function start(ids, forceMode) {
+    const m = forceMode || mode;
+    let qs;
+    if (ids) qs = shuffle(ids.map((id) => qById[id]));
+    else {
+      const p = shuffle(pool());
+      const n = m === 'timed' ? 20 : ($('#qCount').value === 'all' ? p.length : +$('#qCount').value);
+      qs = p.slice(0, n);
+    }
+    if (!qs.length) return;
+    S = { mode: m, items: qs.map((q) => ({ q, order: shuffle([0, 1, 2, 3]) })), idx: 0, ans: qs.map(() => null), endAt: m === 'timed' ? Date.now() + 25 * 60 * 1000 : 0, warned: false, timeout: false };
+    setup.hidden = true; result.hidden = true; run.hidden = false;
+    clearInterval(tick);
+    if (m === 'timed') { tick = setInterval(updTimer, 1000); updTimer(); }
+    render();
+    run.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
+  }
+  function updTimer() {
+    const t = $('#qTimer');
+    const left = Math.max(0, S.endAt - Date.now());
+    const mm = Math.floor(left / 60000), ss = Math.floor(left / 1000) % 60;
+    t.textContent = '⏱ ' + String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+    t.classList.toggle('low', left < 60000);
+    if (left <= 0) { S.timeout = true; finish(); }
+  }
+  function render() {
+    const it = S.items[S.idx], q = it.q, n = S.items.length, a = S.ans[S.idx];
+    $('#qNum').textContent = 'ข้อ ' + (S.idx + 1) + ' / ' + n;
+    $('#qTopic').textContent = topicOf(q.topic).label;
+    const dp = $('#qDiff'); dp.textContent = q.difficulty;
+    dp.className = 'pill' + (q.difficulty === 'ยาก' ? ' d-hard' : q.difficulty === 'ยากมาก' ? ' d-xhard' : '');
+    const bm = $('#qBm'), isBm = bookmarks.has(q.id);
+    bm.setAttribute('aria-pressed', String(isBm)); bm.textContent = (isBm ? '★' : '☆') + ' Bookmark';
+    $('#qTimer').hidden = S.mode !== 'timed';
+    $('#qBar').style.width = (S.ans.filter((x) => x != null).length / n * 100) + '%';
+    $('#qText').innerHTML = q.question;
+    const box = $('#qChoices');
+    box.innerHTML = choiceHTML(q, it.order);
+    const fb = $('#qFb');
+    fb.innerHTML = '';
+    if (a != null) {
+      if (S.mode === 'practice') { revealChoices(box, q, a); fb.innerHTML = feedbackHTML(q, a, it.order); }
+      else { const b = $('.choice[data-orig="' + a + '"]', box); if (b) b.classList.add('selected'); }
+    }
+    $('#qPrev').disabled = S.idx === 0;
+    const last = S.idx === n - 1;
+    $('#qNext').textContent = last ? (S.mode === 'timed' ? 'ส่งคำตอบ' : 'ดูผลสรุป') : 'ถัดไป';
+    $('#qDots').innerHTML = S.items.map((_, i) => '<button class="' + (S.ans[i] != null ? 'ans' : '') + (i === S.idx ? ' cur' : '') + '" data-i="' + i + '" aria-label="ข้อ ' + (i + 1) + '">' + (i + 1) + '</button>').join('');
+  }
+  function choose(pos) {
+    if (!S) return;
+    const it = S.items[S.idx];
+    if (pos < 0 || pos >= it.order.length) return;
+    if (S.mode === 'practice' && S.ans[S.idx] != null) return;
+    S.ans[S.idx] = it.order[pos];
+    S.warned = false;
+    render();
+  }
+  function next() {
+    if (!S) return;
+    if (S.idx < S.items.length - 1) { S.idx++; render(); return; }
+    const un = S.ans.filter((x) => x == null).length;
+    if (un && !S.warned) {
+      S.warned = true;
+      $('#qFb').innerHTML = '<div class="fb bad"><strong class="verdict">ยังไม่ได้ตอบ ' + un + ' ข้อ</strong><p>กด "' + $('#qNext').textContent + '" อีกครั้งเพื่อยืนยัน (ข้อที่ไม่ได้ตอบนับเป็นผิด) หรือคลิกหมายเลขข้อด้านล่างเพื่อกลับไปตอบ</p></div>';
+      return;
+    }
+    finish();
+  }
+  $('#qChoices').addEventListener('click', (e) => { const b = e.target.closest('.choice'); if (b && !b.disabled) choose(+b.dataset.pos); });
+  $('#qNext').addEventListener('click', next);
+  $('#qPrev').addEventListener('click', () => { if (S.idx > 0) { S.idx--; render(); } });
+  $('#qDots').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; S.idx = +b.dataset.i; render(); });
+  $('#qQuit').addEventListener('click', () => { clearInterval(tick); S = null; run.hidden = true; setup.hidden = false; updatePool(); });
+  $('#qBm').addEventListener('click', () => {
+    const id = S.items[S.idx].q.id;
+    bookmarks.has(id) ? bookmarks.delete(id) : bookmarks.add(id);
+    store.set('bm', [...bookmarks]);
+    render();
+  });
+  $('#qStart').addEventListener('click', () => start());
+
+  function finish() {
+    clearInterval(tick);
+    const n = S.items.length;
+    const res = S.items.map((it, i) => ({ it, sel: S.ans[i], ok: S.ans[i] === it.q.answer }));
+    const c = res.filter((r) => r.ok).length, p = Math.round(c / n * 100);
+    store.set('last', { c, n, p });
+    const best = store.get('best', null);
+    if (!best || p > best.p) store.set('best', { c, n, p });
+
+    $('#rScore').textContent = c + '/' + n;
+    $('#rPct').textContent = p + '% · ' + (S.mode === 'timed' ? 'โหมดจับเวลา' : 'โหมดฝึกซ้อม');
+    $('#rMsg').textContent = (S.timeout ? 'หมดเวลา — ' : '') + (p >= 80 ? 'พร้อมสอบแล้ว ทบทวนข้อที่ผิดอีกนิด' : p >= 60 ? 'ใกล้แล้ว ลองย้อนอ่านหัวข้อที่คะแนนต่ำ' : 'ควรกลับไปอ่านเนื้อหาและเล่นแบบจำลองอีกรอบ');
+
+    const by = {};
+    res.forEach((r) => { const k = r.it.q.topic; by[k] = by[k] || { c: 0, t: 0 }; by[k].t++; if (r.ok) by[k].c++; });
+    const rows = TOPICS.filter((t) => by[t.key]);
+    $('#rBars').innerHTML = rows.map((t) => {
+      const b = by[t.key], pp = Math.round(b.c / b.t * 100);
+      return '<div class="tbar"><span>' + t.label + '</span><div class="track" role="img" aria-label="' + t.label + ' ' + pp + '%"><i class="' + (pp >= 80 ? '' : pp >= 50 ? 'mid' : 'low') + '" style="width:' + Math.max(pp, 2) + '%"></i></div><span class="n">' + b.c + '/' + b.t + '</span></div>';
+    }).join('');
+    let weak = null;
+    rows.forEach((t) => { const b = by[t.key], pp = b.c / b.t; if (pp < 1 && (!weak || pp < weak.pp)) weak = { t, pp, b }; });
+    const wk = $('#rWeak');
+    if (weak) {
+      wk.hidden = false;
+      wk.innerHTML = '<span class="k">หัวข้อที่ควรทบทวนที่สุด</span><p><strong>' + weak.t.label + '</strong> — ได้ ' + weak.b.c + '/' + weak.b.t + ' · <a href="#' + weak.t.sec + '">กลับไปอ่านหัวข้อนี้</a></p>';
+    } else wk.hidden = true;
+
+    const wrong = res.filter((r) => !r.ok);
+    $('#rRetryWrong').disabled = !wrong.length;
+    $('#rRetryWrong').onclick = () => start(wrong.map((r) => r.it.q.id), 'practice');
+    $('#rWrongH').hidden = !wrong.length;
+    $('#rWrong').innerHTML = wrong.map((r) => {
+      const q = r.it.q, o = r.it.order, L = (x) => LETTERS[o.indexOf(x)];
+      return '<div class="wrong-item"><p class="qtext">' + q.question + ' <span class="pill">' + topicOf(q.topic).label + '</span></p>' +
+        '<p><span style="color:var(--bad-ink)">✗ คุณตอบ:</span> ' + (r.sel == null ? 'ไม่ได้ตอบ' : L(r.sel) + ') ' + q.choices[r.sel]) + '</p>' +
+        '<p><span style="color:var(--ok-ink)">✓ คำตอบที่ถูก:</span> ' + L(q.answer) + ') ' + q.choices[q.answer] + '</p>' +
+        '<p class="muted">' + q.explain + '</p>' +
+        (r.sel != null && q.whyWrong[r.sel] ? '<p class="muted"><strong>ทำไมที่เลือกผิด:</strong> ' + q.whyWrong[r.sel] + '</p>' : '') + '</div>';
+    }).join('');
+
+    run.hidden = true; result.hidden = false;
+    result.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
+    result.focus({ preventScroll: true });
+    S = null;
+  }
+  $('#rRestart').addEventListener('click', () => { result.hidden = true; setup.hidden = false; updatePool(); setup.scrollIntoView({ block: 'start' }); });
+
+  // keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target;
+    if (t.closest && t.closest('input, select, textarea')) return;
+    if (S && !run.hidden && inView(run)) {
+      const k = e.key.toLowerCase();
+      let pos = '1234'.indexOf(k);
+      if (pos < 0 && k.length === 1) pos = 'abcd'.indexOf(k);
+      if (pos >= 0) { e.preventDefault(); choose(pos); return; }
+      if (e.key === 'Enter') {
+        const onChoice = t.closest && t.closest('.choice');
+        if (onChoice && S.ans[S.idx] == null) return;
+        if (!onChoice && t.closest && t.closest('button, a, summary')) return;
+        e.preventDefault(); next(); return;
+      }
+    }
+    if (e.key === ' ' && inView(FC.el)) {
+      if (t.closest && t.closest('button, a, summary')) return;
+      e.preventDefault(); FC.flip();
+    }
+  });
+})();
+
+})();
+</script>
+<script id="gl-js">
+/* ================= GLOSSARY TOOLTIPS ================= */
+/* ชี้เมาส์ (หรือแตะบนมือถือ) ที่ศัพท์เฉพาะเพื่อดูความหมาย ไม่ใส่ในปุ่ม, โจทย์/ตัวเลือกข้อสอบ, เกม และ flashcard เพื่อไม่ให้เฉลยคำตอบ */
+(() => {
+  const GLOSS = [[["AWS"],"Amazon Web Services ผู้ให้บริการคลาวด์ของ Amazon"],[["ACD"],"AWS Academy Cloud Developing คอร์สของ AWS Academy ที่ใช้เรียนวิชานี้"],[["cloud"],"การใช้ทรัพยากรคอมพิวเตอร์ (เครื่อง, storage, ฐานข้อมูล ฯลฯ) ผ่านอินเทอร์เน็ตจากผู้ให้บริการ จ่ายตามที่ใช้"],[["serverless"],"รูปแบบที่เราไม่ต้องสร้างหรือดูแลเซิร์ฟเวอร์เอง ผู้ให้บริการดูแลเครื่อง OS และการ scale ให้ เราจ่ายตามการใช้งานจริง"],[["OS"],"Operating System ระบบปฏิบัติการ เช่น Linux, Windows"],[["compute"],"ทรัพยากรด้านการประมวลผล (CPU/หน่วยความจำ) ที่ใช้รันโปรแกรม"],[["scale","scaling"],"การเพิ่มหรือลดทรัพยากรให้พอดีกับปริมาณงาน"],[["scale out"],"เพิ่มจำนวนเครื่อง/instance เพื่อรับโหลดมากขึ้น (scale แนวนอน)"],[["auto scaling","Auto Scaling"],"การเพิ่ม/ลดจำนวนเครื่องให้อัตโนมัติตามโหลดหรือ metric ที่กำหนด"],[["availability"],"ความพร้อมใช้งาน คือสัดส่วนเวลาที่ระบบใช้งานได้"],[["High Availability","high availability","HA"],"ความพร้อมใช้งานสูง ออกแบบให้ระบบแทบไม่ล่ม เช่น กระจายไว้หลาย AZ"],[["resilience"],"ความทนทาน ความสามารถในการฟื้นตัวกลับมาทำงานได้เมื่อเกิดปัญหา"],[["loosely coupled"],"แต่ละส่วนของระบบผูกกันหลวม ๆ ไม่พึ่งกันโดยตรง ส่วนหนึ่งพังไม่ลากส่วนอื่นพังตาม"],[["event-driven"],"สถาปัตยกรรมที่ทำงานเมื่อมี event เกิดขึ้น เช่น มีไฟล์อัปโหลด มีข้อความเข้าคิว"],[["event"],"เหตุการณ์หรือข้อมูลที่บอกว่ามีบางอย่างเกิดขึ้น ใช้กระตุ้นให้ระบบทำงาน"],[["microservices","microservice","Microservices","Microservice"],"สถาปัตยกรรมที่แบ่งแอปเป็นบริการย่อย ๆ อิสระต่อกัน แต่ละตัว deploy และ scale แยกกันได้"],[["warm"],"environment ที่ถูกเตรียมไว้แล้วและยังไม่ถูกปิด เรียกซ้ำได้ทันทีโดยไม่เกิด cold start"],[["request"],"คำขอที่ client ส่งไปให้ server หรือบริการ"],[["response"],"คำตอบที่ server ส่งกลับมาให้ผู้เรียก"],[["client"],"ฝั่งผู้ใช้หรือโปรแกรมที่ส่ง request ไปเรียกบริการ"],[["server"],"เครื่องหรือโปรแกรมที่ให้บริการตอบ request"],[["API"],"Application Programming Interface ช่องทางที่โปรแกรมใช้เรียกใช้งานกันตามรูปแบบที่กำหนด"],[["REST","REST API"],"รูปแบบการออกแบบ API บน HTTP โดยใช้ method อย่าง GET/POST กับ URL ของ resource"],[["HTTP","HTTPS","HTTP/S"],"โปรโตคอลรับส่งข้อมูลบนเว็บ (HTTPS คือแบบเข้ารหัส)"],[["GET"],"HTTP method สำหรับขออ่านข้อมูล"],[["URL","URI"],"ที่อยู่ของ resource บนเครือข่าย เช่น https://example.com/path"],[["endpoint"],"ที่อยู่ (URL) ของบริการที่ใช้เรียกใช้งาน"],[["JSON"],"รูปแบบข้อมูลแบบข้อความที่เป็น key/value อ่านง่าย นิยมใช้รับส่งข้อมูลระหว่างโปรแกรม"],[["CLI"],"Command Line Interface การสั่งงานผ่านการพิมพ์คำสั่งใน terminal"],[["log","logs","logging"],"บันทึกข้อความที่โปรแกรมเขียนออกมาระหว่างทำงาน ใช้ตรวจสอบย้อนหลังและ debug"],[["metric","metrics"],"ค่าตัวเลขที่วัดสถานะระบบตามเวลา เช่น CPU, จำนวน error, duration"],[["latency"],"ความหน่วง เวลาที่ใช้ตั้งแต่ส่ง request จนได้ response"],[["throughput"],"ปริมาณงานหรือข้อมูลที่ระบบรับได้ต่อหน่วยเวลา เช่น MB/s หรือ records/s"],[["real-time","Real-time"],"ประมวลผลทันทีที่ข้อมูลเข้ามา แทบไม่มีความหน่วง"],[["batch"],"การรวมข้อมูลหลายรายการเป็นก้อนเดียวแล้วประมวลผลทีเดียว"],[["batch processing"],"การประมวลผลข้อมูลเป็นก้อนตามรอบ ไม่ได้ทำทันทีทีละรายการ"],[["state"],"ข้อมูลสถานะที่ระบบต้องจำไว้ข้ามการทำงานแต่ละครั้ง"],[["trade-off"],"การได้อย่างหนึ่งต้องแลกกับเสียอีกอย่างหนึ่ง"],[["troubleshoot"],"การไล่หาสาเหตุและแก้ไขปัญหาของระบบ"],[["crash"],"โปรแกรมหยุดทำงานกะทันหันเพราะเกิดข้อผิดพลาด"],[["production","Production","prod","PROD"],"สภาพแวดล้อมจริงที่ผู้ใช้ใช้งานอยู่"],[["AZ","Availability Zone"],"Availability Zone กลุ่มศูนย์ข้อมูลที่แยกกันภายใน Region หนึ่ง กระจายไว้หลาย AZ เพื่อลดความเสี่ยงล่มพร้อมกัน"],[["ARN"],"Amazon Resource Name รหัสระบุ resource บน AWS แบบไม่ซ้ำกัน เช่น arn:aws:lambda:..."],[["resource"],"ทรัพยากรที่สร้างบน AWS เช่น EC2 instance, S3 bucket, Lambda function"],[["MB"],"เมกะไบต์ หน่วยขนาดข้อมูล (≈ 1,000 KB)"],[["KB"],"กิโลไบต์ หน่วยขนาดข้อมูล (≈ 1,000 ไบต์)"],[["ms"],"มิลลิวินาที (1/1000 วินาที)"],[["memory"],"หน่วยความจำ (RAM) ที่จัดสรรให้โปรแกรม"],[["storage"],"ที่เก็บข้อมูลถาวร เช่น disk หรือ S3"],[["pay-as-you-go","Pay-as-you-go","pay for value"],"จ่ายเงินตามการใช้งานจริง ไม่ต้องจ่ายล่วงหน้า"],[["IP","IP address"],"หมายเลขที่อยู่ของเครื่องบนเครือข่าย"],[["IoT"],"Internet of Things อุปกรณ์ที่เชื่อมต่ออินเทอร์เน็ต เช่น เซนเซอร์ กล้อง"],[["EC2","Amazon EC2"],"Amazon Elastic Compute Cloud บริการเช่าเครื่องเสมือน (VM) บน AWS เราต้องดูแล OS เอง"],[["S3","Amazon S3"],"Amazon Simple Storage Service บริการเก็บไฟล์ (object) แบบไม่จำกัดขนาดรวม"],[["bucket"],"ที่เก็บไฟล์ใน S3 ชื่อต้องไม่ซ้ำกันทั่วโลก"],[["object"],"ไฟล์หนึ่งไฟล์ที่เก็บใน S3 พร้อม metadata"],[["Lambda","AWS Lambda"],"บริการ serverless compute ของ AWS รันโค้ดเมื่อมี event โดยไม่ต้องดูแลเซิร์ฟเวอร์ คิดเงินตามจำนวนครั้งและเวลาที่รัน"],[["DynamoDB","Amazon DynamoDB"],"ฐานข้อมูล NoSQL แบบ key-value ของ AWS แบบ serverless เร็วและ scale อัตโนมัติ"],[["RDS","Amazon RDS"],"Amazon Relational Database Service ฐานข้อมูลเชิงสัมพันธ์ (เช่น MySQL, PostgreSQL) แบบ managed"],[["Redshift","Amazon Redshift"],"data warehouse ของ AWS ใช้วิเคราะห์ข้อมูลปริมาณมากด้วย SQL"],[["OpenSearch","Amazon OpenSearch"],"บริการค้นหาและวิเคราะห์ log/ข้อความ (ต่อยอดจาก Elasticsearch)"],[["Splunk"],"แพลตฟอร์มภายนอกสำหรับเก็บและวิเคราะห์ log"],[["SQL"],"ภาษาสำหรับดึงและจัดการข้อมูลในฐานข้อมูลเชิงสัมพันธ์"],[["database","DB"],"ฐานข้อมูล ระบบเก็บและค้นหาข้อมูลอย่างเป็นระบบ"],[["data warehouse","Data Warehouse"],"คลังข้อมูลสำหรับวิเคราะห์ เก็บข้อมูลย้อนหลังจำนวนมากจากหลายแหล่ง"],[["CloudWatch","Amazon CloudWatch"],"บริการ monitoring ของ AWS เก็บ log และ metric ตั้ง alarm และดู dashboard"],[["log stream"],"ลำดับ log จากแหล่งเดียวภายใน log group เช่น จาก execution environment หนึ่งตัว"],[["KMS","AWS KMS"],"AWS Key Management Service บริการสร้างและจัดการกุญแจเข้ารหัสข้อมูล"],[["VPC","Amazon VPC"],"Virtual Private Cloud เครือข่ายส่วนตัวที่แยกออกมาบน AWS"],[["subnet"],"เครือข่ายย่อยภายใน VPC อยู่ใน AZ ใด AZ หนึ่ง"],[["private subnet"],"subnet ที่ไม่มีเส้นทางออกอินเทอร์เน็ตโดยตรง"],[["IAM","AWS IAM"],"AWS Identity and Access Management บริการกำหนดว่าใครหรืออะไรทำอะไรกับ resource ไหนได้"],[["policy"],"เอกสาร (JSON) ที่ระบุสิทธิ์ว่าอนุญาตหรือปฏิเสธการกระทำใดกับ resource ใด"],[["role","IAM role","IAM Role"],"ชุดสิทธิ์ที่บริการหรือผู้ใช้ \"สวม\" ใช้ชั่วคราว ไม่มีรหัสผ่านถาวร"],[["resource-based policy","Resource-based policy"],"policy ที่ติดไว้กับ resource เอง กำหนดว่าใครมีสิทธิ์เรียกใช้ resource นี้ เช่น อนุญาตให้ S3 เรียก Lambda (สิทธิ์ขาเข้า)"],[["encryption"],"การเข้ารหัสข้อมูลเพื่อให้คนที่ไม่มีกุญแจอ่านไม่ได้"],[["Server-side encryption","server-side encryption","SSE"],"การเข้ารหัสข้อมูลฝั่งบริการ (เช่น ตอนเก็บใน SQS/S3) ก่อนบันทึก และถอดรหัสให้ตอนอ่าน"],[["SSE-KMS"],"การเข้ารหัสฝั่งบริการโดยใช้กุญแจที่จัดการผ่าน AWS KMS"],[["function"],"ในบริบท Lambda คือโค้ดหนึ่งชุดที่ deploy ไว้และถูกเรียกเมื่อมี event"],[["synchronous","sync","Synchronous","Sync"],"การเรียกแบบรอผล ผู้เรียกรอจนได้คำตอบกลับมาก่อนทำงานต่อ"],[["asynchronous","async","Asynchronous","Async"],"การเรียกแบบไม่รอผล ส่งงานแล้วทำอย่างอื่นต่อได้เลย งานถูกประมวลผลภายหลัง"],[["push","push model"],"การส่งข้อมูลออกไปหาปลายทางเอง: (Lambda) ต้นทางเป็นฝ่ายส่ง event มาเรียก function เช่น S3, SNS, API Gateway / (SNS) ส่งข้อความถึง subscriber ทันที / (Docker) อัปโหลด image ขึ้น registry"],[["poll","polling"],"การวนถามหรือดึงข้อมูลจากต้นทางเป็นระยะว่ามีข้อมูลใหม่หรือไม่"],[["event source"],"บริการต้นทางที่สร้าง event มากระตุ้น Lambda เช่น S3, SQS"],[["event source mapping"],"ตัวกลางของ Lambda ที่คอย poll ข้อมูลจาก SQS, Kinesis หรือ DynamoDB Streams แล้วเรียก function พร้อมข้อมูลเป็น batch"],[["trigger"],"ตัวกระตุ้นที่ทำให้ function ทำงาน เช่น มีไฟล์ใหม่ใน S3"],[["retry"],"การลองทำซ้ำอัตโนมัติเมื่อครั้งก่อนล้มเหลว"],[["timeout","Timeout"],"เวลาสูงสุดที่ยอมให้ทำงาน ถ้าเกินจะถูกหยุด (Lambda ตั้งได้สูงสุด 15 นาที)"],[["throttle","throttling","throttled"],"การจำกัดหรือปฏิเสธ request เมื่อเกินขีดจำกัด เช่น concurrency เต็ม"],[["connection"],"การเชื่อมต่อกับบริการอื่น เช่น ฐานข้อมูล ควรสร้างไว้นอก handler เพื่อใช้ซ้ำ"],[["publish","Publish"],"การสร้าง version ใหม่ที่ล็อกโค้ดและการตั้งค่าไว้ ณ ขณะนั้น"],[["thumbnail"],"รูปย่อขนาดเล็กที่สร้างจากรูปต้นฉบับ"],[["container","Container"],"แพ็กเกจที่รวมแอปกับ dependencies ทั้งหมด รันแยกจากกันโดยใช้ kernel ร่วมกับ OS ของเครื่อง host เบาและเริ่มเร็วกว่า VM"],[["image","images","Image"],"แม่แบบแบบอ่านอย่างเดียวที่บรรจุโค้ด runtime และ dependencies ใช้สร้าง container"],[["tag","Tag"],"ป้ายชื่อเวอร์ชันของ image เช่น myapp:v2 หรือ :latest"],[["managed","Managed"],"บริการที่ AWS ดูแลส่วนเบื้องหลัง (เครื่อง, patch, HA) ให้ เราจึงดูแลน้อยลง"],[["fully managed","Fully managed","Fully Managed"],"AWS ดูแลให้ทั้งหมด เราไม่ต้องจัดการเครื่องหรือ cluster เลย"],[["ECS","Amazon ECS"],"Amazon Elastic Container Service บริการ orchestration ของ AWS สำหรับรันและจัดการ container"],[["Reserved Instance","RI"],"การจองใช้ EC2 ระยะยาว 1 หรือ 3 ปี แลกกับส่วนลดสูง"],[["ASG","Auto Scaling Group","Auto Scaling group"],"กลุ่ม EC2 ที่เพิ่ม/ลดจำนวนเครื่องอัตโนมัติตามโหลด และกำหนดจำนวนต่ำสุด/สูงสุดได้"],[["load balancer","Load Balancer","LB"],"ตัวกระจาย request ไปยังหลายเครื่อง เพื่อแบ่งโหลดและข้ามเครื่องที่พัง"],[["spec"],"รายละเอียดสเปกของเครื่อง เช่น CPU, memory"],[["cache","Cache"],"ที่เก็บสำเนาข้อมูลชั่วคราวใกล้ผู้ใช้หรือในหน่วยความจำ เพื่อให้อ่านซ้ำได้เร็วโดยไม่ต้องไปถึงต้นทาง"],[["caching","Caching"],"การเก็บข้อมูลที่ถูกเรียกบ่อยไว้ใน cache เพื่อลด latency และโหลดของต้นทาง"],[["cache hit","Cache Hit","hit"],"หาข้อมูลเจอใน cache ตอบกลับได้ทันที"],[["TTL"],"Time To Live อายุของข้อมูลใน cache เมื่อหมดอายุจะถูกลบหรือต้องดึงใหม่"],[["ElastiCache","Amazon ElastiCache"],"บริการ cache แบบ in-memory ที่ AWS ดูแลให้ รองรับ engine Redis, Valkey และ Memcached"],[["pub/sub","Pub/Sub","Publish/Subscribe","publish/subscribe"],"รูปแบบ publisher ส่งข้อความเข้า topic แล้วทุก subscriber ที่สมัครไว้ได้รับสำเนา (one-to-many)"],[["Edge Location","edge location","edge","Edge"],"จุดให้บริการของ CloudFront ที่กระจายอยู่ทั่วโลก ใกล้ผู้ใช้"],[["URL path","path"],"ส่วนเส้นทางใน URL หลังชื่อโดเมน เช่น /images/logo.png"],[["streaming"],"การส่งข้อมูลแบบต่อเนื่องเป็นกระแส ไม่ต้องรอให้ครบก่อน"],[["messaging","Messaging"],"การสื่อสารระหว่างระบบด้วยการส่งข้อความผ่านตัวกลาง ทำให้ระบบไม่ต้องผูกกันโดยตรง"],[["message","Message"],"ข้อมูลหนึ่งชิ้นที่ส่งผ่านระบบ messaging เช่น คำสั่งซื้อหนึ่งรายการ"],[["queue","Queue"],"คิวพักข้อความ ผู้ส่งใส่ข้อความเข้าไป ผู้รับดึงไปทำทีละรายการตามจังหวะของตัวเอง"],[["producer","Producer"],"ฝ่ายที่สร้างและส่งข้อความเข้า queue หรือ stream"],[["consumer","Consumer"],"ฝ่ายที่ดึงข้อความจาก queue หรือ stream ไปประมวลผล"],[["publisher","Publisher"],"ฝ่ายที่ส่ง (publish) ข้อความเข้า topic"],[["subscriber","Subscriber"],"ฝ่ายที่สมัครรับข้อความจาก topic จะได้รับสำเนาข้อความทุกครั้งที่มีการ publish"],[["topic","Topic"],"(SNS) ช่องทางกลางที่ publisher ส่งข้อความเข้าไป แล้วกระจายไปยังทุก subscriber"],[["SNS topic"],"topic ของ Amazon SNS ใช้กระจายข้อความไปยังหลาย subscriber"],[["subscription","subscribe"],"การสมัครรับข้อความจาก topic โดยระบุปลายทาง เช่น SQS, Lambda, email"],[["one-to-one","One-to-one","point-to-point"],"ข้อความหนึ่งชิ้นมีผู้รับประมวลผลเพียงรายเดียว (รูปแบบของ queue)"],[["one-to-many","One-to-many"],"ข้อความหนึ่งชิ้นถูกส่งไปยังผู้รับหลายราย (รูปแบบของ pub/sub)"],[["many-to-many"],"ผู้ส่งหลายรายส่งถึงผู้รับหลายรายผ่านตัวกลาง"],[["fan-out","Fan-out","fan out"],"การกระจายข้อความเดียวไปยังหลายปลายทางพร้อมกัน เช่น SNS ส่งต่อไปหลาย SQS queue"],[["SQS","Amazon SQS"],"Amazon Simple Queue Service บริการ message queue แบบ fully managed ใช้พักข้อความระหว่างระบบ"],[["SNS","Amazon SNS"],"Amazon Simple Notification Service บริการ pub/sub ส่งข้อความหนึ่งครั้งไปยังหลาย subscriber (SQS, Lambda, email, SMS ฯลฯ)"],[["Standard","Standard queue","standard queue"],"ประเภท queue พื้นฐานของ SQS: throughput แทบไม่จำกัด ส่งอย่างน้อยหนึ่งครั้ง (อาจซ้ำ) และลำดับไม่รับประกัน"],[["FIFO","FIFO queue","First-In-First-Out"],"First-In-First-Out ประเภท queue ที่รักษาลำดับข้อความและส่งครั้งเดียวไม่ซ้ำ แต่ throughput จำกัดกว่า Standard"],[["best-effort ordering","best-effort"],"พยายามรักษาลำดับให้ แต่ไม่รับประกัน (ลักษณะของ Standard queue)"],[["at-least-once"],"รับประกันว่าข้อความถูกส่งอย่างน้อยหนึ่งครั้ง อาจมีซ้ำได้ consumer จึงควรรองรับข้อความซ้ำ"],[["exactly-once"],"ข้อความถูกประมวลผลครั้งเดียวพอดี ไม่ซ้ำ (FIFO queue)"],[["message group","message group ID","MessageGroupId"],"(FIFO) กลุ่มของข้อความที่ต้องรักษาลำดับร่วมกัน ข้อความต่างกลุ่มประมวลผลขนานกันได้"],[["idempotent","idempotency"],"ทำซ้ำกี่ครั้งก็ได้ผลเหมือนทำครั้งเดียว ช่วยรับมือข้อความซ้ำ"],[["visibility timeout","Visibility Timeout"],"ระยะเวลาที่ข้อความถูกซ่อนจาก consumer อื่นหลังมีคนรับไปแล้ว ถ้าไม่ลบภายในเวลานี้ข้อความจะกลับมาให้รับใหม่ (ค่าเริ่มต้น 30 วินาที)"],[["in-flight","In-flight"],"ข้อความที่ถูกรับไปแล้วแต่ยังไม่ถูกลบ อยู่ระหว่างช่วง visibility timeout"],[["SendMessage","send-message"],"API ของ SQS สำหรับส่งข้อความเข้า queue"],[["ReceiveMessage","receive-message"],"API ของ SQS สำหรับดึงข้อความออกจาก queue (ข้อความยังไม่ถูกลบ)"],[["DeleteMessage","delete-message"],"API ของ SQS สำหรับลบข้อความหลังประมวลผลสำเร็จ (ใช้ receipt handle)"],[["receipt handle"],"รหัสที่ได้ตอนรับข้อความ ใช้อ้างอิงตอนลบข้อความนั้นจาก queue"],[["acknowledge","acknowledgement","ack"],"การยืนยันว่ารับหรือประมวลผลข้อความเรียบร้อยแล้ว (ใน SQS คือการลบข้อความ)"],[["short polling","Short polling","Short Polling"],"การ poll ที่ตอบกลับทันทีแม้ไม่มีข้อความ (อาจได้ empty response บ่อย และเปลืองค่าเรียก)"],[["long polling","Long polling","Long Polling"],"การ poll ที่รอได้สูงสุด 20 วินาทีจนกว่าจะมีข้อความ ลด empty response และค่าใช้จ่าย"],[["WaitTimeSeconds","wait-time-seconds","ReceiveMessageWaitTimeSeconds"],"พารามิเตอร์กำหนดเวลารอของ long polling (1–20 วินาที; 0 = short polling)"],[["empty response"],"การตอบกลับที่ไม่มีข้อความเลย ยังถูกนับเป็น request และคิดเงิน"],[["retention period","retention","Retention","Retention Period"],"ระยะเวลาที่ queue เก็บข้อความไว้ก่อนลบทิ้งอัตโนมัติ (SQS ค่าเริ่มต้น 4 วัน สูงสุด 14 วัน)"],[["Dead-Letter Queue","dead-letter queue","DLQ"],"queue สำรองที่เก็บข้อความซึ่งประมวลผลไม่สำเร็จเกินจำนวนครั้งที่กำหนด เพื่อนำมาตรวจสอบภายหลัง"],[["maxReceiveCount"],"จำนวนครั้งสูงสุดที่ข้อความถูกรับไปได้ ถ้าเกินจะถูกย้ายไป DLQ"],[["redrive","redrive policy"],"การตั้งค่าที่ผูก queue กับ DLQ หรือการย้ายข้อความจาก DLQ กลับไปประมวลผลใหม่"],[["SQS policy"],"resource-based policy ของ queue กำหนดว่าใคร/บริการใดส่งหรืออ่านข้อความได้"],[["Interface Endpoint","interface endpoint","VPC Interface Endpoint"],"VPC endpoint ที่สร้าง network interface ใน subnet ให้เรียกบริการ AWS (เช่น SQS) แบบ private ไม่ผ่านอินเทอร์เน็ต"],[["Gateway Endpoint","gateway endpoint"],"VPC endpoint แบบเส้นทางใน route table รองรับเฉพาะ S3 และ DynamoDB"],[["VPC endpoint"],"ช่องทางเชื่อมจาก VPC ไปยังบริการ AWS แบบ private ไม่ต้องออกอินเทอร์เน็ต"],[["private"],"ส่วนตัว เข้าถึงได้เฉพาะภายในเครือข่ายหรือผู้มีสิทธิ์"],[["filter policy","Filter policy","filtering","Filtering"],"(SNS) เงื่อนไขของ subscription ที่ให้รับเฉพาะข้อความที่ตรงตาม attribute ที่กำหนด"],[["SMS"],"ข้อความสั้นทางโทรศัพท์มือถือ"],[["Mobile Push","mobile push"],"การส่งการแจ้งเตือนเด้งขึ้นบนแอปมือถือ"],[["MQTT"],"โปรโตคอล pub/sub น้ำหนักเบา นิยมใช้กับอุปกรณ์ IoT"],[["Kinesis","Amazon Kinesis"],"กลุ่มบริการของ AWS สำหรับรับและประมวลผลข้อมูล streaming แบบ real-time"],[["Kinesis Data Streams"],"บริการรับข้อมูล streaming แบบ real-time แบ่งเป็น shard เก็บข้อมูลไว้ให้หลาย consumer อ่านซ้ำได้ (ค่าเริ่มต้น 24 ชั่วโมง)"],[["Kinesis Data Firehose","Data Firehose","Firehose","Amazon Data Firehose"],"บริการส่งข้อมูล streaming ไปเก็บที่ปลายทาง (S3, Redshift, OpenSearch, Splunk) อัตโนมัติ แปลงข้อมูลได้ ไม่ต้องเขียน consumer เอง"],[["image processing","Image processing"],"การประมวลผลรูปภาพ เช่น ย่อขนาด แปลงไฟล์ หรือสร้าง thumbnail"],[["Kinesis Data Analytics"],"บริการวิเคราะห์ข้อมูล streaming แบบ real-time ด้วย SQL หรือ Apache Flink"],[["Apache Flink"],"เฟรมเวิร์ก open source สำหรับประมวลผลข้อมูล streaming แบบ real-time"],[["stream","Stream"],"กระแสข้อมูลที่ไหลเข้ามาต่อเนื่องตามลำดับเวลา"],[["shard","Shard"],"หน่วยย่อยของ Kinesis Data Stream แต่ละ shard รับเขียนได้ 1 MB/s (1,000 records/s) และอ่านได้ 2 MB/s"],[["record","records","Record"],"ข้อมูลหนึ่งรายการ เช่น หนึ่งรายการใน stream, ใน event ที่ส่งให้ Lambda หรือ DNS record"],[["clickstream"],"ข้อมูลการคลิกและการใช้งานเว็บของผู้ใช้ที่ไหลเข้ามาต่อเนื่อง"],[["analytics","Analytics"],"การวิเคราะห์ข้อมูลเพื่อหาข้อมูลเชิงลึก"],[["Dev"],"Development ทีมหรือฝั่งที่เขียนและพัฒนาซอฟต์แวร์"],[["CI","Continuous Integration"],"Continuous Integration การรวมโค้ดเข้ากับ repository หลักบ่อย ๆ แล้ว build และ test อัตโนมัติทุกครั้ง"],[["CD"],"Continuous Delivery หรือ Continuous Deployment การส่งโค้ดที่ผ่านการทดสอบไปยัง environment ต่าง ๆ อัตโนมัติ"],[["Ref"],"ฟังก์ชันใน CloudFormation สำหรับอ้างถึงค่าของ parameter หรือ resource อื่น"],[["Transform"],"บรรทัดใน template ที่บอก CloudFormation ให้แปลงไวยากรณ์ SAM เป็น resource ปกติ"]];
+  const SKIP = 'script,style,code,pre,kbd,svg,button,a,input,select,textarea,h1,h2,.gl,.gl-tip,.fc,.choice,.qq,.qtext,.game-q,.diag-card,.sec-label,.eyebrow,.stat,[data-no-gloss]';
+  const root = document.querySelector('main');
+  if (!root || !GLOSS.length) return;
+
+  // alias ที่มีตัวพิมพ์ใหญ่ = จับแบบตรงตัว, ตัวพิมพ์เล็กล้วน = ตัวแรกของแต่ละคำเป็นใหญ่ได้ + พหูพจน์ -s/-es
+  const exact = new Map(), lower = new Map(), pats = [];
+  GLOSS.forEach((g, i) => g[0].forEach((a) => {
+    const cs = /[A-Z]/.test(a);
+    (cs ? exact : lower).set(a, i);
+    let p = a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (!cs) p = p.replace(/(^|[\s\-\/])([a-z])/g, (m, s, c) => s + '[' + c + c.toUpperCase() + ']') + '(?:e?s)?';
+    pats.push([a.length, p]);
+  }));
+  pats.sort((a, b) => b[0] - a[0]);
+  const RE = new RegExp('(?<![A-Za-z0-9@_\\-])(?:' + pats.map((p) => p[1]).join('|') + ')(?![A-Za-z0-9@_\\-])', 'g');
+  const find = (t) => {
+    if (exact.has(t)) return exact.get(t);
+    const l = t.toLowerCase();
+    for (const k of [l, l.replace(/es$/, ''), l.replace(/s$/, '')]) if (lower.has(k)) return lower.get(k);
+    return null;
+  };
+
+  const wrap = (el) => {
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (!n.nodeValue.trim() || n.parentElement.closest(SKIP)) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+    });
+    const nodes = [];
+    while (w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach((n) => {
+      const s = n.nodeValue;
+      let m, last = 0, frag = null;
+      RE.lastIndex = 0;
+      while ((m = RE.exec(s))) {
+        const i = find(m[0]);
+        if (i == null) continue;
+        frag = frag || document.createDocumentFragment();
+        frag.append(s.slice(last, m.index));
+        const sp = document.createElement('span');
+        sp.className = 'gl';
+        sp.dataset.g = i;
+        sp.textContent = m[0];
+        frag.append(sp);
+        last = m.index + m[0].length;
+      }
+      if (frag) { frag.append(s.slice(last)); n.replaceWith(frag); }
+    });
+  };
+
+  // เนื้อหาที่ JS วาดใหม่ภายหลัง (widget, ข้อสอบ, เฉลย) ก็ได้ tooltip ด้วย
+  const mo = new MutationObserver((recs) => {
+    const els = new Set();
+    recs.forEach((r) => r.addedNodes.forEach((n) => {
+      const el = n.nodeType === 1 ? n : n.parentElement;
+      if (el && el.isConnected && !el.closest('.gl')) els.add(el);
+    }));
+    if (!els.size) return;
+    mo.disconnect();
+    els.forEach(wrap);
+    mo.takeRecords();
+    mo.observe(root, { childList: true, subtree: true });
+  });
+  wrap(root);
+  mo.observe(root, { childList: true, subtree: true });
+
+  const tip = document.createElement('div');
+  tip.className = 'gl-tip';
+  tip.setAttribute('role', 'tooltip');
+  tip.hidden = true;
+  document.body.append(tip);
+  let cur = null;
+
+  const hide = () => {
+    if (cur) cur.classList.remove('on');
+    cur = null;
+    tip.hidden = true;
+  };
+  const show = (el) => {
+    if (el === cur) return;
+    hide();
+    const g = GLOSS[el.dataset.g];
+    if (!g) return;
+    tip.innerHTML = '';
+    const b = document.createElement('b');
+    b.textContent = g[0][0];
+    const p = document.createElement('span');
+    p.textContent = g[1];
+    tip.append(b, p);
+    tip.hidden = false;
+    cur = el;
+    el.classList.add('on');
+    const r = el.getClientRects()[0] || el.getBoundingClientRect();
+    const tw = tip.offsetWidth, th = tip.offsetHeight, gap = 8;
+    const headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+    let top = r.top - th - gap;
+    if (top < headerH + gap) top = r.bottom + gap;
+    const left = Math.max(gap, Math.min(r.left + r.width / 2 - tw / 2, innerWidth - tw - gap));
+    tip.style.top = top + 'px';
+    tip.style.left = left + 'px';
+  };
+
+  document.addEventListener('mouseover', (e) => {
+    const t = e.target.closest && e.target.closest('.gl');
+    if (t) show(t); else if (cur) hide();
+  });
+  // มือถือ: แตะที่คำเพื่อเปิด แตะที่อื่นเพื่อปิด
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest && e.target.closest('.gl');
+    if (t) show(t); else hide();
+  });
+  addEventListener('scroll', hide, { passive: true });
+  addEventListener('resize', hide);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
+})();
+</script>
+</body>
+</html>
