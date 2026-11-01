@@ -329,6 +329,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .fc-back .t{font-size:1.1rem;line-height:1.65}
 .fc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
 .fc-count{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.fc-mode{display:flex;justify-content:center;margin-top:18px}
+.fc-wrap [hidden]{display:none!important}
+.fc-wrap.mcq .fc-inner{min-height:160px}
+.fc.locked{cursor:default}
+.fc-choices{margin-top:16px}
+.fc-skip{display:block;margin:10px auto 0;border:0;background:none;padding:4px 8px;color:var(--muted);font:inherit;font-size:14px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.fc-skip:hover{color:var(--text)}
+.fc-wrap .fb kbd{font-size:11px}
 
 /* cheatsheet */
 .cheat{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:20px 0}
@@ -1154,7 +1162,8 @@ a.icon-btn{color:var(--text);text-decoration:none}
 <section class="sec" id="flashcards" aria-labelledby="h-fc">
   <div class="sec-label">ทบทวน</div>
   <h2 id="h-fc">Flashcards</h2>
-  <p class="muted">คลิกการ์ดหรือกด <kbd>Space</kbd> เพื่อพลิก แล้วบอกตัวเองว่าจำได้หรือยัง การ์ดที่ยังจำไม่ได้จะวนกลับมาอีก</p>
+  <p class="muted">เลือกคำตอบที่ถูกจาก 4 ตัวเลือก (กด <kbd>1</kbd>–<kbd>4</kbd> หรือ <kbd>A</kbd>–<kbd>D</kbd> ก็ได้) การ์ดจะพลิกเฉลยพร้อมบอกว่าตัวที่เลือกผิดเพราะอะไร ตอบผิดหรือกด "ไม่รู้" การ์ดจะวนกลับมาอีก ถ้าอยากทวนแบบเดิมให้สลับเป็นโหมด "พลิกการ์ด"</p>
+  <div class="fc-mode"><div class="seg" id="fcMode" role="group" aria-label="รูปแบบ flashcard"><button data-m="mcq" aria-pressed="true">เลือกคำตอบ</button><button data-m="flip" aria-pressed="false">พลิกการ์ด</button></div></div>
   <div class="fc-wrap">
     <button class="fc" id="fcCard" aria-live="polite">
       <div class="fc-inner">
@@ -1162,6 +1171,9 @@ a.icon-btn{color:var(--text);text-decoration:none}
         <div class="fc-face fc-back"><span class="k">คำตอบ</span><div class="t" id="fcBack"></div></div>
       </div>
     </button>
+    <div class="choices fc-choices" id="fcChoices" role="group" aria-label="ตัวเลือก"></div>
+    <button class="fc-skip" id="fcSkip">ไม่รู้ — ขอดูเฉลย</button>
+    <div id="fcFb" aria-live="polite"></div>
     <div class="fc-bar">
       <span class="fc-count" id="fcCount"></span>
       <div class="row">
@@ -1170,7 +1182,7 @@ a.icon-btn{color:var(--text);text-decoration:none}
         <button class="btn btn-sm" id="fcNext">ถัดไป</button>
       </div>
     </div>
-    <div class="row" style="justify-content:center;margin-top:12px">
+    <div class="row" id="fcRate" style="justify-content:center;margin-top:12px">
       <button class="btn" id="fcNo">ยังไม่ได้</button>
       <button class="btn btn-primary" id="fcYes">จำได้</button>
     </div>
@@ -1600,6 +1612,34 @@ const FLASHCARDS = [
   ['Fan-out pattern', 'message เดียวส่งไป <strong>หลายปลายทางพร้อมกัน</strong> ผ่าน SNS'],
   ['Kinesis Data Streams แบ่งข้อมูลเป็น', '<strong>Shard</strong> · ต้องตั้ง consumer เอง (EC2 / Lambda / Firehose)'],
   ['Data Firehose', 'แปลงข้อมูลในตัว <strong>ไม่ต้องมี compute</strong><br>แต่ส่งได้แค่ปลายทางที่รองรับ เช่น S3']
+];
+
+/* ตัวเลือกของ flashcard (เรียงตาม FLASHCARDS): [คำตอบที่ถูก, [ตัวหลอก, ทำไมผิด] x3] */
+const FC_MCQ = [
+  ["เป็นตัวกลางให้ service ไม่ต้องคุยกันตรง ๆ (decouple)", ["ทำให้ service ผูกกันแน่นขึ้นเพื่อให้ตอบเร็วขึ้น", "messaging ทำตรงข้าม คือแยกให้ผูกกันหลวม ๆ"], ["เก็บข้อมูลถาวรแทนฐานข้อมูล", "message ถูกเก็บชั่วคราวตาม retention period ไม่ได้แทนฐานข้อมูล"], ["แคชข้อมูลไว้ใกล้ผู้ใช้เพื่อลด latency", "นั่นคือหน้าที่ของ cache / CDN"]],
+  ["Message Queue · one-to-one · consumer poll ไปเอง", ["Publish/Subscribe · one-to-many · push ไปทุก subscriber", "นั่นคือ SNS"], ["Message Queue · one-to-many · SQS push ไปหา consumer", "SQS ไม่ push แต่ consumer ต้อง poll เอง และหนึ่ง message มีผู้รับรายเดียว"], ["Data Stream · ข้อมูลไหลต่อเนื่อง real-time", "นั่นคือ Kinesis"]],
+  ["Publish/Subscribe · one-to-many · push ไปทุก subscriber", ["Message Queue · one-to-one · consumer poll ไปเอง", "นั่นคือ SQS"], ["Publish/Subscribe · one-to-one · subscriber ต้อง poll เอง", "SNS ส่งไปทุก subscriber (one-to-many) และเป็นฝ่าย push เอง"], ["Data Stream · แบ่งข้อมูลเป็น shard", "นั่นคือ Kinesis Data Streams"]],
+  ["Data Stream · ข้อมูลไหลต่อเนื่อง real-time", ["Message Queue · one-to-one", "นั่นคือ SQS"], ["Publish/Subscribe · one-to-many", "นั่นคือ SNS"], ["ส่งไฟล์ก้อนใหญ่เป็นรอบ วันละครั้ง", "นั่นคือ batch ไม่ใช่ stream ที่ไหลต่อเนื่อง"]],
+  ["ตอบเร็ว เหมาะงาน real-time · แต่กิน resource scale ไม่ดี", ["scale ดี รับ client ได้มาก · แต่การันตีไม่ได้ว่าเสร็จเมื่อไร", "นั่นคือ async"], ["ประหยัด resource scale ดี · แต่ตอบช้า", "sync ตอบเร็วแต่ต้องถือ resource ไว้ระหว่างรอ จึง scale ไม่ดี"], ["รักษาลำดับได้แน่นอน · แต่ throughput จำกัด", "นั่นคือลักษณะของ FIFO queue"]],
+  ["scale ดี รับ client ได้มาก · แต่การันตีไม่ได้ว่าเสร็จเมื่อไร", ["ตอบเร็ว เหมาะงาน real-time · แต่กิน resource scale ไม่ดี", "นั่นคือ sync"], ["การันตีว่าเสร็จทันที · แต่ client ต้องรอ", "async ไม่ให้ client รอ และไม่การันตีว่าเสร็จเมื่อไร"], ["รักษาลำดับได้แน่นอน · แต่ throughput จำกัด", "นั่นคือลักษณะของ FIFO queue"]],
+  ["Reliable — เก็บ message จนประมวลผลสำเร็จ", ["Real-time — ส่งทันทีไปทุก subscriber", "การ push ไปทุก subscriber คือ SNS"], ["Fan-out — กระจายไปหลายปลายทางพร้อมกัน", "fan-out เป็นรูปแบบที่ใช้ SNS"], ["Streaming — ให้หลาย consumer อ่านข้อมูลซ้ำได้", "นั่นคือ Kinesis Data Streams"]],
+  ["30 วินาที", ["20 วินาที", "20 วินาทีคือเวลารอสูงสุดของ long polling"], ["4 วัน", "4 วันคือค่าเริ่มต้นของ retention period"], ["15 นาที", "15 นาทีคือค่าสูงสุดของ delay queue"]],
+  ["ซ่อน message จาก consumer อื่นระหว่างประมวลผล · หมดเวลาแล้วกลับมาให้ตัวอื่นทำ", ["ลบ message ทิ้งเมื่อหมดเวลา", "การลบอัตโนมัติเมื่อหมดเวลาคือ retention period"], ["หน่วงไม่ให้ใครเห็น message ใหม่ในช่วงแรก", "นั่นคือ delay queue ซึ่งใช้กับ message ใหม่ก่อนมีคนรับ"], ["เวลาที่ consumer รอเมื่อ queue ว่าง", "นั่นคือ wait time ของ long polling"]],
+  ["รับ message ที่ล้มเหลวครบ maxReceiveCount · เคลียร์ queue หลัก + troubleshoot", ["รับ message ที่หมด retention period", "message ที่หมด retention ถูกลบทิ้งเลย ไม่ได้ย้ายไป DLQ"], ["เก็บสำเนาทุก message ไว้เป็น backup", "DLQ รับเฉพาะ message ที่ประมวลผลล้มเหลวซ้ำ ๆ"], ["รับ message ที่ส่งซ้ำใน FIFO queue", "FIFO ตัด message ซ้ำทิ้งเอง ไม่ได้ส่งไป DLQ"]],
+  ["default · best-effort ordering · throughput สูงแทบไม่จำกัด", ["ลำดับแน่นอน · throughput จำกัด", "นั่นคือ FIFO queue"], ["default · ลำดับแน่นอน · ส่งครั้งเดียวไม่ซ้ำ", "Standard ไม่รับประกันลำดับ และอาจได้ message ซ้ำ (at-least-once)"], ["ต้องเลือกเองเพราะไม่ใช่ default · throughput จำกัด", "Standard คือ default และ throughput สูงแทบไม่จำกัด"]],
+  ["ลำดับแน่นอน · throughput จำกัด · ตัวหน้าช้า ตัวหลังต้องรอ", ["best-effort ordering · throughput แทบไม่จำกัด", "นั่นคือ Standard queue"], ["ลำดับแน่นอน · throughput ไม่จำกัดเท่ากับ Standard", "การรักษาลำดับทำให้ FIFO มี throughput จำกัดกว่า"], ["ลำดับแน่นอน · แต่อาจได้ message ซ้ำ", "FIFO ส่งครั้งเดียวไม่ซ้ำ (exactly-once) ที่อาจซ้ำคือ Standard"]],
+  ["ถามบ่อย · response เร็ว · แพงกว่า", ["ถามน้อยครั้ง · ถูกกว่า · ยอมรับ delay", "นั่นคือ long polling"], ["ถามบ่อย · response เร็ว · ถูกกว่า", "แพงกว่า เพราะ empty response ก็ถูกนับเป็น request และคิดเงิน"], ["รอได้สูงสุด 20 วินาทีจนกว่าจะมี message", "นั่นคือ long polling"]],
+  ["ถามน้อยครั้ง · ถูกกว่า · ยอมรับ delay (รอสูงสุด 20 วินาที)", ["ถามบ่อย · response เร็ว · แพงกว่า", "นั่นคือ short polling"], ["ถามน้อยครั้ง · แพงกว่า · รอสูงสุด 20 วินาที", "long polling ถูกกว่า เพราะลด empty response"], ["ถามน้อยครั้ง · ถูกกว่า · รอสูงสุด 15 นาที", "long polling รอได้สูงสุด 20 วินาที ส่วน 15 นาทีคือค่าสูงสุดของ delay queue"]],
+  ["<code>delete-message</code> ลบ message ตัวเดียว · <code>delete-queue</code> ลบทั้ง queue", ["<code>delete-message</code> ลบทั้ง queue · <code>delete-queue</code> ลบ message ตัวเดียว", "สลับกัน"], ["<code>delete-message</code> ล้างทุก message · <code>delete-queue</code> ลบทั้ง queue", "การล้างทุก message ใน queue คือ purge-queue ส่วน delete-message ลบทีละตัว"], ["ทั้งคู่ลบ message ตัวเดียว ต่างกันแค่ชื่อ", "delete-queue ลบตัว queue ทิ้งทั้งหมด"]],
+  ["message ถูกลบทิ้ง (default 4 วัน)", ["message ถูกย้ายไป DLQ (default 4 วัน)", "DLQ รับ message ที่ล้มเหลวเกิน maxReceiveCount ไม่ใช่ message ที่หมดอายุ"], ["message กลับมาให้ consumer อื่นเห็น (default 30 วินาที)", "นั่นคือ visibility timeout"], ["message ถูกลบทิ้ง (default 14 วัน)", "14 วันคือค่าสูงสุดที่ตั้งได้ ค่าเริ่มต้นคือ 4 วัน"]],
+  ["Interface Endpoint (private, มีค่าใช้จ่าย)", ["Gateway Endpoint (ไม่มีค่าใช้จ่าย)", "Gateway Endpoint รองรับแค่ S3 และ DynamoDB"], ["Internet Gateway เท่านั้น ไม่มีทางเชื่อมแบบ private", "เชื่อมแบบ private ได้ด้วย Interface Endpoint"], ["VPC Peering ไปยัง SQS", "SQS ไม่ได้อยู่ใน VPC ของใคร จึง peering ไม่ได้"]],
+  ["แค่ S3 และ DynamoDB (ไม่มีค่าใช้จ่าย)", ["S3, DynamoDB และ SQS (ไม่มีค่าใช้จ่าย)", "SQS ต้องใช้ Interface Endpoint"], ["ทุกบริการของ AWS (มีค่าใช้จ่าย)", "ที่รองรับบริการส่วนใหญ่และมีค่าใช้จ่ายคือ Interface Endpoint"], ["แค่ SQS และ SNS (มีค่าใช้จ่าย)", "SQS/SNS ใช้ Interface Endpoint"]],
+  ["IAM + resource-based policy · SSE ผ่าน KMS", ["Security group + NACL · SSE ผ่าน KMS", "SQS/SNS ไม่ได้อยู่ใน subnet การคุมสิทธิ์ทำด้วย IAM และ resource-based policy"], ["IAM + resource-based policy · เข้ารหัสด้วย ACM", "ACM ใช้ออกใบรับรอง TLS การเข้ารหัสข้อมูลที่เก็บใช้ KMS"], ["ไม่มีการเข้ารหัสในตัว ต้องเข้ารหัสในแอปเอง", "SQS/SNS มี server-side encryption (SSE) ในตัว"]],
+  ["ไม่ — Retry และ DLQ ไม่ใช่ค่า default", ["ใช่ — เก็บ message ไว้จนทุก subscriber ประมวลผลสำเร็จ", "การเก็บ message จนประมวลผลสำเร็จคือจุดเด่นของ SQS"], ["ใช่ — มี DLQ ตั้งไว้ให้อัตโนมัติ", "ต้องตั้ง DLQ เอง ไม่ใช่ค่า default"], ["ไม่ — และตั้ง DLQ ให้ SNS ไม่ได้เลย", "ตั้งได้ แค่ไม่ใช่ค่า default"]],
+  ["Lambda, SQS, Firehose, HTTP/S, Email, SMS, Mobile Push", ["Lambda, SQS, EC2 instance โดยตรง, RDS", "SNS ส่งตรงเข้า EC2 หรือ RDS ไม่ได้"], ["S3, DynamoDB, Kinesis Data Streams, ECR", "ปลายทางเหล่านี้ไม่ใช่ endpoint ของ SNS"], ["Email และ SMS เท่านั้น", "SNS ส่งไปบริการ AWS อย่าง Lambda, SQS, Firehose และ HTTP/S ได้ด้วย"]],
+  ["message เดียวส่งไปหลายปลายทางพร้อมกันผ่าน SNS", ["หลาย producer ส่งเข้า queue เดียว", "นั่นคือ fan-in ไม่ใช่ fan-out"], ["แบ่ง message ใหญ่ออกเป็นชิ้นเล็ก ๆ", "fan-out ไม่ได้แบ่ง message แต่ส่งสำเนาไปหลายที่"], ["consumer หลายตัวแย่งกันดึง message จาก SQS ตัวเดียว", "แบบนั้นแต่ละ message ถึง consumer แค่ตัวเดียว ไม่ได้กระจายไปทุกตัว"]],
+  ["Shard · ต้องตั้ง consumer เอง (EC2 / Lambda / Firehose)", ["Partition · Firehose ประมวลผลให้เอง ไม่ต้องมี consumer", "หน่วยของ Kinesis เรียกว่า shard และ Data Streams ต้องมี consumer"], ["Message group · ไม่ต้องมี consumer", "message group เป็นแนวคิดของ SQS FIFO"], ["Shard · ไม่ต้องมี consumer ส่งเข้า S3 ให้อัตโนมัติ", "การส่งเข้า S3 อัตโนมัติคือ Firehose ส่วน Data Streams ต้องตั้ง consumer เอง"]],
+  ["แปลงข้อมูลในตัว ไม่ต้องมี compute · แต่ส่งได้แค่ปลายทางที่รองรับ เช่น S3", ["ต้องเขียน consumer เองบน EC2/Lambda · ส่งได้ทุกที่", "นั่นคือ Kinesis Data Streams"], ["แบ่งข้อมูลเป็น shard ให้หลาย consumer อ่านซ้ำได้", "นั่นคือ Kinesis Data Streams"], ["queue แบบ FIFO สำหรับข้อมูล streaming", "Firehose ไม่ใช่ queue แต่เป็นบริการส่งข้อมูลไปปลายทาง"]]
 ];
 
 const GAME = [
@@ -2371,9 +2411,12 @@ const later = (fn, ms) => (REDUCE ? fn() : setTimeout(fn, ms));
 })();
 
 /* ================= flashcards ================= */
+/* โหมด "เลือกคำตอบ": ถูก = นับว่าจำได้, ผิด/ไม่รู้ = วนกลับมาท้ายคิว · โหมด "พลิกการ์ด": ประเมินตัวเองแบบเดิม */
 const FC = (function () {
-  const card = $('#fcCard');
+  const card = $('#fcCard'), wrap = $('.fc-wrap'), box = $('#fcChoices'), fb = $('#fcFb'), seg = $('#fcMode');
   let queue = FLASHCARDS.map((_, i) => i), pos = 0, known = new Set();
+  let mode = store.get('fcMode', 'mcq') === 'flip' ? 'flip' : 'mcq';
+  let opts = [], picked = null;
   function face(flipped) {
     card.classList.toggle('flipped', flipped);
     $('.fc-front', card).setAttribute('aria-hidden', String(flipped));
@@ -2382,6 +2425,9 @@ const FC = (function () {
   function render() {
     face(false);
     const empty = !queue.length;
+    const mcq = mode === 'mcq' && !empty && !!FC_MCQ[queue[pos]];
+    picked = null;
+    fb.innerHTML = '';
     if (empty) {
       $('#fcFront').innerHTML = 'จำได้ครบทั้ง ' + FLASHCARDS.length + ' ใบแล้ว';
       $('#fcBack').innerHTML = 'กด "สุ่ม" เพื่อเริ่มรอบใหม่';
@@ -2390,28 +2436,85 @@ const FC = (function () {
       $('#fcFront').innerHTML = c[0];
       $('#fcBack').innerHTML = c[1];
     }
+    if (mcq) {
+      const m = FC_MCQ[queue[pos]];
+      opts = shuffle([{ t: m[0], ok: true }].concat(m.slice(1).map((w) => ({ t: w[0], why: w[1] }))));
+      box.innerHTML = opts.map((o, k) =>
+        '<button class="choice" data-k="' + k + '"><span class="key">' + LETTERS[k] + '</span><span class="ct">' + o.t + '</span><span class="st"></span></button>'
+      ).join('');
+    } else {
+      opts = [];
+      box.innerHTML = '';
+    }
+    wrap.classList.toggle('mcq', mcq);
+    card.classList.toggle('locked', mcq);
+    box.hidden = !mcq;
+    $('#fcSkip').hidden = !mcq;
+    $('#fcRate').hidden = mcq;
     $('#fcCount').textContent = (empty ? 'ครบแล้ว' : 'ใบที่ ' + (pos + 1) + '/' + queue.length) + ' · จำได้ ' + known.size + '/' + FLASHCARDS.length;
     ['fcPrev', 'fcNext', 'fcYes', 'fcNo'].forEach((id) => { $('#' + id).disabled = empty; });
   }
-  function flip() { if (queue.length) face(!card.classList.contains('flipped')); }
+  // k = -1 คือกด "ไม่รู้ — ขอดูเฉลย"
+  function choose(k) {
+    if (box.hidden || picked !== null) return;
+    picked = k;
+    const right = opts.findIndex((o) => o.ok), ok = k === right;
+    $$('.choice', box).forEach((b, j) => {
+      b.disabled = true;
+      if (j === right) { b.classList.add('correct'); $('.st', b).textContent = 'คำตอบ'; }
+      else if (j === k) { b.classList.add('wrong'); $('.st', b).textContent = 'ที่เลือก'; }
+    });
+    let h = '<div class="fb ' + (ok ? 'ok' : 'bad') + '"><strong class="verdict">' +
+      (ok ? '✓ ถูกต้อง' : (k < 0 ? '— ยังไม่รู้' : '✗ ยังไม่ถูก') + ' — คำตอบคือ ' + LETTERS[right]) + '</strong>';
+    if (!ok && k >= 0) h += '<p><strong>ทำไม ' + LETTERS[k] + ' ผิด:</strong> ' + opts[k].why + '</p>';
+    const others = opts.map((o, j) => (o.ok || j === k) ? '' : '<li><strong>' + LETTERS[j] + '</strong> — ' + o.why + '</li>').join('');
+    h += '<details><summary>' + (ok || k < 0 ? 'ดูเหตุผลของตัวเลือกที่ผิดทั้งหมด' : 'ดูเหตุผลของตัวเลือกผิดข้ออื่น') + '</summary><ul>' + others + '</ul></details>';
+    h += '<p class="muted">' + (ok ? 'นับว่าจำได้แล้ว' : 'การ์ดใบนี้จะวนกลับมาอีก') + ' · กด <kbd>Enter</kbd> เพื่อไปใบถัดไป</p>';
+    h += '<div class="row"><button class="btn btn-primary btn-sm" id="fcGo">ใบถัดไป →</button></div></div>';
+    fb.innerHTML = h;
+    $('#fcSkip').hidden = true;
+    card.classList.remove('locked');
+    face(true);
+  }
+  function markKnown() { known.add(queue[pos]); queue.splice(pos, 1); if (pos >= queue.length) pos = 0; render(); }
+  function requeue() { const c = queue.splice(pos, 1)[0]; queue.push(c); if (pos >= queue.length) pos = 0; render(); }
+  function settle() { (opts[picked] && opts[picked].ok) ? markKnown() : requeue(); }
+  function flip() { if (queue.length && !card.classList.contains('locked')) face(!card.classList.contains('flipped')); }
+  function setMode(m) {
+    mode = m;
+    store.set('fcMode', m);
+    $$('button', seg).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+    render();
+  }
   card.addEventListener('click', flip);
-  $('#fcNext').addEventListener('click', () => { pos = (pos + 1) % queue.length; render(); });
+  seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b && b.dataset.m !== mode) setMode(b.dataset.m); });
+  box.addEventListener('click', (e) => { const b = e.target.closest('.choice'); if (b && !b.disabled) choose(+b.dataset.k); });
+  $('#fcSkip').addEventListener('click', () => choose(-1));
+  fb.addEventListener('click', (e) => { if (e.target.closest('#fcGo')) settle(); });
+  $('#fcNext').addEventListener('click', () => { if (picked !== null) { settle(); return; } pos = (pos + 1) % queue.length; render(); });
   $('#fcPrev').addEventListener('click', () => { pos = (pos - 1 + queue.length) % queue.length; render(); });
   $('#fcShuffle').addEventListener('click', () => {
     if (!queue.length) { known.clear(); queue = FLASHCARDS.map((_, i) => i); }
     queue = shuffle(queue); pos = 0; render();
   });
-  $('#fcYes').addEventListener('click', () => {
-    known.add(queue[pos]); queue.splice(pos, 1);
-    if (pos >= queue.length) pos = 0;
-    render();
+  $('#fcYes').addEventListener('click', markKnown);
+  $('#fcNo').addEventListener('click', requeue);
+  document.addEventListener('keydown', (e) => {
+    if (box.hidden && picked === null) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || !inView(wrap)) return;
+    const t = e.target, run = $('#qRun');
+    if (t.closest && t.closest('input, select, textarea')) return;
+    if (run && !run.hidden && inView(run)) return;
+    if (picked === null) {
+      const k = e.key.toLowerCase();
+      let p = '1234'.indexOf(k);
+      if (p < 0 && k.length === 1) p = 'abcd'.indexOf(k);
+      if (p >= 0 && p < opts.length) { e.preventDefault(); choose(p); }
+    } else if (e.key === 'Enter' && !(t.closest && t.closest('button, a, summary'))) {
+      e.preventDefault(); settle();
+    }
   });
-  $('#fcNo').addEventListener('click', () => {
-    const c = queue.splice(pos, 1)[0]; queue.push(c);
-    if (pos >= queue.length) pos = 0;
-    render();
-  });
-  render();
+  setMode(mode);
   return { flip, el: $('#flashcards') };
 })();
 

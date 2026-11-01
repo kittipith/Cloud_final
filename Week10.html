@@ -329,6 +329,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .fc-back .t{font-size:1.1rem;line-height:1.65}
 .fc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
 .fc-count{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.fc-mode{display:flex;justify-content:center;margin-top:18px}
+.fc-wrap [hidden]{display:none!important}
+.fc-wrap.mcq .fc-inner{min-height:160px}
+.fc.locked{cursor:default}
+.fc-choices{margin-top:16px}
+.fc-skip{display:block;margin:10px auto 0;border:0;background:none;padding:4px 8px;color:var(--muted);font:inherit;font-size:14px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.fc-skip:hover{color:var(--text)}
+.fc-wrap .fb kbd{font-size:11px}
 
 /* cheatsheet */
 .cheat{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:20px 0}
@@ -1316,7 +1324,8 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
 <section class="sec" id="flashcards" aria-labelledby="h-fc">
   <div class="sec-label">ทบทวน</div>
   <h2 id="h-fc">Flashcards</h2>
-  <p class="muted">คลิกการ์ดหรือกด <kbd>Space</kbd> เพื่อพลิก แล้วบอกตัวเองว่าจำได้หรือยัง การ์ดที่ยังจำไม่ได้จะวนกลับมาอีก</p>
+  <p class="muted">เลือกคำตอบที่ถูกจาก 4 ตัวเลือก (กด <kbd>1</kbd>–<kbd>4</kbd> หรือ <kbd>A</kbd>–<kbd>D</kbd> ก็ได้) การ์ดจะพลิกเฉลยพร้อมบอกว่าตัวที่เลือกผิดเพราะอะไร ตอบผิดหรือกด "ไม่รู้" การ์ดจะวนกลับมาอีก ถ้าอยากทวนแบบเดิมให้สลับเป็นโหมด "พลิกการ์ด"</p>
+  <div class="fc-mode"><div class="seg" id="fcMode" role="group" aria-label="รูปแบบ flashcard"><button data-m="mcq" aria-pressed="true">เลือกคำตอบ</button><button data-m="flip" aria-pressed="false">พลิกการ์ด</button></div></div>
   <div class="fc-wrap">
     <button class="fc" id="fcCard" aria-live="polite">
       <div class="fc-inner">
@@ -1324,6 +1333,9 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
         <div class="fc-face fc-back"><span class="k">คำตอบ</span><div class="t" id="fcBack"></div></div>
       </div>
     </button>
+    <div class="choices fc-choices" id="fcChoices" role="group" aria-label="ตัวเลือก"></div>
+    <button class="fc-skip" id="fcSkip">ไม่รู้ — ขอดูเฉลย</button>
+    <div id="fcFb" aria-live="polite"></div>
     <div class="fc-bar">
       <span class="fc-count" id="fcCount"></span>
       <div class="row">
@@ -1332,7 +1344,7 @@ CMD ["nginx", "-g", "daemon off;"]</code></pre>
         <button class="btn btn-sm" id="fcNext">ถัดไป</button>
       </div>
     </div>
-    <div class="row" style="justify-content:center;margin-top:12px">
+    <div class="row" id="fcRate" style="justify-content:center;margin-top:12px">
       <button class="btn" id="fcNo">ยังไม่ได้</button>
       <button class="btn btn-primary" id="fcYes">จำได้</button>
     </div>
@@ -2389,6 +2401,37 @@ const FLASHCARDS = [
   ['Lambda@Edge vs CloudFront Functions', 'L@E: Node.js + <strong>Python</strong>, logic ซับซ้อน<br>CFF: <strong>JS เท่านั้น</strong>, 2 MB, 10 KB, งานง่ายและเร็ว']
 ];
 
+/* ตัวเลือกของ flashcard (เรียงตาม FLASHCARDS): [คำตอบที่ถูก, [ตัวหลอก, ทำไมผิด] x3] */
+const FC_MCQ = [
+  ["VM = EC2 · Serverless = Lambda · Container", ["VM = Lambda · Serverless = EC2 · Container", "สลับกัน EC2 คือ VM ส่วน Lambda คือ serverless"], ["VM = EC2 · Serverless = Lambda · Database", "แบบที่ 3 คือ Container ฐานข้อมูลไม่ใช่ compute service"], ["VM = EC2 · Serverless = S3 · Container", "S3 เป็น storage ไม่ใช่ compute"]],
+  ["Container ใช้ kernel ของ host ร่วมกัน (เบา) · VM มี OS แยกทุกตัว (หนัก)", ["Container มี OS แยกทุกตัว · VM ใช้ kernel ของ host ร่วมกัน", "สลับกัน"], ["Container ต้องมี hypervisor · VM ไม่ต้องมี", "VM ต่างหากที่ต้องใช้ hypervisor ส่วน container ใช้ container engine บน OS ของ host"], ["ไม่ต่างกัน container ก็คือ VM ขนาดเล็ก", "ต่างกันที่ container ไม่มี OS ของตัวเอง จึงเบาและเริ่มเร็วกว่ามาก"]],
+  ["Library ชนกัน, ย้ายเครื่องแล้วใช้ไม่ได้, \"works on my machine\"", ["ทุกแอปมี OS ของตัวเอง จึงกินทรัพยากรมาก", "นั่นคือข้อเสียของ VM"], ["จ่ายตาม vCPU/Memory ที่ใช้จริง ทำให้คาดเดาค่าใช้จ่ายยาก", "นั่นคือลักษณะของ Fargate"], ["เกิด cold start เมื่อไม่มี request นาน ๆ", "นั่นคือข้อเสียของ serverless"]],
+  ["ข้อดี: isolated · ข้อเสีย: ทุก VM มี OS ของตัวเอง หนัก", ["ข้อดี: เบาและเริ่มเร็ว · ข้อเสีย: ไม่ isolated", "เบาและเริ่มเร็วเป็นจุดเด่นของ container ส่วน VM แยกขาดจากกันได้ดี"], ["ข้อดี: ไม่ต้องดูแล OS · ข้อเสีย: cold start", "นั่นคือ serverless VM ยังต้องดูแล OS เอง"], ["ข้อดี: ใช้ kernel ร่วมกัน · ข้อเสีย: library ชนกัน", "ใช้ kernel ร่วมกันคือ container ส่วน library ชนกันคือปัญหายุค Bare Metal"]],
+  ["Code, Runtime, System Tools, Library", ["Code, Runtime, Library และ kernel ของ OS เต็มตัว", "container ไม่มี kernel ของตัวเอง ใช้ของเครื่อง host"], ["Code และ Library เท่านั้น runtime ใช้ของเครื่อง host", "runtime อยู่ใน container ด้วย จึงรันที่ไหนก็ได้ผลเหมือนเดิม"], ["Hypervisor, Guest OS และ Code", "นั่นคือองค์ประกอบของ VM"]],
+  ["สูตรสร้าง image: base image, copy ไฟล์, command", ["ที่เก็บ image สำหรับ push / pull", "นั่นคือ container registry"], ["container ที่กำลังรันอยู่พร้อม R/W layer", "นั่นคือ container ที่ได้จาก docker run"], ["ไฟล์ตั้งค่า ECS ที่ระบุ CPU/memory ของ task", "นั่นคือ task definition ของ ECS"]],
+  ["Image ที่เป็น layer ซ้อนกัน ทุก layer read-only", ["Container ที่กำลังรัน พร้อม R/W layer", "นั่นคือผลของ docker run"], ["Image ชั้นเดียวที่แก้ไขได้", "image มีหลาย layer ซ้อนกัน และทุก layer อ่านได้อย่างเดียว"], ["Image ที่ถูก push ขึ้น ECR ให้อัตโนมัติ", "build แค่สร้าง image ในเครื่อง ต้องสั่ง docker push เองจึงขึ้น registry"]],
+  ["เพิ่ม R/W layer (container layer) ไว้บนสุด", ["แก้ไข read-only layer ของ image โดยตรง", "image ไม่ถูกแก้ การเขียนทั้งหมดไปอยู่ที่ R/W layer"], ["สร้าง image ใหม่จาก Dockerfile", "นั่นคือ docker build"], ["อัปโหลด image ขึ้น registry", "นั่นคือ docker push"]],
+  ["ที่เก็บ image เช่น Amazon ECR, Docker Hub, GitLab", ["ตัวจัดการ container เช่น ECS, EKS", "นั่นคือ orchestration ไม่ใช่ที่เก็บ image"], ["ที่เก็บซอร์สโค้ด เช่น CodeCommit, GitHub", "นั่นคือ Git repository"], ["ที่เก็บ log ของ container เช่น CloudWatch", "CloudWatch ใช้เก็บ log และ metric"]],
+  ["ป้าย key/value เช่น Name=WebServer ใช้จัดกลุ่ม ค้นหา filter", ["สูตรสร้าง image แบบชั้น ๆ", "นั่นคือ Dockerfile"], ["รหัสระบุ resource แบบไม่ซ้ำ เช่น arn:aws:...", "นั่นคือ ARN"], ["เอกสารกำหนดสิทธิ์ว่าใครทำอะไรได้", "นั่นคือ IAM policy"]],
+  ["ควบคุมได้มาก + ถูกกว่าเมื่อ spec เท่ากัน", ["เร็ว (agility) + AWS provision / maintain ให้", "นั่นคือข้อดีของ Managed"], ["ไม่ต้องดูแล OS และ patch เอง", "IaaS ยังต้องดูแล OS เอง"], ["scale และทำ HA ให้อัตโนมัติโดยไม่ต้องตั้งค่า", "IaaS ต้องวางระบบ scale และ HA เอง"]],
+  ["เร็ว (agility) + AWS provision / manage / maintain ให้", ["ควบคุมได้มาก + ถูกกว่าเมื่อ spec เท่ากัน", "นั่นคือข้อดีของ IaaS"], ["ปรับแต่ง OS และ kernel ได้ทุกอย่าง", "การควบคุมระดับนั้นเป็นจุดเด่นของ IaaS"], ["ไม่มีค่าใช้จ่ายเลยตอนไม่มี container รัน", "ไม่ใช่ข้อดีที่สไลด์เน้น และ managed หลายแบบยังมีค่าใช้จ่ายพื้นฐาน"]],
+  ["container จำนวนมาก, scaling, ลด workload, HA / resilience", ["ต้องควบคุมเองทุกอย่าง, งบจำกัด, container น้อย, ทีมเชี่ยวชาญ", "นี่คือเหตุผลที่ควรเลือก IaaS"], ["container จำนวนมาก, scaling, ลด workload, ต้องปรับแต่ง kernel เอง", "การปรับแต่ง kernel เป็นเหตุผลที่ควรเลือก IaaS"], ["ราคาถูกที่สุด, ไม่ต้องใช้ IAM, ไม่ต้องมี VPC, ไม่ต้องมี image", "managed ไม่ได้ถูกที่สุดเสมอ และยังต้องใช้ IAM, เครือข่าย และ image"]],
+  ["เลือกว่าจะวาง container บน EC2 ตัวไหน / AZ ไหน", ["ตั้งเวลาเปิดปิด EC2 ตามช่วงเวลา", "scheduling ในที่นี้คือการจัดวาง container ไม่ใช่การตั้งเวลา"], ["เลือก Region ที่จะเก็บ image ใน ECR", "ไม่เกี่ยวกับ ECR"], ["จัดลำดับ message ใน queue", "นั่นเป็นเรื่องของ messaging เช่น FIFO queue"]],
+  ["วาง container ใน EC2 ที่อยู่หลาย AZ · ECS เป็น Regional", ["วาง container ใน EC2 ตัวใหญ่ตัวเดียว · ECS เป็น global", "เครื่องเดียวไม่มี HA และ ECS เป็น Regional"], ["กระจาย container ข้ามหลาย Region อัตโนมัติ · ECS เป็น global", "ECS เป็น Regional กระจายหลาย AZ ภายใน Region ไม่ได้ข้าม Region ให้อัตโนมัติ"], ["สำรอง image ไว้ใน ECR · ECS เป็นบริการระดับ AZ", "HA มาจากการกระจาย container หลาย AZ และ ECS เป็น Regional"]],
+  ["registry แบบ fully managed · Regional · ใช้ Docker CLI ได้ · คุมสิทธิ์ด้วย IAM", ["registry แบบ global · ต้องใช้ CLI เฉพาะ · คุมสิทธิ์ด้วย security group", "ECR เป็น Regional ใช้ Docker CLI ปกติได้ และคุมสิทธิ์ด้วย IAM"], ["บริการ orchestration ที่รัน container หลาย AZ", "นั่นคือ ECS"], ["บริการ build image อัตโนมัติจาก Dockerfile", "ECR เก็บ image อย่างเดียว การ build ทำด้วย docker build หรือ CodeBuild"]],
+  ["จ่ายตาม EC2 ที่ provision · คุมงบได้ · RI ลดได้ 50–60%", ["จ่ายตาม vCPU/Memory ที่ใช้จริง · ไม่ต้องดูแล infra", "นั่นคือ Fargate launch type"], ["จ่ายตาม EC2 ที่ provision · ค่าใช้จ่ายคาดเดายาก", "EC2 launch type คุมงบได้ง่าย ที่คาดเดายากคือ Fargate"], ["ไม่มีค่าใช้จ่ายตอนไม่มี task · scale ได้ไม่มีเพดาน", "จ่ายค่า EC2 ตลอดแม้ไม่มี task และถ้าเกิน max ของเครื่องที่มีจะรับไม่ไหว"]],
+  ["จ่ายตาม vCPU/Memory ที่ใช้จริง · ไม่ต้องดูแล infra · คาดเดาค่าใช้จ่ายยาก", ["จ่ายตาม EC2 ที่ provision · คุมงบได้", "นั่นคือ EC2 launch type"], ["จ่ายตาม vCPU/Memory · แต่ต้อง patch OS ของเครื่องเอง", "Fargate ไม่มีเครื่องให้เราดูแล"], ["ใช้ RI ลดได้ 50–60% · ต้องเลือก instance type", "นั่นคือ EC2 launch type"]],
+  ["container จำนวนมาก หรือมี K8s on-prem อยู่แล้ว · แพงกว่า ECS", ["container น้อย งบจำกัด · ถูกกว่า ECS", "EKS แพงกว่า ECS และเหมาะกับระบบใหญ่"], ["อยากอัปโหลดโค้ดแล้วให้ AWS สร้าง EC2 + LB ให้", "นั่นคือ Elastic Beanstalk"], ["มี K8s on-prem อยู่แล้ว · ถูกกว่า ECS", "เหตุผลถูก แต่ EKS แพงกว่า ECS"]],
+  ["EC2 + Auto Scaling Group + Load Balancer", ["Lambda + API Gateway + DynamoDB", "นั่นคือชุดที่ใช้บ่อยกับ AWS SAM"], ["EKS cluster + Fargate profile", "Beanstalk ไม่ได้สร้าง EKS"], ["EC2 ตัวเดียว ไม่มี Load Balancer เสมอ", "Beanstalk สร้าง ASG และ Load Balancer ให้ได้"]],
+  ["role ของ EC2 / ให้ Beanstalk provision แทนเรา / สิทธิ์ของ IAM User/Group", ["ให้ Beanstalk provision แทนเรา / role ของ EC2 / สิทธิ์ของ IAM User/Group", "สลับ Instance Profile กับ Service Role"], ["สิทธิ์ของ IAM User/Group / role ของ EC2 / ให้ Beanstalk provision แทนเรา", "สลับกันทั้งชุด"], ["role ของ EC2 / สิทธิ์ของ IAM User/Group / ให้ Beanstalk provision แทนเรา", "สลับ Service Role กับ User Policy"]],
+  ["All at once (downtime) · Rolling (capacity ลด) · +Additional batch (จ่ายเพิ่ม) · Immutable (2 ASG) · Traffic splitting (canary)", ["All at once (capacity ลด) · Rolling (downtime) · +Additional batch (จ่ายเพิ่ม) · Immutable (2 ASG) · Traffic splitting (canary)", "All at once คือแบบที่มี downtime ส่วน Rolling ไม่มี downtime แต่ capacity ลดระหว่าง deploy"], ["All at once (downtime) · Rolling (capacity ลด) · +Additional batch (2 ASG) · Immutable (จ่ายเพิ่ม) · Traffic splitting (canary)", "Immutable คือการสร้าง ASG ชั่วคราวชุดใหม่ (2 ASG) ส่วน Additional batch คือเพิ่มเครื่องอีกหนึ่ง batch จึงจ่ายเพิ่ม"], ["All at once (downtime) · Rolling (capacity ลด) · +Additional batch (จ่ายเพิ่ม) · Immutable (canary) · Traffic splitting (2 ASG)", "แบบที่แบ่ง traffic ไปทดสอบ (canary) คือ Traffic splitting"]],
+  ["อ่านบ่อย เปลี่ยนไม่บ่อย · read-heavy · compute-intensive", ["เขียนบ่อย เปลี่ยนตลอดเวลา · write-heavy", "ข้อมูลที่เปลี่ยนบ่อยทำให้ cache เก่าเร็ว ต้องอัปเดตตลอด"], ["อ่านนาน ๆ ครั้ง · ข้อมูลใหญ่ที่ไม่ค่อยมีคนใช้", "ถ้าไม่ค่อยมีคนอ่าน hit ratio จะต่ำ cache ไม่คุ้ม"], ["ธุรกรรมการเงินที่ต้องถูกต้องแบบ real-time ทุกครั้ง", "ข้อมูลที่ต้องสดตลอดเสี่ยงได้ค่าเก่าจาก cache"]],
+  ["Memcached: ง่าย, network-attached RAM · Redis: ฟีเจอร์เยอะ, cluster mode", ["Memcached: ฟีเจอร์เยอะ มี replication · Redis: ง่าย ไม่มี persistence", "สลับกัน Redis ต่างหากที่มี replication และ persistence"], ["ทั้งคู่เหมือนกันทุกอย่าง ต่างแค่ราคา", "ต่างกันที่ฟีเจอร์ Memcached เรียบง่าย Redis ทำได้มากกว่า"], ["Memcached: ฐานข้อมูลบน disk · Redis: cache ใน RAM", "ทั้งคู่เป็น in-memory"]],
+  ["Lazy: เขียน cache ตอน miss · Write-through: เขียน cache ทุกครั้งที่อัปเดต DB", ["Lazy: เขียน cache ทุกครั้งที่อัปเดต DB · Write-through: เขียน cache ตอน miss", "สลับกัน"], ["Lazy: เขียน cache ทุกครั้งที่อัปเดต DB · Write-through: ไม่เขียน cache เลย", "Lazy โหลดเข้า cache ตอน miss และ Write-through เขียน cache พร้อม DB"], ["ทั้งคู่เขียน cache เฉพาะตอนหมด TTL", "TTL คือการกำหนดอายุข้อมูล ไม่ใช่กลยุทธ์การเขียนของทั้งสองแบบ"]],
+  ["Distribution domain + URL path", ["URL path + query string ทั้งหมด", "ค่าเริ่มต้นไม่รวม query string"], ["Distribution domain + URL path + cookie ทั้งหมด", "ค่าเริ่มต้นไม่รวม cookie ถ้าใส่เพิ่มจะทำให้ hit ratio ลด"], ["IP ของผู้ใช้ + URL path", "IP ไม่ได้อยู่ใน cache key ไม่อย่างนั้นแต่ละคนจะได้ cache แยกกันหมด"]],
+  ["L@E: Node.js + Python, logic ซับซ้อน · CFF: JS เท่านั้น งานง่ายและเร็ว", ["L@E: JS เท่านั้น งานง่าย · CFF: Node.js + Python logic ซับซ้อน", "สลับกัน"], ["L@E: Python เท่านั้น · CFF: รองรับทุกภาษา", "L@E ใช้ได้ทั้ง Node.js และ Python ส่วน CFF ใช้ได้แค่ JavaScript"], ["ทั้งคู่ใช้ได้ทุกจังหวะและเรียก network ได้เหมือนกัน", "CFF ใช้ได้แค่ viewer request/response และทำงานเบา ๆ เท่านั้น"]]
+];
+
 const GAME = [
   { q: 'หน่วยงานรัฐมีงบตายตัวทั้งปี ระบบมี container ราว 30 ตัว และ traffic ค่อนข้างคงที่', a: 'ecs-ec2', why: 'งบตายตัว + demand คงที่ → ECS แบบ EC2 launch type คุมค่าใช้จ่ายได้ (ใช้ RI ลดเพิ่มได้)' },
   { q: 'Startup ทีม 3 คน ไม่อยากดูแลเครื่อง traffic ขึ้นลงคาดเดาไม่ได้', a: 'ecs-fg', why: 'ทีมเล็ก + traffic คาดเดาไม่ได้ → Fargate ไม่ต้องดูแล infra และรองรับ traffic ที่พุ่ง' },
@@ -3184,9 +3227,12 @@ function choiceItems(box, items, opts, onScore) {
 })();
 
 /* ================= flashcards ================= */
+/* โหมด "เลือกคำตอบ": ถูก = นับว่าจำได้, ผิด/ไม่รู้ = วนกลับมาท้ายคิว · โหมด "พลิกการ์ด": ประเมินตัวเองแบบเดิม */
 const FC = (function () {
-  const card = $('#fcCard');
+  const card = $('#fcCard'), wrap = $('.fc-wrap'), box = $('#fcChoices'), fb = $('#fcFb'), seg = $('#fcMode');
   let queue = FLASHCARDS.map((_, i) => i), pos = 0, known = new Set();
+  let mode = store.get('fcMode', 'mcq') === 'flip' ? 'flip' : 'mcq';
+  let opts = [], picked = null;
   function face(flipped) {
     card.classList.toggle('flipped', flipped);
     $('.fc-front', card).setAttribute('aria-hidden', String(flipped));
@@ -3195,6 +3241,9 @@ const FC = (function () {
   function render() {
     face(false);
     const empty = !queue.length;
+    const mcq = mode === 'mcq' && !empty && !!FC_MCQ[queue[pos]];
+    picked = null;
+    fb.innerHTML = '';
     if (empty) {
       $('#fcFront').innerHTML = 'จำได้ครบทั้ง ' + FLASHCARDS.length + ' ใบแล้ว';
       $('#fcBack').innerHTML = 'กด "สุ่ม" เพื่อเริ่มรอบใหม่';
@@ -3203,28 +3252,85 @@ const FC = (function () {
       $('#fcFront').innerHTML = c[0];
       $('#fcBack').innerHTML = c[1];
     }
+    if (mcq) {
+      const m = FC_MCQ[queue[pos]];
+      opts = shuffle([{ t: m[0], ok: true }].concat(m.slice(1).map((w) => ({ t: w[0], why: w[1] }))));
+      box.innerHTML = opts.map((o, k) =>
+        '<button class="choice" data-k="' + k + '"><span class="key">' + LETTERS[k] + '</span><span class="ct">' + o.t + '</span><span class="st"></span></button>'
+      ).join('');
+    } else {
+      opts = [];
+      box.innerHTML = '';
+    }
+    wrap.classList.toggle('mcq', mcq);
+    card.classList.toggle('locked', mcq);
+    box.hidden = !mcq;
+    $('#fcSkip').hidden = !mcq;
+    $('#fcRate').hidden = mcq;
     $('#fcCount').textContent = (empty ? 'ครบแล้ว' : 'ใบที่ ' + (pos + 1) + '/' + queue.length) + ' · จำได้ ' + known.size + '/' + FLASHCARDS.length;
     ['fcPrev', 'fcNext', 'fcYes', 'fcNo'].forEach((id) => { $('#' + id).disabled = empty; });
   }
-  function flip() { if (queue.length) face(!card.classList.contains('flipped')); }
+  // k = -1 คือกด "ไม่รู้ — ขอดูเฉลย"
+  function choose(k) {
+    if (box.hidden || picked !== null) return;
+    picked = k;
+    const right = opts.findIndex((o) => o.ok), ok = k === right;
+    $$('.choice', box).forEach((b, j) => {
+      b.disabled = true;
+      if (j === right) { b.classList.add('correct'); $('.st', b).textContent = 'คำตอบ'; }
+      else if (j === k) { b.classList.add('wrong'); $('.st', b).textContent = 'ที่เลือก'; }
+    });
+    let h = '<div class="fb ' + (ok ? 'ok' : 'bad') + '"><strong class="verdict">' +
+      (ok ? '✓ ถูกต้อง' : (k < 0 ? '— ยังไม่รู้' : '✗ ยังไม่ถูก') + ' — คำตอบคือ ' + LETTERS[right]) + '</strong>';
+    if (!ok && k >= 0) h += '<p><strong>ทำไม ' + LETTERS[k] + ' ผิด:</strong> ' + opts[k].why + '</p>';
+    const others = opts.map((o, j) => (o.ok || j === k) ? '' : '<li><strong>' + LETTERS[j] + '</strong> — ' + o.why + '</li>').join('');
+    h += '<details><summary>' + (ok || k < 0 ? 'ดูเหตุผลของตัวเลือกที่ผิดทั้งหมด' : 'ดูเหตุผลของตัวเลือกผิดข้ออื่น') + '</summary><ul>' + others + '</ul></details>';
+    h += '<p class="muted">' + (ok ? 'นับว่าจำได้แล้ว' : 'การ์ดใบนี้จะวนกลับมาอีก') + ' · กด <kbd>Enter</kbd> เพื่อไปใบถัดไป</p>';
+    h += '<div class="row"><button class="btn btn-primary btn-sm" id="fcGo">ใบถัดไป →</button></div></div>';
+    fb.innerHTML = h;
+    $('#fcSkip').hidden = true;
+    card.classList.remove('locked');
+    face(true);
+  }
+  function markKnown() { known.add(queue[pos]); queue.splice(pos, 1); if (pos >= queue.length) pos = 0; render(); }
+  function requeue() { const c = queue.splice(pos, 1)[0]; queue.push(c); if (pos >= queue.length) pos = 0; render(); }
+  function settle() { (opts[picked] && opts[picked].ok) ? markKnown() : requeue(); }
+  function flip() { if (queue.length && !card.classList.contains('locked')) face(!card.classList.contains('flipped')); }
+  function setMode(m) {
+    mode = m;
+    store.set('fcMode', m);
+    $$('button', seg).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+    render();
+  }
   card.addEventListener('click', flip);
-  $('#fcNext').addEventListener('click', () => { pos = (pos + 1) % queue.length; render(); });
+  seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b && b.dataset.m !== mode) setMode(b.dataset.m); });
+  box.addEventListener('click', (e) => { const b = e.target.closest('.choice'); if (b && !b.disabled) choose(+b.dataset.k); });
+  $('#fcSkip').addEventListener('click', () => choose(-1));
+  fb.addEventListener('click', (e) => { if (e.target.closest('#fcGo')) settle(); });
+  $('#fcNext').addEventListener('click', () => { if (picked !== null) { settle(); return; } pos = (pos + 1) % queue.length; render(); });
   $('#fcPrev').addEventListener('click', () => { pos = (pos - 1 + queue.length) % queue.length; render(); });
   $('#fcShuffle').addEventListener('click', () => {
     if (!queue.length) { known.clear(); queue = FLASHCARDS.map((_, i) => i); }
     queue = shuffle(queue); pos = 0; render();
   });
-  $('#fcYes').addEventListener('click', () => {
-    known.add(queue[pos]); queue.splice(pos, 1);
-    if (pos >= queue.length) pos = 0;
-    render();
+  $('#fcYes').addEventListener('click', markKnown);
+  $('#fcNo').addEventListener('click', requeue);
+  document.addEventListener('keydown', (e) => {
+    if (box.hidden && picked === null) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || !inView(wrap)) return;
+    const t = e.target, run = $('#qRun');
+    if (t.closest && t.closest('input, select, textarea')) return;
+    if (run && !run.hidden && inView(run)) return;
+    if (picked === null) {
+      const k = e.key.toLowerCase();
+      let p = '1234'.indexOf(k);
+      if (p < 0 && k.length === 1) p = 'abcd'.indexOf(k);
+      if (p >= 0 && p < opts.length) { e.preventDefault(); choose(p); }
+    } else if (e.key === 'Enter' && !(t.closest && t.closest('button, a, summary'))) {
+      e.preventDefault(); settle();
+    }
   });
-  $('#fcNo').addEventListener('click', () => {
-    const c = queue.splice(pos, 1)[0]; queue.push(c);
-    if (pos >= queue.length) pos = 0;
-    render();
-  });
-  render();
+  setMode(mode);
   return { flip, el: $('#flashcards') };
 })();
 

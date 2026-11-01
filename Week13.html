@@ -329,6 +329,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .fc-back .t{font-size:1.1rem;line-height:1.65}
 .fc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
 .fc-count{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.fc-mode{display:flex;justify-content:center;margin-top:18px}
+.fc-wrap [hidden]{display:none!important}
+.fc-wrap.mcq .fc-inner{min-height:160px}
+.fc.locked{cursor:default}
+.fc-choices{margin-top:16px}
+.fc-skip{display:block;margin:10px auto 0;border:0;background:none;padding:4px 8px;color:var(--muted);font:inherit;font-size:14px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.fc-skip:hover{color:var(--text)}
+.fc-wrap .fb kbd{font-size:11px}
 
 /* cheatsheet */
 .cheat{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:20px 0}
@@ -1094,7 +1102,8 @@ Resources:
 <section class="sec" id="flashcards" aria-labelledby="h-fc">
   <div class="sec-label">ทบทวน</div>
   <h2 id="h-fc">Flashcards</h2>
-  <p class="muted">คลิกการ์ดหรือกด <kbd>Space</kbd> เพื่อพลิก แล้วบอกตัวเองว่าจำได้หรือยัง การ์ดที่ยังจำไม่ได้จะวนกลับมาอีก</p>
+  <p class="muted">เลือกคำตอบที่ถูกจาก 4 ตัวเลือก (กด <kbd>1</kbd>–<kbd>4</kbd> หรือ <kbd>A</kbd>–<kbd>D</kbd> ก็ได้) การ์ดจะพลิกเฉลยพร้อมบอกว่าตัวที่เลือกผิดเพราะอะไร ตอบผิดหรือกด "ไม่รู้" การ์ดจะวนกลับมาอีก ถ้าอยากทวนแบบเดิมให้สลับเป็นโหมด "พลิกการ์ด"</p>
+  <div class="fc-mode"><div class="seg" id="fcMode" role="group" aria-label="รูปแบบ flashcard"><button data-m="mcq" aria-pressed="true">เลือกคำตอบ</button><button data-m="flip" aria-pressed="false">พลิกการ์ด</button></div></div>
   <div class="fc-wrap">
     <button class="fc" id="fcCard" aria-live="polite">
       <div class="fc-inner">
@@ -1102,6 +1111,9 @@ Resources:
         <div class="fc-face fc-back"><span class="k">คำตอบ</span><div class="t" id="fcBack"></div></div>
       </div>
     </button>
+    <div class="choices fc-choices" id="fcChoices" role="group" aria-label="ตัวเลือก"></div>
+    <button class="fc-skip" id="fcSkip">ไม่รู้ — ขอดูเฉลย</button>
+    <div id="fcFb" aria-live="polite"></div>
     <div class="fc-bar">
       <span class="fc-count" id="fcCount"></span>
       <div class="row">
@@ -1110,7 +1122,7 @@ Resources:
         <button class="btn btn-sm" id="fcNext">ถัดไป</button>
       </div>
     </div>
-    <div class="row" style="justify-content:center;margin-top:12px">
+    <div class="row" id="fcRate" style="justify-content:center;margin-top:12px">
       <button class="btn" id="fcNo">ยังไม่ได้</button>
       <button class="btn btn-primary" id="fcYes">จำได้</button>
     </div>
@@ -2008,6 +2020,34 @@ const FLASHCARDS = [
   ['SAM CLI มีไว้ทำอะไร', '<strong>ทดสอบ Lambda บนเครื่อง local</strong> ก่อน deploy → ไม่เสียเงินโดยไม่จำเป็น']
 ];
 
+/* ตัวเลือกของ flashcard (เรียงตาม FLASHCARDS): [คำตอบที่ถูก, [ตัวหลอก, ทำไมผิด] x3] */
+const FC_MCQ = [
+  ["วัฒนธรรมการทำงานและกระบวนการให้ Dev กับ Ops ทำงานร่วมกัน — ไม่ใช่เครื่องมือ", ["เครื่องมือ CI/CD ของ AWS ที่ซื้อมาใช้ได้ทันที", "DevOps ไม่ใช่เครื่องมือ เครื่องมือแค่ช่วยให้ทำได้"], ["ตำแหน่งงานที่คนเดียวทำทั้ง Dev และ Ops", "DevOps คือการทำงานร่วมกันของทั้งสองฝั่ง ไม่ใช่ให้คนเดียวทำทุกอย่าง"], ["ทีมใหม่ที่แยกออกมาดูแลการ deploy โดยเฉพาะ", "การแยกทีมเพิ่มยังเป็นการแบ่งไซโล ซึ่งเป็นสิ่งที่ DevOps พยายามแก้"]],
+  ["ดูแลแค่ตัวแอปพลิเคชัน", ["Infrastructure: DNS, SMTP, storage, server", "นั่นคือหน้าที่ของ Ops Team แบบเดิม"], ["ทั้งแอปพลิเคชันและ infrastructure", "นั่นคือแนวคิดของ DevOps ไม่ใช่ทีมแบบเดิม"], ["ความปลอดภัยของทั้งองค์กร", "ไม่ใช่หน้าที่ของ Dev Team แบบเดิม"]],
+  ["Infrastructure: DNS, SMTP, storage, database, load balancer, server", ["ตัวแอปพลิเคชันและ business logic", "นั่นคือหน้าที่ของ Dev Team"], ["การออกแบบ UI และ UX ของแอป", "ไม่ใช่หน้าที่ของ Ops"], ["การเขียน unit test ของแอป", "unit test เป็นงานฝั่ง Dev"]],
+  ["environment ต่างกัน → \"works on my machine\", deploy ช้า, โทษกันไปมา", ["คนในทีมเดียวมีมากเกินไป", "ปัญหาอยู่ที่การแยกกันทำงาน ไม่ใช่จำนวนคน"], ["ใช้คลาวด์มากเกินไปจนค่าใช้จ่ายสูง", "ไม่ใช่ปัญหาที่เกิดจากการแยก Dev/Ops"], ["deploy บ่อยเกินไปจนระบบไม่เสถียร", "ปัญหาคือ deploy ช้า ไม่ใช่บ่อยเกินไป"]],
+  ["คนและความเข้าใจ มากกว่าเครื่องมือ", ["เครื่องมือที่แพงและครบที่สุด", "อาจารย์เน้นว่าเครื่องมือไม่ใช่ปัจจัยหลัก"], ["จำนวน server ที่มี", "ไม่เกี่ยวกับความสำเร็จของ DevOps"], ["การเลือก Terraform แทน CloudFormation", "เครื่องมือ IaC ตัวไหนก็ไม่ใช่ปัจจัยหลัก"]],
+  ["เหมือนกัน เช่น prod เป็น Unix บนคลาวด์ test ก็ควรเหมือน", ["ต่างกันได้ ขอแค่ prod ดีที่สุด", "environment ที่ต่างกันทำให้เกิดปัญหา \"works on my machine\""], ["dev ใช้เครื่องส่วนตัวอะไรก็ได้ ไม่ต้องเหมือน prod", "ควรให้เหมือน prod เพื่อให้ผลการทดสอบเชื่อถือได้"], ["ใช้ environment เดียวรวมกันทั้ง dev/test/prod", "ควรแยก environment กัน แต่ให้มีหน้าตาเหมือนกัน"]],
+  ["รวม Security เข้าเป็นความรับผิดชอบร่วมของ Dev + Ops", ["แยกทีม Security ไว้ตรวจตอนท้ายก่อนขึ้น prod", "DevSecOps คือให้ security เป็นเรื่องของทุกคนตั้งแต่ต้น ไม่ใช่ตรวจตอนท้าย"], ["DevOps แบบที่ไม่ต้องสนใจเรื่องความปลอดภัย", "ตรงข้าม DevSecOps เน้นความปลอดภัย"], ["ให้ Security เป็นหน้าที่ของ Ops เท่านั้น", "เป็นความรับผิดชอบร่วมของทั้ง Dev และ Ops"]],
+  ["Speed, Reliability, Scale, Security", ["Speed, ค่าใช้จ่ายเป็นศูนย์, ไม่ต้องมี Ops", "DevOps ไม่ได้ทำให้ไม่มีค่าใช้จ่าย และยังมีงานฝั่ง Ops"], ["ลดจำนวนคน, ลดการทดสอบ, deploy ปีละครั้ง", "DevOps เน้นทดสอบอัตโนมัติและส่งของบ่อยขึ้น"], ["Speed, Reliability, Scale แต่ไม่รวม Security", "Security เป็นหนึ่งในเป้าหมายด้วย"]],
+  ["Automation ทุกช่วง + Infrastructure as Code", ["Manual review ทุกขั้นตอน + คลิกสร้างใน console", "ตรงข้ามกับหัวใจของ DevOps"], ["ทีมขนาดใหญ่ + เครื่องมือแพง", "หัวใจคือ automation ไม่ใช่ขนาดทีมหรือราคาเครื่องมือ"], ["Automation เฉพาะขั้น build ส่วน infra คลิกสร้างเอง", "ต้อง automate ทุกช่วง รวมถึง infrastructure ด้วย IaC"]],
+  ["CI → CD → Continuous Monitoring → Continuous Improvement", ["CD → CI → Continuous Monitoring → Continuous Improvement", "ลำดับผิด ต้องรวมโค้ด (CI) ก่อนจึงส่งต่อ (CD)"], ["Plan → Code → Build → Release", "ไม่ใช่ 4 เฟสตามที่สไลด์สอน"], ["CI → CD → Continuous Testing → Continuous Security", "สองเฟสหลังคือ Monitoring และ Improvement"]],
+  ["รวมโค้ดต่อเนื่อง แล้ว build/test อัตโนมัติ", ["deploy ขึ้น production อัตโนมัติทุกครั้ง", "นั่นคือ Continuous Deployment"], ["เฝ้าดู metric และ log หลัง deploy", "นั่นคือ Continuous Monitoring"], ["รวมโค้ดเดือนละครั้งแล้วทดสอบด้วยมือ", "CI คือรวมบ่อย ๆ และทดสอบอัตโนมัติ"]],
+  ["Delivery: มี manual approval ก่อน prod · Deployment: อัตโนมัติทั้งหมด", ["Delivery: อัตโนมัติทั้งหมด · Deployment: มี manual approval ก่อน prod", "สลับกัน"], ["ทั้งคู่ต้องมี manual approval ก่อน prod", "Continuous Deployment ไม่มีคนอนุมัติ"], ["ทั้งคู่อัตโนมัติทั้งหมด ต่างกันแค่ชื่อ", "Continuous Delivery ต้องมีคนกดอนุมัติก่อนขึ้น prod"]],
+  ["Source → Build &amp; Test → Deploy Test → Deploy Production", ["Source → Deploy Production → Build &amp; Test → Deploy Test", "ต้อง build/test และลง test ก่อนขึ้น production"], ["Build &amp; Test → Source → Deploy Test → Deploy Production", "ต้องเริ่มจากดึงโค้ดจาก Source ก่อน"], ["Source → Deploy Test → Build &amp; Test → Deploy Production", "ต้อง build ก่อนจึงจะ deploy ได้"]],
+  ["เก็บโค้ด / build + test / deploy", ["build + test / เก็บโค้ด / deploy", "สลับ CodeCommit กับ CodeBuild"], ["เก็บโค้ด / deploy / build + test", "สลับ CodeBuild กับ CodeDeploy"], ["deploy / build + test / เก็บโค้ด", "สลับ CodeCommit กับ CodeDeploy"]],
+  ["เชื่อมทุกขั้นเป็น pipeline เดียว", ["build และรัน test", "นั่นคือ CodeBuild"], ["deploy ไปยัง EC2 / Lambda / ECS", "นั่นคือ CodeDeploy"], ["เก็บ Git repository", "นั่นคือ CodeCommit"]],
+  ["AWS CodeConnections", ["AWS CodeCatalyst", "CodeCatalyst เป็นบริการรวมเครื่องมือพัฒนาอีกตัวหนึ่ง"], ["AWS CodeArtifact", "CodeArtifact ใช้เก็บแพ็กเกจ/ไลบรารี"], ["AWS CodeCommit", "CodeCommit เป็นที่เก็บ Git repository"]],
+  ["metric &amp; log / performance &amp; error ของแอป / ตรวจการตั้งค่าตามข้อกำหนด", ["performance &amp; error ของแอป / metric &amp; log / ตรวจการตั้งค่าตามข้อกำหนด", "สลับ CloudWatch กับ X-Ray"], ["metric &amp; log / ตรวจการตั้งค่าตามข้อกำหนด / performance &amp; error ของแอป", "สลับ X-Ray กับ AWS Config"], ["ตรวจการตั้งค่าตามข้อกำหนด / metric &amp; log / performance &amp; error ของแอป", "สลับกันทั้งชุด"]],
+  ["สร้าง ปรับปรุง หรือลบทรัพยากรตาม template", ["เขียน template ด้วยมืออย่างเดียว", "provision คือการลงมือสร้าง/แก้/ลบทรัพยากรจริงตาม template"], ["สร้างได้อย่างเดียว แก้หรือลบไม่ได้", "provision ครอบคลุมทั้งสร้าง ปรับปรุง และลบ"], ["ทดสอบโค้ดแอปก่อน deploy", "นั่นคือขั้น test ของ pipeline"]],
+  ["CFN: ของ AWS ความเสี่ยงต่ำ · Terraform: ฟีเจอร์เยอะ แต่เป็นบุคคลที่สาม", ["CFN: บุคคลที่สาม license เปลี่ยน · Terraform: ของ AWS ความเสี่ยงต่ำ", "สลับกัน"], ["CFN: ใช้ได้ทุกคลาวด์ · Terraform: ใช้ได้แค่ AWS", "กลับกัน CFN ใช้กับ AWS ส่วน Terraform รองรับหลายคลาวด์"], ["ไม่ต่างกัน ทั้งคู่เป็นของ AWS", "Terraform เป็นของ HashiCorp (บุคคลที่สาม)"]],
+  ["แยกขั้นสร้าง infrastructure ออกจากขั้น deploy แอป/ไฟล์", ["รวมทุกอย่างไว้ใน template เดียว แล้ว deploy ด้วยสิทธิ์ admin", "ควรแยกขั้นและให้สิทธิ์เท่าที่จำเป็น"], ["ใส่รหัสผ่านและ access key ไว้ใน template ตรง ๆ", "ไม่ปลอดภัย ห้าม hard-code credential"], ["ให้ทุกคนในทีมใช้ root account", "ไม่ควรใช้ root ในงานประจำ"]],
+  ["Resources", ["Parameters", "Parameters ไม่บังคับ ใช้รับค่าตอนสร้าง stack"], ["Outputs", "Outputs ไม่บังคับ ใช้ส่งค่าออกมาหลังสร้างเสร็จ"], ["AWSTemplateFormatVersion", "ใส่ได้แต่ไม่บังคับ ส่วนเดียวที่บังคับคือ Resources"]],
+  ["Stack: region เดียว · StackSets: หลาย account × หลาย region", ["Stack: หลาย account × หลาย region · StackSets: region เดียว", "สลับกัน"], ["Stack: หลาย region · StackSets: หลาย template ใน account เดียว", "stack อยู่ใน region เดียว และ StackSets ใช้ template เดียวไปหลาย account/region"], ["Stack: account เดียวหลาย region · StackSets: region เดียวหลาย account", "stack อยู่ region เดียว ส่วน StackSets ทำได้ทั้งหลาย account และหลาย region"]],
+  ["open-source framework สำหรับ serverless บน CloudFormation", ["บริการ CI/CD สำหรับ build และ deploy container", "นั่นคือ CodeBuild / CodePipeline"], ["เครื่องมือ IaC ของ HashiCorp รองรับหลายคลาวด์", "นั่นคือ Terraform"], ["บริการรัน container แบบ serverless", "นั่นคือ Fargate"]],
+  ["ทดสอบ Lambda บนเครื่อง local ก่อน deploy → ไม่เสียเงินโดยไม่จำเป็น", ["จัดการ IAM user ผ่าน command line", "นั่นคือ AWS CLI ทั่วไป ไม่ใช่จุดประสงค์ของ SAM CLI"], ["ดู service map ของ request", "นั่นคือ X-Ray"], ["สร้าง Kubernetes cluster บน AWS", "นั่นคือ EKS ไม่เกี่ยวกับ SAM"]]
+];
+
 const GAME = [
   { q: 'ต้องการให้ unit test รันอัตโนมัติทุกครั้งที่มีการ push โค้ด', a: 'build', why: 'CodeBuild ทำขั้น build และ test' },
   { q: 'นำเวอร์ชันใหม่ไปติดตั้งบน EC2 หลายเครื่อง', a: 'deploy', why: 'CodeDeploy ทำขั้น deploy' },
@@ -2598,9 +2638,12 @@ choiceItems($('#mythItems'), [
 })();
 
 /* ================= flashcards ================= */
+/* โหมด "เลือกคำตอบ": ถูก = นับว่าจำได้, ผิด/ไม่รู้ = วนกลับมาท้ายคิว · โหมด "พลิกการ์ด": ประเมินตัวเองแบบเดิม */
 const FC = (function () {
-  const card = $('#fcCard');
+  const card = $('#fcCard'), wrap = $('.fc-wrap'), box = $('#fcChoices'), fb = $('#fcFb'), seg = $('#fcMode');
   let queue = FLASHCARDS.map((_, i) => i), pos = 0, known = new Set();
+  let mode = store.get('fcMode', 'mcq') === 'flip' ? 'flip' : 'mcq';
+  let opts = [], picked = null;
   function face(flipped) {
     card.classList.toggle('flipped', flipped);
     $('.fc-front', card).setAttribute('aria-hidden', String(flipped));
@@ -2609,6 +2652,9 @@ const FC = (function () {
   function render() {
     face(false);
     const empty = !queue.length;
+    const mcq = mode === 'mcq' && !empty && !!FC_MCQ[queue[pos]];
+    picked = null;
+    fb.innerHTML = '';
     if (empty) {
       $('#fcFront').innerHTML = 'จำได้ครบทั้ง ' + FLASHCARDS.length + ' ใบแล้ว';
       $('#fcBack').innerHTML = 'กด "สุ่ม" เพื่อเริ่มรอบใหม่';
@@ -2617,28 +2663,85 @@ const FC = (function () {
       $('#fcFront').innerHTML = c[0];
       $('#fcBack').innerHTML = c[1];
     }
+    if (mcq) {
+      const m = FC_MCQ[queue[pos]];
+      opts = shuffle([{ t: m[0], ok: true }].concat(m.slice(1).map((w) => ({ t: w[0], why: w[1] }))));
+      box.innerHTML = opts.map((o, k) =>
+        '<button class="choice" data-k="' + k + '"><span class="key">' + LETTERS[k] + '</span><span class="ct">' + o.t + '</span><span class="st"></span></button>'
+      ).join('');
+    } else {
+      opts = [];
+      box.innerHTML = '';
+    }
+    wrap.classList.toggle('mcq', mcq);
+    card.classList.toggle('locked', mcq);
+    box.hidden = !mcq;
+    $('#fcSkip').hidden = !mcq;
+    $('#fcRate').hidden = mcq;
     $('#fcCount').textContent = (empty ? 'ครบแล้ว' : 'ใบที่ ' + (pos + 1) + '/' + queue.length) + ' · จำได้ ' + known.size + '/' + FLASHCARDS.length;
     ['fcPrev', 'fcNext', 'fcYes', 'fcNo'].forEach((id) => { $('#' + id).disabled = empty; });
   }
-  function flip() { if (queue.length) face(!card.classList.contains('flipped')); }
+  // k = -1 คือกด "ไม่รู้ — ขอดูเฉลย"
+  function choose(k) {
+    if (box.hidden || picked !== null) return;
+    picked = k;
+    const right = opts.findIndex((o) => o.ok), ok = k === right;
+    $$('.choice', box).forEach((b, j) => {
+      b.disabled = true;
+      if (j === right) { b.classList.add('correct'); $('.st', b).textContent = 'คำตอบ'; }
+      else if (j === k) { b.classList.add('wrong'); $('.st', b).textContent = 'ที่เลือก'; }
+    });
+    let h = '<div class="fb ' + (ok ? 'ok' : 'bad') + '"><strong class="verdict">' +
+      (ok ? '✓ ถูกต้อง' : (k < 0 ? '— ยังไม่รู้' : '✗ ยังไม่ถูก') + ' — คำตอบคือ ' + LETTERS[right]) + '</strong>';
+    if (!ok && k >= 0) h += '<p><strong>ทำไม ' + LETTERS[k] + ' ผิด:</strong> ' + opts[k].why + '</p>';
+    const others = opts.map((o, j) => (o.ok || j === k) ? '' : '<li><strong>' + LETTERS[j] + '</strong> — ' + o.why + '</li>').join('');
+    h += '<details><summary>' + (ok || k < 0 ? 'ดูเหตุผลของตัวเลือกที่ผิดทั้งหมด' : 'ดูเหตุผลของตัวเลือกผิดข้ออื่น') + '</summary><ul>' + others + '</ul></details>';
+    h += '<p class="muted">' + (ok ? 'นับว่าจำได้แล้ว' : 'การ์ดใบนี้จะวนกลับมาอีก') + ' · กด <kbd>Enter</kbd> เพื่อไปใบถัดไป</p>';
+    h += '<div class="row"><button class="btn btn-primary btn-sm" id="fcGo">ใบถัดไป →</button></div></div>';
+    fb.innerHTML = h;
+    $('#fcSkip').hidden = true;
+    card.classList.remove('locked');
+    face(true);
+  }
+  function markKnown() { known.add(queue[pos]); queue.splice(pos, 1); if (pos >= queue.length) pos = 0; render(); }
+  function requeue() { const c = queue.splice(pos, 1)[0]; queue.push(c); if (pos >= queue.length) pos = 0; render(); }
+  function settle() { (opts[picked] && opts[picked].ok) ? markKnown() : requeue(); }
+  function flip() { if (queue.length && !card.classList.contains('locked')) face(!card.classList.contains('flipped')); }
+  function setMode(m) {
+    mode = m;
+    store.set('fcMode', m);
+    $$('button', seg).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+    render();
+  }
   card.addEventListener('click', flip);
-  $('#fcNext').addEventListener('click', () => { pos = (pos + 1) % queue.length; render(); });
+  seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b && b.dataset.m !== mode) setMode(b.dataset.m); });
+  box.addEventListener('click', (e) => { const b = e.target.closest('.choice'); if (b && !b.disabled) choose(+b.dataset.k); });
+  $('#fcSkip').addEventListener('click', () => choose(-1));
+  fb.addEventListener('click', (e) => { if (e.target.closest('#fcGo')) settle(); });
+  $('#fcNext').addEventListener('click', () => { if (picked !== null) { settle(); return; } pos = (pos + 1) % queue.length; render(); });
   $('#fcPrev').addEventListener('click', () => { pos = (pos - 1 + queue.length) % queue.length; render(); });
   $('#fcShuffle').addEventListener('click', () => {
     if (!queue.length) { known.clear(); queue = FLASHCARDS.map((_, i) => i); }
     queue = shuffle(queue); pos = 0; render();
   });
-  $('#fcYes').addEventListener('click', () => {
-    known.add(queue[pos]); queue.splice(pos, 1);
-    if (pos >= queue.length) pos = 0;
-    render();
+  $('#fcYes').addEventListener('click', markKnown);
+  $('#fcNo').addEventListener('click', requeue);
+  document.addEventListener('keydown', (e) => {
+    if (box.hidden && picked === null) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || !inView(wrap)) return;
+    const t = e.target, run = $('#qRun');
+    if (t.closest && t.closest('input, select, textarea')) return;
+    if (run && !run.hidden && inView(run)) return;
+    if (picked === null) {
+      const k = e.key.toLowerCase();
+      let p = '1234'.indexOf(k);
+      if (p < 0 && k.length === 1) p = 'abcd'.indexOf(k);
+      if (p >= 0 && p < opts.length) { e.preventDefault(); choose(p); }
+    } else if (e.key === 'Enter' && !(t.closest && t.closest('button, a, summary'))) {
+      e.preventDefault(); settle();
+    }
   });
-  $('#fcNo').addEventListener('click', () => {
-    const c = queue.splice(pos, 1)[0]; queue.push(c);
-    if (pos >= queue.length) pos = 0;
-    render();
-  });
-  render();
+  setMode(mode);
   return { flip, el: $('#flashcards') };
 })();
 

@@ -329,6 +329,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .fc-back .t{font-size:1.1rem;line-height:1.65}
 .fc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
 .fc-count{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.fc-mode{display:flex;justify-content:center;margin-top:18px}
+.fc-wrap [hidden]{display:none!important}
+.fc-wrap.mcq .fc-inner{min-height:160px}
+.fc.locked{cursor:default}
+.fc-choices{margin-top:16px}
+.fc-skip{display:block;margin:10px auto 0;border:0;background:none;padding:4px 8px;color:var(--muted);font:inherit;font-size:14px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.fc-skip:hover{color:var(--text)}
+.fc-wrap .fb kbd{font-size:11px}
 
 /* cheatsheet */
 .cheat{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:20px 0}
@@ -1003,7 +1011,8 @@ a.icon-btn{color:var(--text);text-decoration:none}
 <section class="sec" id="flashcards" aria-labelledby="h-fc">
   <div class="sec-label">ทบทวน</div>
   <h2 id="h-fc">Flashcards</h2>
-  <p class="muted">คลิกการ์ดหรือกด <kbd>Space</kbd> เพื่อพลิก แล้วบอกตัวเองว่าจำได้หรือยัง การ์ดที่ยังจำไม่ได้จะวนกลับมาอีก</p>
+  <p class="muted">เลือกคำตอบที่ถูกจาก 4 ตัวเลือก (กด <kbd>1</kbd>–<kbd>4</kbd> หรือ <kbd>A</kbd>–<kbd>D</kbd> ก็ได้) การ์ดจะพลิกเฉลยพร้อมบอกว่าตัวที่เลือกผิดเพราะอะไร ตอบผิดหรือกด "ไม่รู้" การ์ดจะวนกลับมาอีก ถ้าอยากทวนแบบเดิมให้สลับเป็นโหมด "พลิกการ์ด"</p>
+  <div class="fc-mode"><div class="seg" id="fcMode" role="group" aria-label="รูปแบบ flashcard"><button data-m="mcq" aria-pressed="true">เลือกคำตอบ</button><button data-m="flip" aria-pressed="false">พลิกการ์ด</button></div></div>
   <div class="fc-wrap">
     <button class="fc" id="fcCard" aria-live="polite">
       <div class="fc-inner">
@@ -1011,6 +1020,9 @@ a.icon-btn{color:var(--text);text-decoration:none}
         <div class="fc-face fc-back"><span class="k">คำตอบ</span><div class="t" id="fcBack"></div></div>
       </div>
     </button>
+    <div class="choices fc-choices" id="fcChoices" role="group" aria-label="ตัวเลือก"></div>
+    <button class="fc-skip" id="fcSkip">ไม่รู้ — ขอดูเฉลย</button>
+    <div id="fcFb" aria-live="polite"></div>
     <div class="fc-bar">
       <span class="fc-count" id="fcCount"></span>
       <div class="row">
@@ -1019,7 +1031,7 @@ a.icon-btn{color:var(--text);text-decoration:none}
         <button class="btn btn-sm" id="fcNext">ถัดไป</button>
       </div>
     </div>
-    <div class="row" style="justify-content:center;margin-top:12px">
+    <div class="row" id="fcRate" style="justify-content:center;margin-top:12px">
       <button class="btn" id="fcNo">ยังไม่ได้</button>
       <button class="btn btn-primary" id="fcYes">จำได้</button>
     </div>
@@ -1442,6 +1454,32 @@ const FLASHCARDS = [
   ['Container image อัปโหลดที่ไหน', '<strong>Amazon ECR</strong>'],
   ['Init Duration ใน REPORT คือ', 'เวลาที่เสียไปกับ <strong>cold start</strong>'],
   ['X-Ray ใช้ทำอะไร', 'trace request ข้ามบริการ วาด <strong>service map</strong><br>หา latency / outlier / debug distributed']
+];
+
+/* ตัวเลือกของ flashcard (เรียงตาม FLASHCARDS): [คำตอบที่ถูก, [ตัวหลอก, ทำไมผิด] x3] */
+const FC_MCQ = [
+  ["serverless compute — รันโค้ดตาม event โดยไม่ต้องดูแลเซิร์ฟเวอร์", ["serverless infrastructure สำหรับรัน container", "นั่นคือ Fargate อาจารย์เน้นว่าอย่าสลับ Lambda = compute, Fargate = container"], ["VM ที่ AWS patch OS ให้ แต่เรายังต้องเลือก instance type", "Lambda ไม่มี VM หรือ instance type ให้เลือก เราตั้งแค่ memory"], ["บริการ orchestration สำหรับจัดการ container หลายตัว", "นั่นคือ ECS / EKS"]],
+  ["serverless infrastructure สำหรับ container", ["serverless compute สำหรับรันฟังก์ชันตาม event", "นั่นคือ Lambda — สลับบทบาทกัน"], ["registry สำหรับเก็บ container image", "นั่นคือ Amazon ECR"], ["EC2 แบบจองล่วงหน้าที่ถูกกว่า On-Demand", "นั่นคือ Reserved Instance ส่วนจุดเด่นของ Fargate คือไม่ต้องจัดการ EC2 เลย"]],
+  ["128 MB – 10,240 MB และ CPU เพิ่มตาม memory", ["128 MB – 3,008 MB และ CPU เพิ่มตาม memory", "3,008 MB คือเพดานรุ่นเก่า ปัจจุบันตั้งได้ถึง 10,240 MB"], ["64 MB – 10,240 MB และเลือก CPU แยกได้อิสระ", "ขั้นต่ำคือ 128 MB และ Lambda ไม่ให้ตั้ง CPU แยก CPU จะเพิ่มตาม memory เอง"], ["128 MB – 10,240 MB แต่ CPU คงที่ทุกขนาด", "CPU เพิ่มตามสัดส่วน memory ยิ่งตั้ง memory สูงยิ่งได้ CPU มาก"]],
+  ["1 วินาที – 15 นาที (900 วินาที)", ["1 วินาที – 5 นาที (300 วินาที)", "5 นาทีคือเพดานรุ่นเก่า ปัจจุบันได้ถึง 15 นาที"], ["1 วินาที – 30 นาที (1,800 วินาที)", "สูงสุดแค่ 15 นาที งานที่นานกว่านั้นควรใช้ Step Functions, Fargate หรือ EC2"], ["3 วินาที – 15 นาที (900 วินาที)", "3 วินาทีคือค่าเริ่มต้น ไม่ใช่ค่าต่ำสุด ตั้งต่ำสุดได้ 1 วินาที"]],
+  ["1,000 ต่อ Region ต่อ account (soft limit ขอเพิ่มได้)", ["1,000 ต่อ function (hard limit ขอเพิ่มไม่ได้)", "โควตาเป็นของทั้ง account ใน Region ทุก function ใช้ร่วมกัน และเป็น soft limit ขอเพิ่มได้"], ["100 ต่อ Region ต่อ account (hard limit)", "ค่าเริ่มต้นคือ 1,000 และเป็น soft limit"], ["ไม่จำกัด เพราะ Lambda scale ให้อัตโนมัติ", "Lambda scale อัตโนมัติก็จริงแต่มีเพดาน concurrency ถ้าเกินจะถูก throttle"]],
+  ["API Gateway · <code>RequestResponse</code> · ไม่มี retry ในตัว", ["S3 · <code>Event</code> · retry ให้ 2 ครั้ง", "นั่นคือการเรียกแบบ async"], ["API Gateway · <code>Event</code> · retry ให้ 2 ครั้ง", "sync ใช้ <code>RequestResponse</code> และ Lambda ไม่ retry ให้ ผู้เรียกต้อง retry เอง"], ["SQS · <code>RequestResponse</code> · retry จนกว่า message หมดอายุ", "SQS เป็น poll model ผ่าน event source mapping ไม่ใช่ตัวอย่างของ sync"]],
+  ["S3 · <code>Event</code> · Lambda เอา event เข้าคิวก่อน", ["API Gateway · <code>RequestResponse</code> · ผู้เรียกรอผล", "นั่นคือการเรียกแบบ sync"], ["S3 · <code>RequestResponse</code> · ผู้เรียกรอผล", "async ใช้ InvocationType = <code>Event</code> และ S3 ไม่รอผล"], ["Kinesis · <code>Event</code> · Lambda poll ข้อมูลเป็น batch", "Kinesis เป็น poll model ผ่าน event source mapping ไม่ใช่ async"]],
+  ["retry 0–2 ครั้ง (ค่าเริ่มต้น 2) รวมลองสูงสุด 3 ครั้ง", ["retry 0–3 ครั้ง (ค่าเริ่มต้น 3) รวมลองสูงสุด 4 ครั้ง", "retry ได้สูงสุด 2 ครั้ง ไม่ใช่ 3"], ["retry 0–2 ครั้ง (ค่าเริ่มต้น 2) รวมลองสูงสุด 2 ครั้ง", "สับสน \"retry 2 ครั้ง\" กับ \"รันทั้งหมด 2 ครั้ง\" ต้องนับครั้งแรกด้วย รวมเป็น 3"], ["ไม่มี retry ผู้เรียกต้อง retry เอง", "นั่นคือพฤติกรรมของ sync"]],
+  ["Kinesis, SQS, DynamoDB Streams ผ่าน event source mapping", ["S3, SNS, EventBridge ผ่าน event source mapping", "ทั้งสามเป็นฝ่าย push event มาเรียก Lambda แบบ async"], ["API Gateway, ALB ผ่าน event source mapping", "ทั้งสองเป็นฝ่าย push มาเรียก Lambda แบบ sync"], ["Kinesis, SQS, SNS ผ่าน Destinations", "SNS เป็นฝ่าย push และ Destinations ใช้ส่งผลลัพธ์ต่อ ไม่ได้มีไว้ poll ข้อมูล"]],
+  ["async + event source mapping · On success / On failure", ["sync เท่านั้น · ส่งผลกลับไปให้ผู้เรียก", "Destinations ใช้กับ sync ไม่ได้ ผู้เรียกแบบ sync ได้ผลลัพธ์ตรง ๆ อยู่แล้ว"], ["ทุกแบบการเรียก · On success / On failure", "ใช้กับ sync ไม่ได้"], ["API Gateway และ ALB · On success / On failure", "ทั้งสองเรียกแบบ sync ซึ่งใช้ Destinations ไม่ได้"]],
+  ["Resource-based policy (function policy)", ["IAM execution role", "execution role คือสิทธิ์ขาออก (function ไปเรียกบริการอื่น) ไม่ใช่สิทธิ์ว่าใครเรียก function ได้"], ["Security group ของ function", "security group คุมการเชื่อมต่อทางเครือข่าย ไม่ได้คุมสิทธิ์ invoke"], ["Environment variables ของ function", "environment variables ใช้เก็บค่าตั้งค่า ไม่เกี่ยวกับสิทธิ์"]],
+  ["IAM execution role", ["Resource-based policy (function policy)", "resource-based policy คือสิทธิ์ขาเข้า ว่าใครเรียก function ได้"], ["Access key ที่ hard-code ไว้ในโค้ด", "ไม่ปลอดภัยและไม่จำเป็น เพราะ execution role ให้ credential ชั่วคราวอยู่แล้ว"], ["Alias ของ function", "alias คือ pointer ไปยัง version ไม่เกี่ยวกับสิทธิ์"]],
+  ["<strong>event</strong> = ข้อมูลของ trigger · <strong>context</strong> = ข้อมูล runtime", ["<strong>event</strong> = ข้อมูล runtime · <strong>context</strong> = ข้อมูลของ trigger", "สลับกัน"], ["<strong>event</strong> = environment variables · <strong>context</strong> = ค่าที่จะส่งกลับ", "environment variables อ่านจาก environment ของ process ส่วนผลลัพธ์คือค่าที่ handler return"], ["<strong>event</strong> = log ของการเรียกครั้งก่อน · <strong>context</strong> = IAM role", "event คือข้อมูลที่ trigger ส่งมาในครั้งนี้ และ context ไม่ได้เก็บ role"]],
+  ["<code>awsRequestId</code>, <code>getRemainingTimeInMillis()</code>, <code>logStreamName</code>", ["<code>Records</code>, <code>eventName</code>, <code>bucket.name</code>", "ฟิลด์เหล่านี้อยู่ใน event ที่ S3 ส่งมา ไม่ใช่ context"], ["<code>httpMethod</code>, <code>queryStringParameters</code>, <code>body</code>", "ฟิลด์เหล่านี้อยู่ใน event ที่ API Gateway ส่งมา"], ["<code>statusCode</code>, <code>headers</code>, <code>body</code>", "นี่คือรูปแบบ response ที่ handler ส่งกลับให้ API Gateway"]],
+  ["กันโควตา + เป็นเพดาน ปกป้องปลายทาง · ไม่มีค่าใช้จ่ายเพิ่ม", ["เตรียม environment อุ่นไว้แก้ cold start · มีค่าใช้จ่ายเพิ่ม", "นั่นคือ provisioned concurrency"], ["กันโควตา + เป็นเพดาน · มีค่าใช้จ่ายเพิ่มตามจำนวนที่จอง", "reserved concurrency ไม่มีค่าใช้จ่ายเพิ่ม"], ["เพิ่มเพดาน concurrency ของ account ให้เกิน 1,000", "reserved แค่แบ่งจากโควตาเดิมของ account ถ้าจะเพิ่มต้องขอ quota กับ AWS"]],
+  ["keep warm แก้ cold start · มีค่าใช้จ่ายเพิ่ม", ["กันโควตา + เป็นเพดาน ปกป้องปลายทาง · ไม่มีค่าใช้จ่ายเพิ่ม", "นั่นคือ reserved concurrency"], ["keep warm แก้ cold start · ไม่มีค่าใช้จ่ายเพิ่ม", "มีค่าใช้จ่ายเพิ่ม เพราะ AWS ต้องเปิด environment ค้างไว้ให้ตลอด"], ["เพิ่ม memory ให้อัตโนมัติเมื่อ request เยอะ", "Lambda ไม่ปรับ memory ให้เอง memory เป็นค่าที่เราตั้ง"]],
+  ["version ที่ publish (<code>:1</code>) immutable · <code>$LATEST</code> คือตัวที่กำลังแก้", ["<code>$LATEST</code> immutable · version ที่ publish ยังแก้โค้ดได้", "สลับกัน"], ["version กับ <code>$LATEST</code> เหมือนกัน แค่ชื่อเรียกต่างกัน", "version ถูกล็อกไว้ ณ ตอน publish ส่วน $LATEST เปลี่ยนไปเรื่อย ๆ ตามที่เราแก้"], ["version ที่ publish ยังแก้ environment variables ได้", "version ที่ publish ล็อกทั้งโค้ดและการตั้งค่า รวมถึง environment variables"]],
+  ["pointer ไป version เช่น <code>PROD</code> · event source ไม่ต้องเปลี่ยน ARN", ["สำเนาของ function ที่ล็อกโค้ดไว้ แก้ไม่ได้", "นั่นคือ version"], ["ชื่อโดเมนสำหรับเรียก function ผ่าน HTTP", "alias ไม่ใช่ URL สำหรับเรียกผ่านเว็บ"], ["library ที่หลาย function ใช้ร่วมกัน", "นั่นคือ layer"]],
+  ["library ที่หลาย function ใช้ร่วมกัน", ["pointer ที่ชี้ไปยัง version หนึ่ง", "นั่นคือ alias"], ["ชั้นเครือข่ายที่ใช้ต่อ function เข้า VPC", "layer ไม่เกี่ยวกับเครือข่าย"], ["สำเนาของ function ที่ publish แล้ว แก้ไม่ได้", "นั่นคือ version"]],
+  ["Amazon ECR", ["Amazon S3", "S3 ใช้เก็บ deployment package แบบ zip ได้ แต่ container image ต้องอยู่ใน ECR"], ["Docker Hub โดยตรง", "Lambda ดึง container image จาก Amazon ECR เท่านั้น"], ["AWS CodeCommit", "CodeCommit ใช้เก็บซอร์สโค้ด Git ไม่ใช่ image"]],
+  ["เวลาที่เสียไปกับ cold start", ["เวลาที่ handler ใช้ประมวลผล", "นั่นคือ Duration"], ["เวลาที่ถูกคิดเงิน", "นั่นคือ Billed Duration"], ["เวลาที่ event รออยู่ในคิวก่อนถูกเรียก", "บรรทัด REPORT ไม่ได้รายงานเวลารอในคิว"]],
+  ["trace request ข้ามบริการ วาด service map หา latency / outlier", ["เก็บ log และตั้ง alarm จาก metric", "นั่นคือ CloudWatch"], ["บันทึกว่าใครเรียก API อะไรใน account", "นั่นคือ CloudTrail"], ["ตรวจว่าการตั้งค่า resource ตรงตามกฎหรือไม่", "นั่นคือ AWS Config"]]
 ];
 </script>
 <script>
@@ -2184,9 +2222,12 @@ $$('.mini').forEach((box) => {
 })();
 
 /* ================= flashcards ================= */
+/* โหมด "เลือกคำตอบ": ถูก = นับว่าจำได้, ผิด/ไม่รู้ = วนกลับมาท้ายคิว · โหมด "พลิกการ์ด": ประเมินตัวเองแบบเดิม */
 const FC = (function () {
-  const card = $('#fcCard');
+  const card = $('#fcCard'), wrap = $('.fc-wrap'), box = $('#fcChoices'), fb = $('#fcFb'), seg = $('#fcMode');
   let queue = FLASHCARDS.map((_, i) => i), pos = 0, known = new Set();
+  let mode = store.get('fcMode', 'mcq') === 'flip' ? 'flip' : 'mcq';
+  let opts = [], picked = null;
   function face(flipped) {
     card.classList.toggle('flipped', flipped);
     $('.fc-front', card).setAttribute('aria-hidden', String(flipped));
@@ -2195,6 +2236,9 @@ const FC = (function () {
   function render() {
     face(false);
     const empty = !queue.length;
+    const mcq = mode === 'mcq' && !empty && !!FC_MCQ[queue[pos]];
+    picked = null;
+    fb.innerHTML = '';
     if (empty) {
       $('#fcFront').innerHTML = 'จำได้ครบทั้ง ' + FLASHCARDS.length + ' ใบแล้ว';
       $('#fcBack').innerHTML = 'กด "สุ่ม" เพื่อเริ่มรอบใหม่';
@@ -2203,28 +2247,85 @@ const FC = (function () {
       $('#fcFront').innerHTML = c[0];
       $('#fcBack').innerHTML = c[1];
     }
+    if (mcq) {
+      const m = FC_MCQ[queue[pos]];
+      opts = shuffle([{ t: m[0], ok: true }].concat(m.slice(1).map((w) => ({ t: w[0], why: w[1] }))));
+      box.innerHTML = opts.map((o, k) =>
+        '<button class="choice" data-k="' + k + '"><span class="key">' + LETTERS[k] + '</span><span class="ct">' + o.t + '</span><span class="st"></span></button>'
+      ).join('');
+    } else {
+      opts = [];
+      box.innerHTML = '';
+    }
+    wrap.classList.toggle('mcq', mcq);
+    card.classList.toggle('locked', mcq);
+    box.hidden = !mcq;
+    $('#fcSkip').hidden = !mcq;
+    $('#fcRate').hidden = mcq;
     $('#fcCount').textContent = (empty ? 'ครบแล้ว' : 'ใบที่ ' + (pos + 1) + '/' + queue.length) + ' · จำได้ ' + known.size + '/' + FLASHCARDS.length;
     ['fcPrev', 'fcNext', 'fcYes', 'fcNo'].forEach((id) => { $('#' + id).disabled = empty; });
   }
-  function flip() { if (queue.length) face(!card.classList.contains('flipped')); }
+  // k = -1 คือกด "ไม่รู้ — ขอดูเฉลย"
+  function choose(k) {
+    if (box.hidden || picked !== null) return;
+    picked = k;
+    const right = opts.findIndex((o) => o.ok), ok = k === right;
+    $$('.choice', box).forEach((b, j) => {
+      b.disabled = true;
+      if (j === right) { b.classList.add('correct'); $('.st', b).textContent = 'คำตอบ'; }
+      else if (j === k) { b.classList.add('wrong'); $('.st', b).textContent = 'ที่เลือก'; }
+    });
+    let h = '<div class="fb ' + (ok ? 'ok' : 'bad') + '"><strong class="verdict">' +
+      (ok ? '✓ ถูกต้อง' : (k < 0 ? '— ยังไม่รู้' : '✗ ยังไม่ถูก') + ' — คำตอบคือ ' + LETTERS[right]) + '</strong>';
+    if (!ok && k >= 0) h += '<p><strong>ทำไม ' + LETTERS[k] + ' ผิด:</strong> ' + opts[k].why + '</p>';
+    const others = opts.map((o, j) => (o.ok || j === k) ? '' : '<li><strong>' + LETTERS[j] + '</strong> — ' + o.why + '</li>').join('');
+    h += '<details><summary>' + (ok || k < 0 ? 'ดูเหตุผลของตัวเลือกที่ผิดทั้งหมด' : 'ดูเหตุผลของตัวเลือกผิดข้ออื่น') + '</summary><ul>' + others + '</ul></details>';
+    h += '<p class="muted">' + (ok ? 'นับว่าจำได้แล้ว' : 'การ์ดใบนี้จะวนกลับมาอีก') + ' · กด <kbd>Enter</kbd> เพื่อไปใบถัดไป</p>';
+    h += '<div class="row"><button class="btn btn-primary btn-sm" id="fcGo">ใบถัดไป →</button></div></div>';
+    fb.innerHTML = h;
+    $('#fcSkip').hidden = true;
+    card.classList.remove('locked');
+    face(true);
+  }
+  function markKnown() { known.add(queue[pos]); queue.splice(pos, 1); if (pos >= queue.length) pos = 0; render(); }
+  function requeue() { const c = queue.splice(pos, 1)[0]; queue.push(c); if (pos >= queue.length) pos = 0; render(); }
+  function settle() { (opts[picked] && opts[picked].ok) ? markKnown() : requeue(); }
+  function flip() { if (queue.length && !card.classList.contains('locked')) face(!card.classList.contains('flipped')); }
+  function setMode(m) {
+    mode = m;
+    store.set('fcMode', m);
+    $$('button', seg).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+    render();
+  }
   card.addEventListener('click', flip);
-  $('#fcNext').addEventListener('click', () => { pos = (pos + 1) % queue.length; render(); });
+  seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b && b.dataset.m !== mode) setMode(b.dataset.m); });
+  box.addEventListener('click', (e) => { const b = e.target.closest('.choice'); if (b && !b.disabled) choose(+b.dataset.k); });
+  $('#fcSkip').addEventListener('click', () => choose(-1));
+  fb.addEventListener('click', (e) => { if (e.target.closest('#fcGo')) settle(); });
+  $('#fcNext').addEventListener('click', () => { if (picked !== null) { settle(); return; } pos = (pos + 1) % queue.length; render(); });
   $('#fcPrev').addEventListener('click', () => { pos = (pos - 1 + queue.length) % queue.length; render(); });
   $('#fcShuffle').addEventListener('click', () => {
     if (!queue.length) { known.clear(); queue = FLASHCARDS.map((_, i) => i); }
     queue = shuffle(queue); pos = 0; render();
   });
-  $('#fcYes').addEventListener('click', () => {
-    known.add(queue[pos]); queue.splice(pos, 1);
-    if (pos >= queue.length) pos = 0;
-    render();
+  $('#fcYes').addEventListener('click', markKnown);
+  $('#fcNo').addEventListener('click', requeue);
+  document.addEventListener('keydown', (e) => {
+    if (box.hidden && picked === null) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || !inView(wrap)) return;
+    const t = e.target, run = $('#qRun');
+    if (t.closest && t.closest('input, select, textarea')) return;
+    if (run && !run.hidden && inView(run)) return;
+    if (picked === null) {
+      const k = e.key.toLowerCase();
+      let p = '1234'.indexOf(k);
+      if (p < 0 && k.length === 1) p = 'abcd'.indexOf(k);
+      if (p >= 0 && p < opts.length) { e.preventDefault(); choose(p); }
+    } else if (e.key === 'Enter' && !(t.closest && t.closest('button, a, summary'))) {
+      e.preventDefault(); settle();
+    }
   });
-  $('#fcNo').addEventListener('click', () => {
-    const c = queue.splice(pos, 1)[0]; queue.push(c);
-    if (pos >= queue.length) pos = 0;
-    render();
-  });
-  render();
+  setMode(mode);
   return { flip, el: $('#flashcards') };
 })();
 
