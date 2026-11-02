@@ -618,6 +618,12 @@ div.node{cursor:default}
 .wacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .wnote{font-size:13px;color:var(--accent-ink);margin:-4px 0 10px}
 .empty{padding:28px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:12px}
+.essaycard{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 18px;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--card);text-decoration:none;color:var(--text);transition:border-color .15s}
+.essaycard:hover{border-color:var(--accent)}
+.essaycard div{flex:1;min-width:220px}
+.essaycard small{display:block;color:var(--accent-ink);font-weight:600;font-size:12.5px;letter-spacing:.04em}
+.essaycard strong{display:block;font-size:1.05rem}
+.essaycard .muted{font-size:14px}
 .hubfoot{margin-top:40px;font-size:14px;color:var(--muted)}
 @media (max-width: 640px){ .hub{padding:0 16px 56px} .wgrid{grid-template-columns:1fr} .hub .hero{padding:36px 0 24px} }
 </style>
@@ -638,6 +644,7 @@ div.node{cursor:default}
     <div id="hubContinue"></div>
   </section>
 
+  <a class="essaycard" href="EssayExam.html"><div><small>ทบทวนแบบบรรยาย</small><strong>เก็งข้อสอบข้อเขียน Week 9–13</strong><span class="muted">วีคละ 1 ข้อ มีข้อย่อย พร้อมแนวคำตอบและคีย์เวิร์ดที่ควรมี</span></div><span class="btn btn-primary" id="hubEssay">เปิดข้อสอบข้อเขียน</span></a>
   <label class="search" for="hubSearch">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
     <input id="hubSearch" type="search" placeholder="ค้นหาหัวข้อ เช่น SQS, Fargate, CloudFormation, Cognito" autocomplete="off">
@@ -661,9 +668,8 @@ div.node{cursor:default}
       tags: ['Docker', 'ECS', 'ECR', 'EKS', 'Fargate', 'Elastic Beanstalk', 'Deployment policy', 'ElastiCache', 'Lazy loading', 'CloudFront', 'Cache key', 'Lambda@Edge', 'CloudFront Functions'], secs: 13, q: 48, fc: 27 },
     { n: 11, mod: 'Module 10', title: 'Messaging Services (SQS, SNS, Kinesis)', desc: 'sync vs async, queue / pub-sub / stream, visibility timeout, DLQ, Standard vs FIFO, polling, fan-out, Data Streams vs Firehose',
       tags: ['SQS', 'Visibility timeout', 'Dead-letter queue', 'FIFO', 'Long polling', 'SNS', 'Fan-out', 'Message filtering', 'Kinesis', 'Shard', 'Firehose', 'VPC endpoint'], secs: 11, q: 38, fc: 24 },
-    { n: 12, mod: 'Module 8 + 9', title: 'Containers บน AWS และ Caching', desc: 'เนื้อหาชุดเดียวกับ Week 10 (สร้างจากข้อความที่ส่งมาสำหรับ Week 12) แต่เก็บความคืบหน้าแยกกัน',
-      note: 'เนื้อหาเดียวกับ Week 10',
-      tags: ['Docker', 'ECS', 'EKS', 'Fargate', 'Elastic Beanstalk', 'ElastiCache', 'CloudFront', 'Lambda@Edge'], secs: 13, q: 48, fc: 27 },
+    { n: 12, mod: 'Module 11 + 12', title: 'Step Functions และ Secure Applications', desc: 'Step Functions, ASL และ state types, Standard vs Express, case Prime Video, TLS และ certificate, ALB vs NLB, STS, Cognito User Pool / Identity Pool',
+      tags: ['Step Functions', 'ASL', 'State types', 'Parallel', 'Map', 'Standard', 'Express', 'TLS', 'ACM', 'ALB', 'NLB', 'STS', 'IAM role', 'SAML', 'OIDC', 'Cognito', 'User Pool', 'Identity Pool', 'JWT'], secs: 11, q: 50, fc: 26 },
     { n: 13, mod: 'Module 13', title: 'DevOps และ CI/CD บน AWS', desc: 'DevOps คือวัฒนธรรม, 4 เฟส, CodePipeline / CodeBuild / CodeDeploy, Continuous Delivery vs Deployment, CloudFormation, StackSets, AWS SAM',
       tags: ['DevOps', 'CI/CD', 'CodeCommit', 'CodeBuild', 'CodeDeploy', 'CodePipeline', 'CodeConnections', 'Continuous Delivery', 'CloudFormation', 'Terraform', 'StackSets', 'AWS SAM', 'AWS Config'], secs: 9, q: 40, fc: 24 }
   ];
@@ -675,11 +681,12 @@ div.node{cursor:default}
   }
 
   // stats
-  const uniq = WEEKS.filter((w) => w.n !== 12);
+  const uniq = WEEKS;
   const sum = (k) => uniq.reduce((s, w) => s + w[k], 0);
+  const ed = get('essay:done', []); if (Array.isArray(ed) && ed.length) $('#hubEssay').textContent = 'ตอบได้แล้ว ' + ed.length + '/5 · เปิดต่อ';
   $('#hubStats').innerHTML =
     '<div class="stat"><b>' + WEEKS.length + '</b><span>บท</span></div>' +
-    '<div class="stat"><b>' + sum('secs') + '</b><span>หัวข้อ (ไม่นับบทซ้ำ)</span></div>' +
+    '<div class="stat"><b>' + sum('secs') + '</b><span>หัวข้อ</span></div>' +
     '<div class="stat"><b>' + sum('q') + '</b><span>ข้อสอบ</span></div>' +
     '<div class="stat"><b>' + sum('fc') + '</b><span>flashcards</span></div>';
 
@@ -711,7 +718,7 @@ div.node{cursor:default}
         '<div class="wmeta"><span><b>' + w.secs + '</b> หัวข้อ</span><span><b>' + w.q + '</b> ข้อสอบ</span><span><b>' + w.fc + '</b> flashcards</span></div>' +
         '<div class="wprog"><div class="lbl"><span>เข้าใจแล้ว ' + p.done + '/' + w.secs + '</span><span>' + (p.best ? 'คะแนนดีที่สุด ' + p.best.p + '%' : 'ยังไม่ได้ทำข้อสอบ') + '</span></div>' +
         '<div class="bar" role="img" aria-label="ความคืบหน้า ' + pct + '%"><i style="width:' + pct + '%"></i></div></div>' +
-        '<div class="wacts"><a class="btn btn-primary" href="Week' + w.n + '.html">' + (p.done ? 'เรียนต่อ' : 'เริ่มเรียน') + '</a><a class="btn" href="Week' + w.n + '.html#quiz">ทำข้อสอบ</a><a class="btn" href="Week' + w.n + '.html#flashcards">Flashcards</a></div>' +
+        '<div class="wacts"><a class="btn btn-primary" href="Week' + w.n + '.html">' + (p.done ? 'เรียนต่อ' : 'เริ่มเรียน') + '</a><a class="btn" href="Week' + w.n + '.html#quiz">ทำข้อสอบ</a><a class="btn" href="Week' + w.n + '.html#flashcards">Flashcards</a><a class="btn" href="EssayExam.html#w' + w.n + '">ข้อเขียน</a></div>' +
         '</article>';
     }).join('');
   }
